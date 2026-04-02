@@ -1,7 +1,7 @@
 {
   "name": "chaos-harness",
   "version": "1.0.0",
-  "description": "Intelligent project invasion system for Claude Code",
+  "description": "Claude Code advanced skill and plugin system for intelligent project invasion, environment scanning, version constraints, Harness generation, and workflow management",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -11,21 +11,43 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "templates"],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
-    "chaos",
+    "claude",
+    "claude-code",
+    "mcp",
     "harness",
+    "workflow",
     "scanner",
-    "invasion"
+    "version-manager",
+    "iron-laws",
+    "project-invasion",
+    "laziness-detection",
+    "adaptive-flow"
   ],
-  "author": "",
+  "author": "Chaos Harness Contributors",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chaos-harness/chaos-harness.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chaos-harness/chaos-harness/issues"
+  },
+  "homepage": "https://github.com/chaos-harness/chaos-harness#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/node": "^25.5.0",
     "@types/xml2js": "^0.4.14",
