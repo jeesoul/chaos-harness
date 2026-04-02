@@ -90,6 +90,7 @@ export {
   evaluateWarningConditions,
   calculateActivationScore,
   shouldActivate,
+  checkChangeMonitor,
   buildDynamicRules,
   extractPrivateRepos,
   inferBuildCommands,

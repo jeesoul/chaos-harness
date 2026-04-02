@@ -15,7 +15,7 @@ export interface HarnessIdentity {
  */
 export interface SelfCheckCondition {
   field: string;
-  operator: 'equals' | 'contains' | 'matches' | 'exists';
+  operator: 'equals' | 'contains' | 'matches' | 'exists' | 'notExists';
   value: string | RegExp;
   description: string;
 }

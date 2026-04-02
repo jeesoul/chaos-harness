@@ -10,7 +10,8 @@ import {
   evaluateActivationConditions,
   evaluateWarningConditions,
   calculateActivationScore,
-  shouldActivate
+  shouldActivate,
+  checkChangeMonitor
 } from './self-check.js';
 import {
   buildDynamicRules,
@@ -275,6 +276,7 @@ export {
   evaluateWarningConditions,
   calculateActivationScore,
   shouldActivate,
+  checkChangeMonitor,
 
   // Dynamic rules
   buildDynamicRules,

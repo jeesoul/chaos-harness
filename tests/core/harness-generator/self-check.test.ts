@@ -3,7 +3,8 @@ import {
   evaluateActivationConditions,
   evaluateWarningConditions,
   calculateActivationScore,
-  shouldActivate
+  shouldActivate,
+  checkChangeMonitor
 } from '../../../src/core/harness-generator/self-check.js';
 import { loadTemplate } from '../../../src/core/harness-generator/template-loader.js';
 import { HarnessConfig } from '../../../src/core/harness-generator/types.js';
@@ -401,6 +402,189 @@ describe('SelfCheck', () => {
 
       const failResult = await evaluateActivationConditions(harness, {});
       expect(failResult[0].passed).toBe(false);
+    });
+
+    it('should handle notExists operator', async () => {
+      const harness: HarnessConfig = {
+        identity: {
+          name: 'test-harness',
+          version: '1.0.0',
+          createdAt: '2026-04-02',
+          createdBy: 'manual',
+          suitableFor: ['test'],
+          confidenceThreshold: 0.8
+        },
+        selfCheck: {
+          activationConditions: [
+            {
+              field: 'deprecatedFile',
+              operator: 'notExists',
+              value: '',
+              description: 'Deprecated file should not exist'
+            }
+          ],
+          warningConditions: [],
+          changeMonitor: {
+            watchedFiles: [],
+            threshold: 0
+          }
+        },
+        ironLaws: [],
+        recommendations: [],
+        dynamicRules: {
+          privateRepositories: [],
+          buildCommands: { standard: '', withTests: '' },
+          testFramework: { primary: '' },
+          inferredCodeStyle: {
+            namingConvention: {},
+            importStyle: ''
+          }
+        },
+        antiBypass: [],
+        effectivenessLog: ''
+      };
+
+      const passResult = await evaluateActivationConditions(harness, {});
+      expect(passResult[0].passed).toBe(true);
+
+      const failResult = await evaluateActivationConditions(harness, { deprecatedFile: 'old-config.xml' });
+      expect(failResult[0].passed).toBe(false);
+    });
+  });
+
+  describe('checkChangeMonitor', () => {
+    it('should detect changes in watched files', async () => {
+      const harness = await loadTemplate('java-spring');
+      const currentScanResult = {
+        buildTool: { name: 'Gradle' }, // Changed from Maven - implies pom.xml changed to build.gradle
+        files: ['build.gradle', 'application.yml', 'src/main.java']
+      };
+      const previousScanResult = {
+        buildTool: { name: 'Maven' },
+        files: ['pom.xml', 'application.yml', 'src/main.java']
+      };
+
+      const result = checkChangeMonitor(harness, currentScanResult, previousScanResult);
+      expect(result.changedFiles.length).toBeGreaterThan(0);
+    });
+
+    it('should return no changes when scan results match', async () => {
+      const harness: HarnessConfig = {
+        identity: {
+          name: 'test-harness',
+          version: '1.0.0',
+          createdAt: '2026-04-02',
+          createdBy: 'manual',
+          suitableFor: ['test'],
+          confidenceThreshold: 0.8
+        },
+        selfCheck: {
+          activationConditions: [],
+          warningConditions: [],
+          changeMonitor: {
+            watchedFiles: ['pom.xml', 'package.json'],
+            threshold: 0.5
+          }
+        },
+        ironLaws: [],
+        recommendations: [],
+        dynamicRules: {
+          privateRepositories: [],
+          buildCommands: { standard: '', withTests: '' },
+          testFramework: { primary: '' },
+          inferredCodeStyle: {
+            namingConvention: {},
+            importStyle: ''
+          }
+        },
+        antiBypass: [],
+        effectivenessLog: ''
+      };
+
+      const currentScanResult = { buildTool: { name: 'Maven' } };
+      const previousScanResult = { buildTool: { name: 'Maven' } };
+
+      const result = checkChangeMonitor(harness, currentScanResult, previousScanResult);
+      expect(result.changeRatio).toBe(0);
+      expect(result.needsUpgrade).toBe(false);
+    });
+
+    it('should calculate change ratio correctly', async () => {
+      const harness: HarnessConfig = {
+        identity: {
+          name: 'test-harness',
+          version: '1.0.0',
+          createdAt: '2026-04-02',
+          createdBy: 'manual',
+          suitableFor: ['test'],
+          confidenceThreshold: 0.8
+        },
+        selfCheck: {
+          activationConditions: [],
+          warningConditions: [],
+          changeMonitor: {
+            watchedFiles: ['pom.xml', 'package.json', 'requirements.txt'],
+            threshold: 0.5
+          }
+        },
+        ironLaws: [],
+        recommendations: [],
+        dynamicRules: {
+          privateRepositories: [],
+          buildCommands: { standard: '', withTests: '' },
+          testFramework: { primary: '' },
+          inferredCodeStyle: {
+            namingConvention: {},
+            importStyle: ''
+          }
+        },
+        antiBypass: [],
+        effectivenessLog: ''
+      };
+
+      const currentScanResult = { buildTool: { name: 'npm' } }; // Maven to npm
+      const previousScanResult = { buildTool: { name: 'Maven' } };
+
+      const result = checkChangeMonitor(harness, currentScanResult, previousScanResult);
+      expect(result.changeRatio).toBeGreaterThan(0);
+    });
+
+    it('should return empty changed files when both are empty', async () => {
+      const harness: HarnessConfig = {
+        identity: {
+          name: 'test-harness',
+          version: '1.0.0',
+          createdAt: '2026-04-02',
+          createdBy: 'manual',
+          suitableFor: ['test'],
+          confidenceThreshold: 0.8
+        },
+        selfCheck: {
+          activationConditions: [],
+          warningConditions: [],
+          changeMonitor: {
+            watchedFiles: [],
+            threshold: 0.5
+          }
+        },
+        ironLaws: [],
+        recommendations: [],
+        dynamicRules: {
+          privateRepositories: [],
+          buildCommands: { standard: '', withTests: '' },
+          testFramework: { primary: '' },
+          inferredCodeStyle: {
+            namingConvention: {},
+            importStyle: ''
+          }
+        },
+        antiBypass: [],
+        effectivenessLog: ''
+      };
+
+      const result = checkChangeMonitor(harness, {}, {});
+      expect(result.changedFiles).toEqual([]);
+      expect(result.changeRatio).toBe(0);
     });
   });
 });
