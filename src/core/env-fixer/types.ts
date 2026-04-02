@@ -58,7 +58,7 @@ export interface PrivateRepoCheckResult {
  */
 export interface JdkLegacyInfo {
   isLegacy: boolean;
-  javaVersion: string | null;
+  javaVersion: string;
   springBootVersion: string | null;
   knownIssues: string[];
   compatibleVersions: {
