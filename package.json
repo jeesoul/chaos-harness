@@ -1,20 +1,17 @@
 {
   "name": "chaos-harness",
   "version": "1.0.0",
-  "description": "Claude Code 智能项目入侵系统 - 扫描、版本约束、Harness生成、偷懒检测、工作流管理",
+  "description": "Claude Code 智能项目入侵系统 - 纯 Skill 方式集成。扫描、版本约束、Harness生成、偷懒检测、工作流管理",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "bin": {
-    "chaos-harness-mcp": "./bin/mcp-server.js"
-  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist", "templates", "bin"],
+  "files": ["dist", "templates", "skills", ".claude-plugin"],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -25,7 +22,6 @@
   "keywords": [
     "claude",
     "claude-code",
-    "mcp",
     "harness",
     "workflow",
     "scanner",
@@ -33,9 +29,9 @@
     "iron-laws",
     "project-invasion",
     "laziness-detection",
-    "adaptive-flow"
+    "skills"
   ],
-  "author": "Chaos Harness Contributors",
+  "author": "jeesoul",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -50,9 +46,6 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

@@ -6,18 +6,17 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-一个为 Claude Code 设计的智能项目入侵系统，实现项目扫描、版本约束、Harness 生成、偷懒检测和全流程工作流管理。
+一个为 Claude Code 设计的智能项目入侵系统，**纯 Skill 方式集成**，无需 MCP 配置。
 
 ## 功能特性
 
-| 模块 | 功能 | 说明 |
-|------|------|------|
-| 🔍 **项目扫描器** | Scanner | 检测项目类型 (Java/Node/Python)、环境、依赖，输出置信度评分 |
-| 📦 **版本管理器** | Version Manager | 锁定版本号，防止文档混乱，session 内不可更改 |
-| 🔧 **环境修复器** | Environment Fixer | 检测问题（JDK 兼容性、私服连通性），提供修复指导 |
-| 📋 **Harness 生成器** | Harness Generator | 生成铁律、防绕过规则、Red Flags 检测，5 个预设模板 |
-| 🔄 **工作流引擎** | Workflow Engine | 12 阶段工作流，自适应项目规模 (small/medium/large) |
-| 🖥️ **MCP Server** | 17 个工具 | 通过 Model Context Protocol 与 Claude Code 集成 |
+| 模块 | Skill | 说明 |
+|------|-------|------|
+| 🔍 **项目扫描器** | `project-scanner` | 检测项目类型、环境、依赖 |
+| 📦 **版本锁定器** | `version-locker` | 锁定版本号，防止文档混乱 |
+| 📋 **Harness 生成器** | `harness-generator` | 生成铁律、防绕过规则 |
+| 🔄 **工作流监督器** | `workflow-supervisor` | 12阶段工作流，自适应规模 |
+| ⚖️ **铁律执行器** | `iron-law-enforcer` | **始终激活**，执行铁律约束 |
 
 ## 五条铁律
 
@@ -30,8 +29,6 @@
 | IL005 | 无明确批准，不改高风险配置 | 敏感配置修改需要批准 |
 
 ## 偷懒模式检测
-
-系统内置监工机制，自动检测 6 种偷懒模式：
 
 | ID | 模式 | 严重程度 |
 |----|------|----------|
@@ -46,121 +43,147 @@
 
 ## 安装
 
-### 方式一：从 GitHub 克隆安装（推荐）
-
-**步骤 1：克隆仓库**
+### 从 GitHub 克隆安装
 
 ```bash
+# 1. 克隆仓库
 git clone https://github.com/jeesoul/chaos-harness.git
 cd chaos-harness
-```
 
-**步骤 2：安装依赖并构建**
-
-```bash
-npm install
-npm run build
-```
-
-**步骤 3：运行安装脚本**
-
-**macOS / Linux:**
-```bash
+# 2. 运行安装脚本
+# macOS / Linux:
 chmod +x install.sh
 ./install.sh
-```
 
-**Windows:**
-```cmd
+# Windows:
 install.bat
+
+# 3. 重启 Claude Code 或开始新会话
 ```
 
-**步骤 4：重启 Claude Code**
+### 安装脚本做了什么
 
-安装脚本会自动：
-- 复制插件到 `~/.claude/plugins/chaos-harness/`
-- 配置 MCP Server 到 Claude Code 配置文件
+安装脚本会复制以下内容到 `~/.claude/plugins/chaos-harness/`：
 
-### 方式二：手动配置
-
-如果安装脚本无法运行，可以手动配置：
-
-**步骤 1：克隆并构建**
-
-```bash
-git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness
-npm install
-npm run build
+```
+chaos-harness/
+├── .claude-plugin/    # 插件配置
+├── skills/            # Skills 定义（核心）
+│   ├── SKILL.md       # 主 skill
+│   ├── project-scanner/
+│   ├── version-locker/
+│   ├── harness-generator/
+│   ├── workflow-supervisor/
+│   └── iron-law-enforcer/
+├── templates/         # Harness 模板
+├── CLAUDE.md          # 项目记忆
+└── README.md
 ```
 
-**步骤 2：配置 Claude Code**
-
-编辑 Claude Code 配置文件：
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
-
-添加以下内容：
-
-```json
-{
-  "mcpServers": {
-    "chaos-harness": {
-      "command": "node",
-      "args": ["/你的路径/chaos-harness/bin/mcp-server.js"],
-      "cwd": "/你的路径/chaos-harness"
-    }
-  }
-}
-```
-
-**步骤 3：重启 Claude Code**
+**无需任何配置！** 安装后 Skills 自动激活。
 
 ---
 
 ## 使用方式
 
-安装完成后，在 Claude Code 中直接对话即可使用：
+安装后重启 Claude Code，**直接对话即可**：
 
 ### 扫描项目
 
 ```
 用户: 帮我扫描当前项目
-Claude: [调用 chaos_scan 工具]
+
+Claude: [激活 project-scanner skill]
+        
         项目类型: java-spring
-        置信度: 95%
+        置信度: 98%
         语言: Java 17
         构建工具: Maven
+        框架: Spring Boot 3.2.0
+        
+        环境状态:
+        | 工具 | 要求 | 实际 | 状态 |
+        |------|------|------|------|
+        | JDK | 17 | 17.0.2 | ✅ |
+        | Maven | 3.6+ | 3.9.0 | ✅ |
+```
+
+### 版本管理
+
+```
+用户: 创建版本 v0.1
+
+Claude: [激活 version-locker skill]
+        
+        ✅ 版本已锁定: v0.1
+        
+        所有后续文档将生成在 output/v0.1/ 目录下。
+        当前 Session 内版本号不可更改。
 ```
 
 ### 生成 Harness
 
 ```
 用户: 生成这个项目的 Harness
-Claude: [调用 chaos_generate_harness 工具]
-        已生成 Harness，包含:
+
+Claude: [检查版本锁定 IL001]
+        [检查扫描结果 IL002]
+        [激活 harness-generator skill]
+        
+        ✅ Harness 已生成
+        
+        包含:
         - 5 条铁律
         - 10 条防绕过规则
+        - 6 个偷懒模式检测
         - 6 个漏洞封堵模式
 ```
 
-### 检测偷懒模式
+### 工作流管理
 
 ```
-用户: 检测 agent-1 是否有偷懒行为
-Claude: [调用 chaos_detect_laziness 工具]
-        检测到:
-        - LP001: 声称完成但无验证证据 (Critical)
-        建议: 要求提供验证证据
+用户: 创建工作流
+
+Claude: [激活 workflow-supervisor skill]
+        
+        项目规模: Medium
+        必经阶段: 8 个
+        
+        阶段进度:
+        | 阶段 | 状态 |
+        |------|------|
+        | W01 需求设计 | 🔄 进行中 |
+        | W02 需求评审 | ⏳ 待开始 |
+        ...
 ```
 
-### 检测绕过尝试
+### 铁律执行（自动）
+
+```
+用户: 我完成了这个功能
+
+Claude: [iron-law-enforcer 自动激活]
+        
+        ⚠️ 铁律检查: IL003
+        
+        完成声明需要验证证据。
+        
+        请提供以下之一：
+        - 测试执行输出
+        - 命令执行结果
+        - 代码审查确认
+        
+        没有证据 = 没有完成。
+```
+
+### 检测绕过尝试（自动）
 
 ```
 用户: 这个修复很简单，可以跳过测试吗？
-Claude: [调用 chaos_detect_bypass 工具]
-        ⚠️ 检测到绕过尝试！
+
+Claude: [iron-law-enforcer 检测到绕过尝试]
+        
+        🚫 检测到绕过尝试！
         
         匹配规则: simple-fix
         铁律引用: IL003
@@ -168,110 +191,73 @@ Claude: [调用 chaos_detect_bypass 工具]
         反驳理由:
         即使看起来简单的修复也可能引入回归问题。
         铁律 IL003 要求所有完成声明必须有验证证据。
+        
+        请运行相关测试并提供结果。
 ```
 
 ---
 
-## MCP 工具列表 (17个)
+## Skills 说明
 
-| 分类 | 工具 | 说明 |
-|------|------|------|
-| Scanner | `chaos_scan` | 扫描项目 |
-| Scanner | `chaos_scan_report` | 生成扫描报告 |
-| Version | `chaos_detect_versions` | 检测版本目录 |
-| Version | `chaos_create_version` | 创建版本目录 |
-| Version | `chaos_lock_version` | 锁定版本 |
-| Version | `chaos_validate_version` | 验证版本格式 |
-| Harness | `chaos_generate_harness` | 生成 Harness |
-| Harness | `chaos_validate_harness` | 验证 Harness |
-| Harness | `chaos_list_templates` | 列出模板 |
-| Harness | `chaos_find_best_template` | 查找最佳模板 |
-| Harness | `chaos_detect_bypass` | 检测绕过尝试 |
-| Workflow | `chaos_create_workflow` | 创建工作流 |
-| Workflow | `chaos_get_workflow_status` | 获取工作流状态 |
-| Workflow | `chaos_detect_laziness` | 检测偷懒模式 |
-| Workflow | `chaos_get_stage_definition` | 获取阶段定义 |
-| Workflow | `chaos_list_stages` | 列出所有阶段 |
-| Workflow | `chaos_list_iron_laws` | 列出铁律 |
+### project-scanner
 
----
+**激活条件：** 扫描项目、分析项目结构、检测项目类型
 
-## 模板
+**功能：**
+- 检测项目类型 (Java/Node/Python)
+- 检测构建工具 (Maven/Gradle/npm)
+- 检测框架 (Spring Boot/Express/Django)
+- 验证环境版本（实际执行命令）
 
-Chaos Harness 包含 5 个预设模板：
+### version-locker
 
-| 模板 | 目标技术栈 | 特点 |
-|------|------------|------|
-| `java-spring` | Java 17/21 + Spring Boot 3.x | 现代Java栈 |
-| `java-spring-legacy` | JDK 8 + Spring Boot 2.x | 兼容历史项目 |
-| `node-express` | Node.js Express | REST API 支持 |
-| `python-django` | Python Django | Web框架 |
-| `generic` | 通用 | 兜底模板 |
+**激活条件：** 创建版本、锁定版本、版本管理
+
+**功能：**
+- 版本号格式验证 (vX.Y)
+- 版本目录创建
+- 版本锁定（Session 内不可更改）
+- VERSION-LOG 记录
+
+### harness-generator
+
+**激活条件：** 生成 Harness、创建约束规则
+
+**功能：**
+- 生成铁律配置
+- 生成防绕过规则
+- 生成偷懒模式检测配置
+- 根据项目类型选择模板
+
+### workflow-supervisor
+
+**激活条件：** 工作流、阶段管理
+
+**功能：**
+- 12 阶段工作流
+- 自适应项目规模
+- 阶段跳过审批
+- 进度追踪
+
+### iron-law-enforcer
+
+**激活条件：** 始终激活
+
+**功能：**
+- 铁律检查
+- 绕过检测
+- 偷懒模式检测
+- 施压消息生成
 
 ---
 
 ## 自适应流程
 
-工作流阶段根据项目规模自动调整：
-
-| 规模 | 定义 | 必经阶段 | 可跳过阶段 |
-|------|------|---------|-----------|
-| Small | ≤5 文件, ≤100 行 | 5 个 | W02, W04, W07 |
-| Medium | 5-20 文件, 100-500 行 | 8 个 | W06 |
-| Large | ≥20 文件, ≥500 行 | 全部 12 个 | 无 |
-
----
-
-## API 参考（npm 包使用）
-
-如果你想在代码中直接使用：
-
-```typescript
-import {
-  scan,
-  VersionManager,
-  generateHarness,
-  createWorkflowExecutor,
-  quickDetectLaziness
-} from 'chaos-harness';
-
-// 扫描项目
-const result = await scan({ projectRoot: './my-project' });
-
-// 版本管理
-const vm = new VersionManager('./output');
-await vm.initialize({ autoCreate: true, defaultVersion: 'v0.1' });
-
-// 生成 Harness
-const harness = await generateHarness({
-  scanResult: result,
-  outputPath: './output/v0.1/Harness'
-});
-
-// 检测偷懒模式
-const patterns = quickDetectLaziness('agent-1', {
-  claimedCompletion: true,
-  ranVerification: false
-});
-```
-
----
-
-## 开发
-
-```bash
-# 安装依赖
-npm install
-
-# 构建
-npm run build
-
-# 运行测试
-npm test
-
-# 测试覆盖率
-npm run test:coverage
-```
+| 规模 | 定义 | 必经阶段 | 可跳过 |
+|------|------|---------|--------|
+| Small | ≤5 文件, ≤100 行 | 5 个 | W02, W04, W07 等 |
+| Medium | 5-20 文件, 100-500 行 | 8 个 | W04, W06 等 |
+| Large | ≥20 文件, ≥500 行 | **全部 12 个** | 无 |
 
 ---
 
@@ -285,6 +271,33 @@ npm run test:coverage
 **Windows:**
 ```cmd
 install.bat --uninstall
+```
+
+---
+
+## 项目结构
+
+```
+chaos-harness/
+├── .claude-plugin/
+│   ├── plugin.json       # 插件元数据
+│   └── marketplace.json  # Marketplace 配置
+├── skills/
+│   ├── SKILL.md          # 主 skill（入口）
+│   ├── project-scanner/  # 项目扫描
+│   ├── version-locker/   # 版本锁定
+│   ├── harness-generator/# Harness 生成
+│   ├── workflow-supervisor/ # 工作流监督
+│   └── iron-law-enforcer/   # 铁律执行
+├── templates/            # Harness 模板
+│   ├── java-spring/
+│   ├── java-spring-legacy/
+│   ├── node-express/
+│   ├── python-django/
+│   └── generic/
+├── CLAUDE.md             # 项目记忆
+├── install.sh            # 安装脚本
+└── install.bat           # 安装脚本
 ```
 
 ---

@@ -1,6 +1,6 @@
 {
   "name": "chaos-harness",
-  "description": "Chaos demands order. Harness provides it. - Claude Code 智能项目入侵系统：扫描、版本约束、Harness生成、偷懒检测、工作流管理",
+  "description": "Claude Code 智能项目入侵系统 - 纯 Skill 方式集成，无需 MCP。扫描、版本约束、Harness生成、偷懒检测、工作流管理",
   "version": "1.0.0",
   "author": {
     "name": "jeesoul"
@@ -15,7 +15,14 @@
     "version-manager",
     "iron-laws",
     "workflow",
-    "mcp",
-    "laziness-detection"
+    "laziness-detection",
+    "skills"
+  ],
+  "skills": [
+    "project-scanner",
+    "version-locker",
+    "harness-generator",
+    "workflow-supervisor",
+    "iron-law-enforcer"
   ]
 }
