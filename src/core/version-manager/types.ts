@@ -64,3 +64,23 @@ export interface ValidationResult {
   error?: string;
   normalized?: string;
 }
+
+/**
+ * 版本选择选项
+ */
+export interface SelectOptions {
+  outputDir: string;
+  autoCreate?: boolean;
+  defaultVersion?: string;
+  specifiedVersion?: string;
+}
+
+/**
+ * 版本选择结果
+ */
+export interface SelectResult {
+  selection: VersionSelection | null;
+  suggestedVersion: VersionNumber;
+  existingVersions: VersionNumber[];
+  needsSelection: boolean;
+}
