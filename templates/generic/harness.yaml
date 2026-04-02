@@ -1,0 +1,69 @@
+identity:
+  name: "generic-harness"
+  version: "1.0.0"
+  createdAt: "2026-04-02"
+  createdBy: "scanner"
+  suitableFor:
+    - "generic"
+    - "unknown"
+    - "fallback"
+  confidenceThreshold: 0.50
+
+selfCheck:
+  activationConditions:
+    - field: "projectType"
+      operator: "exists"
+      description: "Project type must be detected"
+  warningConditions:
+    - field: "projectType.confidence"
+      operator: "lessThan"
+      value: "0.5"
+      description: "Very low confidence, manual review strongly recommended"
+  changeMonitor:
+    watchedFiles:
+      - "*"
+    threshold: 0.30
+
+ironLaws:
+  - id: "IL001"
+    rule: "没有验证就不声称完成"
+    enforcement: "block"
+    violationAction: "阻止提交，要求重新验证"
+  - id: "IL002"
+    rule: "没有根因分析就不修复bug"
+    enforcement: "block"
+    violationAction: "阻止修复，要求Phase 1调查"
+  - id: "IL003"
+    rule: "测试失败必须修复"
+    enforcement: "block"
+    violationAction: "阻止进入下一阶段"
+  - id: "IL004"
+    rule: "版本号不可随意更改"
+    enforcement: "block"
+    violationAction: "阻止文档写入"
+  - id: "IL005"
+    rule: "配置变更必须用户确认"
+    enforcement: "block"
+    violationAction: "暂停操作"
+
+recommendations:
+  - id: "R001"
+    rule: "建立测试框架"
+    skipCondition: "用户明确说跳过"
+  - id: "R002"
+    rule: "使用版本控制"
+    skipCondition: "无版本控制环境"
+
+antiBypass:
+  - id: "AB001"
+    excuse: "这是简单修改，不需要测试"
+    rebuttal: "简单修改也需要验证，防止回归"
+    ironLawRef: "IL003"
+  - id: "AB002"
+    excuse: "用户没说版本号，我默认用最新的"
+    rebuttal: "用户没说=版本不变"
+    ironLawRef: "IL004"
+  - id: "AB003"
+    excuse: "这个bug很简单，直接改一行就行"
+    rebuttal: "简单bug也有根因，不分析可能导致类似bug重复出现"
+    ironLawRef: "IL002"
