@@ -5,7 +5,8 @@ dist/
 coverage/
 .env
 
-# Project-specific: 需求文档、参考文档、设计文档不提交
+# Project-specific: 需求文档、参考文档、设计文档、实施计划不提交
 介绍
 参考/
 docs/superpowers/specs/
+docs/superpowers/plans/
