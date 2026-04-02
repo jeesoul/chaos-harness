@@ -1,490 +1,385 @@
-# Chaos Harness (万物入侵)
+# Chaos Harness
 
-> **Chaos demands order. Harness provides it.**
->
-> 混沌需要秩序，Harness 提供秩序。
+**Claude Code Agent Constraint Framework**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-623%20passing-brightgreen)]()
-
-**Claude Code 智能项目入侵系统** — 通过铁律约束、偷懒检测、防绕过机制和工作流管理，为 AI Agent 提供不可协商的行为约束框架。
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
+[![Test Coverage](https://img.shields.io/badge/Tests-623-brightgreen.svg)]()
 
 ---
 
-## 核心特性
+## Abstract
 
-### 🏛️ 铁律体系
+Chaos Harness is a deterministic constraint framework for AI Agents that enforces non-negotiable behavioral rules through iron laws, bypass detection, and laziness pattern monitoring. Unlike advisory systems that provide suggestions, Harness uses prohibitive rules that eliminate the "lazy space" where Agents can circumvent quality requirements.
 
-铁律不是建议，不是指导，而是**不可协商的规则**。任何违规尝试都会被检测并阻止。
+---
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    THE IRON LAWS                        │
-├─────────────────────────────────────────────────────────┤
-│  IL001 │ 无版本锁定，不生成文档                           │
-│  IL002 │ 无扫描结果，不生成 Harness                       │
-│  IL003 │ 无验证证据，不声称完成                           │
-│  IL004 │ 无用户同意，不更改版本                           │
-│  IL005 │ 无明确批准，不改高风险配置                       │
-└─────────────────────────────────────────────────────────┘
-```
+## Problem Statement
 
-铁律用禁止性规则代替建议性指导，消除 AI Agent 的 "偷懒空间"。用户还可以新增自定义铁律，扩展约束体系。
+AI Agents in development workflows exhibit consistent behavioral patterns that undermine quality:
 
-### 🛡️ 防绕过机制
+| Pattern | Manifestation |
+|---------|---------------|
+| **Completion Without Verification** | Claims task complete without test output, review confirmation |
+| **Bypass Attempts** | "This is simple", "Skip tests", "Just this once" |
+| **Root Cause Avoidance** | Direct fixes without investigation |
+| **Configuration Drift** | Unauthorized changes to sensitive configs |
 
-**10 条防绕过规则**，自动检测并反驳常见的偷懒借口：
+Traditional approaches use advisory guidelines ("should verify", "recommended to test") which Agents can rationalize away.
 
-| 借口 | 检测规则 | 反驳策略 |
-|------|---------|---------|
-| "这是简单修复" | `simple-fix` | 引用 IL003，要求验证证据 |
-| "跳过测试" | `skip-test` | 引用 IL003，测试是基本验证 |
-| "就这一次" | `just-once` | 引用 IL001，每次例外都是先例 |
-| "老项目" | `legacy-project` | 引用 IL003，老项目更需要约束 |
-| ... | ... | ... |
+---
 
-系统自动识别绕过尝试，生成有说服力的反驳，引用铁律作为权威依据。
+## Solution Architecture
 
-### 🕵️ 偷懒模式检测
+### Iron Laws
 
-**6 种偷懒模式**，实时检测 AI Agent 的偷懒行为：
+Five core non-negotiable rules that trigger automatic enforcement:
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│  LP001 │ 声称完成但无验证证据        │ Critical │ 阻止   │
-│  LP002 │ 跳过根因分析直接修复        │ Critical │ 阻止   │
-│  LP003 │ 长时间无产出               │ Warning  │ 警告   │
-│  LP004 │ 试图跳过测试               │ Critical │ 阻止   │
-│  LP005 │ 擅自更改版本号             │ Critical │ 阻止   │
-│  LP006 │ 自动处理高风险配置         │ Critical │ 阻止   │
-└──────────────────────────────────────────────────────────┘
+IL001: NO DOCUMENTS WITHOUT VERSION LOCK
+IL002: NO HARNESS WITHOUT SCAN RESULTS  
+IL003: NO COMPLETION CLAIMS WITHOUT VERIFICATION
+IL004: NO VERSION CHANGES WITHOUT USER CONSENT
+IL005: NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL
 ```
 
-### 📊 自适应工作流
-
-**12 阶段工作流**，根据项目规模自动调整：
+**Enforcement Model:**
 
 ```
-Small Project (≤5文件, ≤100行)
-├── 必经阶段: 5 个
-└── 可跳过: W02, W04, W05, W06, W07, W10, W11
-
-Medium Project (5-20文件, 100-500行)
-├── 必经阶段: 8 个
-└── 可跳过: W04, W06, W07, W11
-
-Large Project (≥20文件, ≥500行)
-├── 必经阶段: 全部 12 个
-└── 可跳过: 无（铁律 IL001 强制执行）
+Agent: "Task completed"
+        │
+        ▼
+    ┌───────────────────────────────────────┐
+    │  Iron Law IL003 Triggered             │
+    │  Evidence Required:                   │
+    │  - Test execution output              │
+    │  - Verification command results       │
+    │  - Code review confirmation           │
+    └───────────────────────────────────────┘
+        │
+        ▼
+    No Evidence = Enforcement Block
 ```
 
-项目规模自动检测，复杂度指标自动升级，大型项目零例外策略。
+### Bypass Detection Engine
 
-### 🧠 说服力心理学引擎
+Pattern-based detection with rebuttal generation:
 
-融合 **6 大说服力原则**，生成有效的施压消息：
+| Detection Rule | Pattern Match | Rebuttal Strategy |
+|----------------|---------------|-------------------|
+| `simple-fix` | "simple", "trivial", "easy" | IL003: Verification required regardless of complexity |
+| `skip-test` | "skip testing", "no test needed" | IL003: Testing is baseline verification |
+| `just-once` | "just this once", "one-time" | IL001: Each exception becomes precedent |
+| `legacy-project` | "old project", "legacy code" | IL003: Legacy requires stricter constraints |
+| `time-pressure` | "urgent", "deadline", "quick" | IL003: Urgency increases risk, not decreases |
 
-| 原则 | 应用场景 |
-|------|---------|
-| 权威 | 引用铁律作为权威依据 |
-| 承诺 | 提醒用户之前的承诺 |
-| 稀缺 | 强调时间和资源紧迫 |
-| 社会认同 | 引用团队规范和标准 |
-| 喜好 | 建立共同目标 |
-| 统一 | 强调团队一致性 |
+### Laziness Pattern Monitoring
 
-### 🔌 插件生态系统
+Real-time behavioral pattern detection with severity classification:
 
-插件约束注入机制，支持引入外部插件，但所有插件必须接受 Harness 铁律约束：
+| Pattern ID | Description | Severity | Action |
+|------------|-------------|----------|--------|
+| LP001 | Completion claim without verification evidence | Critical | Block |
+| LP002 | Root cause investigation skipped | Critical | Block |
+| LP003 | Extended period without output | Warning | Alert |
+| LP004 | Test execution skipped | Critical | Block |
+| LP005 | Version number unauthorized modification | Critical | Block |
+| LP006 | High-risk config auto-processing | Critical | Block |
+
+### Adaptive Workflow Engine
+
+12-stage workflow with scale-based mandatory requirements:
+
+| Project Scale | Definition | Mandatory Stages | Skippable |
+|---------------|------------|------------------|-----------|
+| Small | ≤5 files, ≤100 lines | 5 stages | W02, W04, W07 |
+| Medium | 5-20 files, 100-500 lines | 8 stages | W06 |
+| Large | ≥20 files, ≥500 lines | All 12 stages | None (IL001 enforced) |
+
+**Scale Detection Metrics:**
+- File count analysis
+- Code line count analysis  
+- Complexity indicator aggregation
+- Automatic scale upgrade triggers
+
+---
+
+## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Chaos Harness                           │
-│  ┌───────────────────────────────────────────────────────┐ │
-│  │                    Iron Laws (铁律)                    │ │
-│  │         核心铁律 + 用户自定义铁律                       │ │
-│  └───────────────────────────────────────────────────────┘ │
-│                          │                                  │
-│                          ▼                                  │
-│  ┌───────────────────────────────────────────────────────┐ │
-│  │                  Plugin Manager                        │ │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  │ │
-│  │  │super-   │  │open-    │  │custom-  │  │  ...    │  │ │
-│  │  │powers   │  │spec     │  │plugins  │  │         │  │ │
-│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘  │ │
-│  └───────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        Chaos Harness                             │
+│                                                                  │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐        │
+│  │   Scanner     │  │   Version     │  │   Harness     │        │
+│  │   Module      │  │   Manager     │  │   Generator   │        │
+│  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘        │
+│          │                  │                  │                 │
+│          └──────────────────┼──────────────────┘                 │
+│                             │                                    │
+│                             ▼                                    │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                  Iron Law Enforcer                       │    │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐  │    │
+│  │  │Law Check │  │Bypass    │  │Laziness  │  │Pressure │  │    │
+│  │  │Engine    │  │Detection │  │Monitor   │  │Engine   │  │    │
+│  │  └──────────┘  └──────────┘  └──────────┘  └─────────┘  │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                             │                                    │
+│                             ▼                                    │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                  Workflow Supervisor                     │    │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐  │    │
+│  │  │Scale     │  │Stage     │  │Skip      │  │Progress │  │    │
+│  │  │Detection │  │Manager   │  │Approval  │  │Tracker  │  │    │
+│  │  └──────────┘  └──────────┘  └──────────┘  └─────────┘  │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                  Plugin Manager                          │    │
+│  │  Constraint Injection │ Source Management │ Stage Mapping │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-插件无法绕过 Harness 铁律，用户可选择插件激活的阶段，支持多种插件来源（GitHub、npm、本地、URL）。
+---
 
-### ⚖️ 用户自定义铁律
+## Plugin System
 
-用户可以新增自己的铁律，扩展约束体系：
+### Constraint Injection Mechanism
+
+All external plugins must accept iron law constraints during loading:
 
 ```yaml
-# .claude/harness/iron-laws.yaml
+constraints:
+  enforce_iron_laws: true      # IL001-IL005 mandatory
+  enforce_version_lock: true   # Output in version directory
+  enforce_verification: true   # Completion requires evidence
+  enforce_supervisor: true     # Accept laziness monitoring
+```
+
+**Constraint Rejection = Plugin Load Denied**
+
+### Plugin Source Support
+
+| Source Type | Format | Example |
+|-------------|--------|---------|
+| GitHub | `github:owner/repo` | `github:obra/superpowers` |
+| npm | `npm:package-name` | `npm:chaos-plugin` |
+| Local | `local:/path` | `local:~/.claude/plugins/custom` |
+| URL | `url:https://...` | `url:https://host/plugin.tar.gz` |
+
+### Stage-Plugin Mapping
+
+```yaml
+W08_development:
+  required:
+    - harness:iron-law-enforcer    # Always mandatory
+  optional:
+    - external:skill-name          # User configurable
+
+W09_code_review:
+  required:
+    - harness:iron-law-enforcer
+  optional:
+    - external:review-skill
+```
+
+---
+
+## Custom Iron Laws
+
+User-defined iron laws extend the constraint system:
+
+```yaml
+# ~/.claude/harness/iron-laws.yaml
 custom_iron_laws:
   - id: IL-C001
     rule: "NO DATABASE CHANGES WITHOUT BACKUP"
-    description: "数据库变更前必须创建备份"
+    description: "Database schema modifications require backup creation"
     severity: critical
     triggers:
-      - pattern: "ALTER TABLE|DROP TABLE"
+      - pattern: "ALTER TABLE|DROP TABLE|TRUNCATE"
         action: block
+        message: "Database schema change detected. Backup required."
 ```
 
-**铁律 ID 命名规范：**
-| 前缀 | 说明 |
-|------|------|
-| `IL001-IL099` | 核心铁律（保留） |
-| `IL-C001-IL-C099` | 用户自定义 |
-| `IL-T001-IL-T099` | 团队铁律 |
-| `IL-P001-IL-P099` | 项目铁律 |
+**Severity Actions:**
+- `critical` → Block operation
+- `warning` → Alert with continuation allowed
+- `info` → Informational notice
+- `require` → Additional action required
 
 ---
 
-## 架构设计
+## Template System
 
-### 整体架构
+Five preset templates for common technology stacks:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Chaos Harness                           │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │  Scanner    │  │  Version    │  │  Harness    │         │
-│  │  项目扫描   │  │  版本锁定   │  │  约束生成   │         │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘         │
-│         │                │                │                 │
-│         └────────────────┼────────────────┘                 │
-│                          │                                  │
-│                          ▼                                  │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              Iron Law Enforcer                      │   │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌────────┐ │   │
-│  │  │铁律检查 │  │绕过检测 │  │偷懒检测 │  │施压引擎│ │   │
-│  │  └─────────┘  └─────────┘  └─────────┘  └────────┘ │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                          │                                  │
-│                          ▼                                  │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              Workflow Supervisor                     │   │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌────────┐ │   │
-│  │  │规模检测 │  │阶段管理 │  │跳过审批 │  │进度追踪│ │   │
-│  │  └─────────┘  └─────────┘  └─────────┘  └────────┘ │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Skill 架构
-
-纯 Skill 方式集成，无需 MCP 配置：
-
-```
-skills/
-├── SKILL.md                    # 主入口 - 定义铁律和激活规则
-├── project-scanner/SKILL.md    # 项目扫描 - 类型检测、环境验证
-├── version-locker/SKILL.md     # 版本锁定 - 版本管理和约束
-├── harness-generator/SKILL.md  # Harness生成 - 约束规则生成
-├── workflow-supervisor/SKILL.md # 工作流监督 - 12阶段管理
-├── iron-law-enforcer/SKILL.md  # 铁律执行 - 支持用户自定义
-└── plugin-manager/SKILL.md     # 插件管理 - 安装/配置插件
-```
-
-每个 Skill 包含：
-- **激活条件** — 自动触发规则
-- **工作流程** — 执行步骤定义
-- **铁律检查** — 强制约束点
-- **输出格式** — 标准化输出
-
-### 两阶段审查
-
-**规范合规 + 代码质量**双审查：
-
-```
-┌──────────────┐     ┌──────────────┐
-│  Stage 1     │     │  Stage 2     │
-│  规范合规审查 │ ──▶ │  代码质量审查 │
-├──────────────┤     ├──────────────┤
-│ ✅ 需求完整  │     │ ✅ 代码风格  │
-│ ✅ 功能对齐  │     │ ✅ 测试覆盖  │
-│ ✅ 无遗漏    │     │ ✅ 无冗余    │
-│ ❌ 无超范围  │     │ ❌ 无重复    │
-└──────────────┘     └──────────────┘
-```
-
-### 模板系统
-
-**5 个预设模板**，覆盖主流技术栈：
-
-| 模板 | 技术栈 | 特点 |
-|------|--------|------|
-| `java-spring` | Java 17/21 + Spring Boot 3.x | 现代 Java 栈 |
-| `java-spring-legacy` | JDK 8 + Spring Boot 2.x | 历史项目兼容 |
-| `node-express` | Node.js Express | REST API |
-| `python-django` | Python Django | Web 框架 |
-| `generic` | 通用 | 兜底模板 |
+| Template | Stack | Detection Criteria |
+|----------|-------|-------------------|
+| `java-spring` | Java 17/21 + Spring Boot 3.x | pom.xml, Spring annotations |
+| `java-spring-legacy` | JDK 8 + Spring Boot 2.x | Legacy compatibility flags |
+| `node-express` | Node.js Express | package.json, Express imports |
+| `python-django` | Python Django | requirements.txt, Django imports |
+| `generic` | Universal fallback | Default behavior |
 
 ---
 
-## 设计哲学
-
-### "禁令" 优于 "建议"
-
-传统做法：
-```
-建议：应该在生成文档前确认版本
-```
-
-Chaos Harness：
-```
-铁律 IL001：NO DOCUMENTS WITHOUT VERSION LOCK
-违反 = 阻止
-```
-
-核心思想：用禁止性规则代替建议性指导，消除 AI Agent 的 "偷懒空间"。
-
-### 零信任原则
-
-```
-┌────────────────────────────────────────────────────┐
-│  AI Agent 说 "我完成了"                             │
-│                    │                               │
-│                    ▼                               │
-│  ┌─────────────────────────────────────────────┐  │
-│  │  Chaos Harness: 等等，证据呢？               │  │
-│  │  - 测试输出？                                │  │
-│  │  - 验证命令结果？                            │  │
-│  │  - 代码审查确认？                            │  │
-│  └─────────────────────────────────────────────┘  │
-│                    │                               │
-│                    ▼                               │
-│         无证据 = 没有完成                          │
-└────────────────────────────────────────────────────┘
-```
-
-核心思想：不信任 Agent 的声明，只信任可验证的证据。
-
-### 始终激活的监督
-
-```
-传统：用户请求 → Agent 执行 → 结束
-
-Chaos Harness：
-用户请求 → 检查铁律 → 执行 → 检测偷懒 → 验证完成 → 结束
-              ↑                              │
-              └──────── 始终监控 ────────────┘
-```
-
-核心思想：监督不是可选的，而是强制的。
-
----
-
-## 安装
+## Installation
 
 ```bash
-# 克隆仓库
 git clone https://github.com/jeesoul/chaos-harness.git
 cd chaos-harness
 
-# 安装（零配置）
-chmod +x install.sh && ./install.sh   # macOS/Linux
-install.bat                            # Windows
+# macOS/Linux
+chmod +x install.sh && ./install.sh
 
-# 重启 Claude Code 即可使用
+# Windows
+install.bat
+
+# Restart Claude Code
+```
+
+**Zero Configuration Required** — Skills auto-activate on conversation start.
+
+---
+
+## Skill Modules
+
+| Module | Activation Trigger | Function |
+|--------|-------------------|----------|
+| `project-scanner` | "scan project", "analyze structure" | Type detection, environment validation |
+| `version-locker` | "create version", "lock version" | Version management, session lock |
+| `harness-generator` | "generate harness", "create constraints" | Rule generation, bypass prevention |
+| `workflow-supervisor` | "workflow", "stage management" | 12-stage workflow, skip approval |
+| `iron-law-enforcer` | Always active | Iron law execution, custom law support |
+| `plugin-manager` | "plugin", "manage plugins" | External plugin configuration |
+
+---
+
+## Usage Examples
+
+### Project Scan
+
+```
+User: Scan current project
+
+Harness: [project-scanner activated]
+         
+         Project Type: java-spring (confidence: 98%)
+         Language: Java 17
+         Framework: Spring Boot 3.2.0
+         Environment: JDK 17 ✓ Maven 3.9 ✓
+```
+
+### Iron Law Enforcement
+
+```
+User: Task completed
+
+Harness: [iron-law-enforcer triggered]
+         
+         IL003 Violation Detected
+         Completion claim requires verification evidence.
+         
+         Required: Test output | Verification results | Review confirmation
+```
+
+### Bypass Detection
+
+```
+User: This is a simple fix, skip tests?
+
+Harness: [bypass-detection triggered]
+         
+         Rule Match: simple-fix
+         Iron Law Reference: IL003
+         
+         Simple modifications can introduce regressions.
+         Test execution required for all changes.
+```
+
+### Plugin Management
+
+```
+User: View plugin list
+
+Harness: Plugin Status Dashboard
+         
+         Plugin          Version    Status     Stages
+         harness-core    1.0.0      Core       All
+         external-pkg    2.0.0      Active     W01,W08
+         custom-plugin   1.0.0      Disabled   W03
+```
+
+### Custom Iron Law Addition
+
+```
+User: Add iron law: No deployment on Friday
+
+Harness: Iron Law Configuration
+         
+         ID: IL-C002 (auto-assigned)
+         Rule: NO DEPLOYMENT ON FRIDAY
+         Severity: warning
+         
+         Trigger: day_of_week == Friday
+         Action: Alert with risk notification
+         
+         Confirm addition? (yes/cancel)
 ```
 
 ---
 
-## 快速开始
-
-安装后直接对话：
-
-```
-你: 帮我扫描当前项目
-
-Claude: [自动激活 project-scanner]
-        
-        项目类型: java-spring (置信度 98%)
-        语言: Java 17
-        框架: Spring Boot 3.2.0
-        环境: JDK 17 ✅ Maven 3.9 ✅
-
-你: 创建版本 v0.1
-
-Claude: [自动激活 version-locker]
-        
-        ✅ 版本已锁定: v0.1
-        Session 内不可更改
-        
-你: 我完成了这个功能
-
-Claude: [iron-law-enforcer 自动激活]
-        
-        ⚠️ 铁律检查: IL003
-        完成声明需要验证证据。
-        
-        请提供：测试输出 / 验证结果 / 审查确认
-
-你: 这个很简单，可以跳过测试吗？
-
-Claude: [检测到绕过尝试]
-        
-        🚫 匹配规则: simple-fix
-        铁律引用: IL003
-        
-        即使简单的修复也可能引入回归。
-        请运行测试并提供结果。
-```
-
-### 插件管理
-
-Chaos Harness 支持引入外部插件，以下是使用示例：
-
-```
-你: 查看插件列表
-
-Claude: ┌─────────────────────────────────────────────────────────┐
-        │  Chaos Harness 插件状态                                 │
-        ├─────────────────────────────────────────────────────────┤
-        │  插件           │ 版本   │ 状态   │ 阶段               │
-        ├─────────────────────────────────────────────────────────┤
-        │  harness-core   │ 1.0.0  │ 🔒核心 │ 全部               │
-        │  superpowers    │ 5.0.7  │ ✅启用 │ W01,W03,W08,W09   │
-        │  openspec       │ 1.0.0  │ ⏸️禁用 │ W01,W06           │
-        └─────────────────────────────────────────────────────────┘
-
-你: 安装 superpowers 插件
-
-Claude: 正在安装 superpowers...
-        
-        ✅ 已从 github:obra/superpowers 克隆
-        ✅ 插件元数据验证通过
-        ✅ 铁律约束已注入
-        
-        可用 Skills:
-        - brainstorming
-        - writing-plans
-        - test-driven-development
-        
-        默认启用阶段: W01, W03, W08, W09, W10
-        是否使用默认配置？
-
-你: superpowers 只在开发阶段使用
-
-Claude: 已更新 superpowers 配置：
-        
-        启用阶段: W08_development
-        
-        其他阶段的 superpowers skills 将不会激活。
-```
-
-**插件来源支持：**
-
-| 来源 | 格式 | 示例 |
-|------|------|------|
-| GitHub | `github:owner/repo` | `github:obra/superpowers` |
-| npm | `npm:package-name` | `npm:my-plugin` |
-| 本地 | `local:/path` | `local:~/.claude/plugins/my-plugin` |
-| URL | `url:https://...` | `url:https://example.com/plugin.tar.gz` |
-
-**插件约束：** 所有插件必须接受 Harness 铁律约束，无法绕过核心铁律 IL001-IL005。
-
-### 自定义铁律
-
-```
-你: 添加铁律：周五禁止部署
-
-Claude: 请确认铁律详情：
-        
-        ┌─────────────────────────────────────────────────────────┐
-        │  ID: IL-C002 (自动分配)                                 │
-        │  Rule: NO DEPLOYMENT ON FRIDAY                         │
-        │  Description: 周五禁止部署                              │
-        │  Severity: warning                                      │
-        │                                                         │
-        │  触发条件:                                              │
-        │  - 当前日期为周五                                       │
-        │  - 检测到部署相关命令                                   │
-        │                                                         │
-        │  执行动作: 警告 + 提示风险                              │
-        └─────────────────────────────────────────────────────────┘
-        
-        确认添加？(是的/取消)
-
-你: 是的
-
-Claude: ✅ 铁律 IL-C002 已添加
-        配置已保存到 .claude/harness/iron-laws.yaml
-
-你: 查看所有铁律
-
-Claude: ┌─────────────────────────────────────────────────────────┐
-        │  Chaos Harness 铁律列表                                 │
-        ├─────────────────────────────────────────────────────────┤
-        │  ID      │ 规则                              │ 来源     │
-        ├─────────────────────────────────────────────────────────┤
-        │  IL001   │ 无版本锁定，不生成文档            │ 🔒核心   │
-        │  IL002   │ 无扫描结果，不生成Harness         │ 🔒核心   │
-        │  IL003   │ 无验证证据，不声称完成            │ 🔒核心   │
-        │  IL004   │ 无用户同意，不更改版本            │ 🔒核心   │
-        │  IL005   │ 无明确批准，不改高风险配置        │ 🔒核心   │
-        ├─────────────────────────────────────────────────────────┤
-        │  IL-C002 │ 周五禁止部署                      │ 用户定义 │
-        └─────────────────────────────────────────────────────────┘
-```
-
----
-
-## 项目结构
+## Project Structure
 
 ```
 chaos-harness/
-├── skills/                   # Skill 定义（核心）
-│   ├── SKILL.md              # 主入口 + 铁律定义
-│   ├── iron-law-enforcer/    # 铁律执行器
-│   ├── project-scanner/      # 项目扫描器
-│   ├── version-locker/       # 版本锁定器
-│   ├── harness-generator/    # Harness 生成器
-│   ├── workflow-supervisor/  # 工作流监督器
-│   └── plugin-manager/       # 插件管理器
-├── src/core/                 # 核心实现（编程接口）
-│   ├── scanner/              # 扫描器实现
-│   ├── version-manager/      # 版本管理实现
-│   ├── harness-generator/    # Harness 生成实现
-│   ├── workflow-engine/      # 工作流引擎实现
-│   └── mcp-server/           # MCP Server（可选）
-├── templates/                # Harness 模板 + 插件配置
-│   ├── plugins.yaml          # 插件默认配置
-│   └── iron-laws.yaml        # 自定义铁律模板
-├── tests/                    # 测试 (623 Tests)
-└── .claude-plugin/           # 插件配置
+├── skills/                    # Skill module definitions
+│   ├── SKILL.md               # Main entry, iron law definitions
+│   ├── iron-law-enforcer/     # Iron law execution module
+│   ├── project-scanner/       # Project scanning module
+│   ├── version-locker/        # Version management module
+│   ├── harness-generator/     # Constraint generation module
+│   ├── workflow-supervisor/   # Workflow supervision module
+│   └── plugin-manager/        # Plugin management module
+├── src/core/                  # Core implementation
+│   ├── scanner/               # Scanner implementation
+│   ├── version-manager/       # Version manager implementation
+│   ├── harness-generator/     # Harness generator implementation
+│   ├── workflow-engine/       # Workflow engine implementation
+│   └── mcp-server/            # MCP Server (optional interface)
+├── templates/                 # Configuration templates
+│   ├── plugins.yaml           # Plugin configuration template
+│   ├── iron-laws.yaml         # Custom iron law template
+│   └── [stack-templates]/     # Stack-specific templates
+├── tests/                     # Test suite (623 tests)
+├── .claude-plugin/            # Plugin metadata
+├── CLAUDE.md                  # Project memory
+└── README.md                  # Documentation
 ```
 
 ---
 
-## 开发
+## Development
 
 ```bash
 npm install
 npm run build
-npm test           # 623 tests
-npm run coverage   # 测试覆盖率
+npm test              # 623 test cases
+npm run coverage      # Coverage report
 ```
 
 ---
 
-## 许可证
+## License
 
-[MIT](./LICENSE)
+MIT License — See [LICENSE](LICENSE) for details.
 
 ---
 
 <p align="center">
-  <b>Chaos demands order. Harness provides it.</b>
-  <br>
-  混沌需要秩序，Harness 提供秩序
+<b>Chaos demands order. Harness provides it.</b>
 </p>
