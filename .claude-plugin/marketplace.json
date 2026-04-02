@@ -1,17 +1,19 @@
 {
   "name": "chaos-harness",
-  "description": "Claude Code 智能项目入侵系统 Marketplace",
+  "description": "Claude Code Agent Constraint Framework - Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow",
   "owner": {
-    "name": "jeesoul"
+    "name": "jeesoul",
+    "url": "https://github.com/jeesoul"
   },
   "plugins": [
     {
       "name": "chaos-harness",
-      "description": "Chaos demands order. Harness provides it. - 智能项目入侵、版本约束、Harness生成、偷懒检测、工作流管理",
+      "description": "Deterministic AI Agent Constraint Framework with Iron Laws, Bypass Detection, Laziness Monitoring, and Adaptive Workflow",
       "version": "1.0.0",
       "source": "./",
       "author": {
-        "name": "jeesoul"
+        "name": "jeesoul",
+        "url": "https://github.com/jeesoul"
       }
     }
   ]

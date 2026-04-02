@@ -238,6 +238,7 @@ install.bat                            # Windows
 ### 斜杠命令
 
 ```
+/chaos-harness:overview             # 主入口
 /chaos-harness:project-scanner      # 扫描项目
 /chaos-harness:version-locker       # 版本管理
 /chaos-harness:harness-generator    # 生成约束

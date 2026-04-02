@@ -1,11 +1,12 @@
 @echo off
 chcp 65001 >nul 2>&1
-REM Chaos Harness Installation Script (Windows)
-REM Installs as a Claude Code plugin
+REM Chaos Harness Installation Script (Marketplace Mode)
+REM Installs as a Claude Code plugin with slash commands
 
 setlocal enabledelayedexpansion
 
 set "PLUGIN_NAME=chaos-harness"
+set "MARKETPLACE_NAME=chaos-harness"
 set "VERSION=1.0.0"
 
 echo ========================================================
@@ -17,8 +18,9 @@ echo.
 REM Get script directory
 set "SCRIPT_DIR=%~dp0"
 
-REM Set plugin directory
-set "PLUGIN_DIR=%USERPROFILE%\.claude\plugins\cache\local\%PLUGIN_NAME%\%VERSION%"
+REM Set directories
+set "MARKETPLACE_DIR=%USERPROFILE%\.claude\plugins\marketplaces\%MARKETPLACE_NAME%"
+set "CACHE_DIR=%USERPROFILE%\.claude\plugins\cache\%MARKETPLACE_NAME%\%PLUGIN_NAME%\%VERSION%"
 
 REM Uninstall mode
 if "%1"=="--uninstall" goto uninstall
@@ -26,37 +28,66 @@ if "%1"=="--uninstall" goto uninstall
 REM Install
 echo Installing Chaos Harness plugin...
 
-REM Create plugin directory
-if not exist "%PLUGIN_DIR%" mkdir "%PLUGIN_DIR%"
+REM Create marketplace directory
+if not exist "%MARKETPLACE_DIR%" mkdir "%MARKETPLACE_DIR%"
 
-REM Copy plugin files
-echo Copying plugin files...
-xcopy /s /e /i /q "%SCRIPT_DIR%.claude-plugin" "%PLUGIN_DIR%\.claude-plugin\" >nul
-xcopy /s /e /i /q "%SCRIPT_DIR%skills" "%PLUGIN_DIR%\skills\" >nul
-if exist "%SCRIPT_DIR%CLAUDE.md" copy /y "%SCRIPT_DIR%CLAUDE.md" "%PLUGIN_DIR%\" >nul
-if exist "%SCRIPT_DIR%README.md" copy /y "%SCRIPT_DIR%README.md" "%PLUGIN_DIR%\" >nul
-if exist "%SCRIPT_DIR%templates" xcopy /s /e /i /q "%SCRIPT_DIR%templates" "%PLUGIN_DIR%\templates\" >nul
+REM Copy plugin files to marketplace
+echo Copying to marketplace directory...
+xcopy /s /e /i /q "%SCRIPT_DIR%.claude-plugin" "%MARKETPLACE_DIR%\.claude-plugin\" >nul
+xcopy /s /e /i /q "%SCRIPT_DIR%skills" "%MARKETPLACE_DIR%\skills\" >nul
+if exist "%SCRIPT_DIR%CLAUDE.md" copy /y "%SCRIPT_DIR%CLAUDE.md" "%MARKETPLACE_DIR%\" >nul
+if exist "%SCRIPT_DIR%README.md" copy /y "%SCRIPT_DIR%README.md" "%MARKETPLACE_DIR%\" >nul
+if exist "%SCRIPT_DIR%templates" xcopy /s /e /i /q "%SCRIPT_DIR%templates" "%MARKETPLACE_DIR%\templates\" >nul
+if exist "%SCRIPT_DIR%commands" xcopy /s /e /i /q "%SCRIPT_DIR%commands" "%MARKETPLACE_DIR%\commands\" >nul
+
+REM Create cache directory
+if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
+
+REM Copy to cache directory
+echo Copying to cache directory...
+xcopy /s /e /i /q "%MARKETPLACE_DIR%\.claude-plugin" "%CACHE_DIR%\.claude-plugin\" >nul
+xcopy /s /e /i /q "%MARKETPLACE_DIR%\skills" "%CACHE_DIR%\skills\" >nul
+xcopy /s /e /i /q "%MARKETPLACE_DIR%\templates" "%CACHE_DIR%\templates\" >nul
+if exist "%MARKETPLACE_DIR%\commands" xcopy /s /e /i /q "%MARKETPLACE_DIR%\commands" "%CACHE_DIR%\commands\" >nul
+if exist "%MARKETPLACE_DIR%\CLAUDE.md" copy /y "%MARKETPLACE_DIR%\CLAUDE.md" "%CACHE_DIR%\" >nul
+if exist "%MARKETPLACE_DIR%\README.md" copy /y "%MARKETPLACE_DIR%\README.md" "%CACHE_DIR%\" >nul
+
+REM Register marketplace
+echo Registering marketplace...
+powershell -Command "$file='%USERPROFILE%\.claude\plugins\known_marketplaces.json'; $ts=Get-Date -Format 'yyyy-MM-ddTHH:mm:ss.000Z'; if(!(Test-Path $file)){ New-Item -ItemType Directory -Force -Path (Split-Path $file) | Out-Null; '{}' | Out-File -Encoding utf8 $file }; $json=Get-Content $file | ConvertFrom-Json; $json | Add-Member -NotePropertyName 'chaos-harness' -NotePropertyValue @{source=@{source='github';repo='jeesoul/chaos-harness'};installLocation='%MARKETPLACE_DIR%';lastUpdated=$ts} -Force; $json | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $file" 2>nul
 
 REM Register plugin
 echo Registering plugin...
-powershell -Command "$file='%USERPROFILE%\.claude\plugins\installed_plugins.json'; $ts=Get-Date -Format 'yyyy-MM-ddTHH:mm:ss.000Z'; if(!(Test-Path $file)){ New-Item -ItemType Directory -Force -Path (Split-Path $file) | Out-Null; '{\"version\":2,\"plugins\":{}}' | Out-File -Encoding utf8 $file }; $json=Get-Content $file | ConvertFrom-Json; $entry=@{scope='user';installPath='%PLUGIN_DIR%';version='%VERSION%';installedAt=$ts;lastUpdated=$ts}; if(!$json.plugins){Add-Member -InputObject $json -NotePropertyName 'plugins' -NotePropertyValue @{} -Force}; $json.plugins | Add-Member -NotePropertyName '%PLUGIN_NAME%@local' -NotePropertyValue @($entry) -Force; $json | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $file" 2>nul
+powershell -Command "$file='%USERPROFILE%\.claude\plugins\installed_plugins.json'; $ts=Get-Date -Format 'yyyy-MM-ddTHH:mm:ss.000Z'; if(!(Test-Path $file)){ New-Item -ItemType Directory -Force -Path (Split-Path $file) | Out-Null; '{\"version\":2,\"plugins\":{}}' | Out-File -Encoding utf8 $file }; $json=Get-Content $file | ConvertFrom-Json; if(!$json.plugins){Add-Member -InputObject $json -NotePropertyName 'plugins' -NotePropertyValue @{} -Force}; $json.plugins | Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue @(@{scope='user';installPath='%CACHE_DIR%';version='%VERSION%';installedAt=$ts;lastUpdated=$ts}) -Force; $json | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $file" 2>nul
 
-echo [OK] Plugin installed to: %PLUGIN_DIR%
+REM Enable plugin in settings
+echo Enabling plugin in settings...
+powershell -Command "$file='%USERPROFILE%\.claude\settings.json'; if(Test-Path $file){ $json=Get-Content $file | ConvertFrom-Json; if(!$json.enabledPlugins){Add-Member -InputObject $json -NotePropertyName 'enabledPlugins' -NotePropertyValue @{} -Force}; $json.enabledPlugins | Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue $true -Force; if(!$json.extraKnownMarketplaces){Add-Member -InputObject $json -NotePropertyName 'extraKnownMarketplaces' -NotePropertyValue @{} -Force}; $json.extraKnownMarketplaces | Add-Member -NotePropertyName 'chaos-harness' -NotePropertyValue @{source=@{repo='jeesoul/chaos-harness';source='github'}} -Force; $json | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $file }" 2>nul
+
+echo [OK] Plugin installed successfully
 
 goto done
 
 :uninstall
 echo Uninstalling Chaos Harness...
 
-if exist "%PLUGIN_DIR%" (
-    rmdir /s /q "%PLUGIN_DIR%"
-    echo Unregistering plugin...
-    powershell -Command "$file='%USERPROFILE%\.claude\plugins\installed_plugins.json'; if(Test-Path $file){ $json=Get-Content $file|ConvertFrom-Json; $json.plugins.PSObject.Properties.Remove('%PLUGIN_NAME%@local'); $json|ConvertTo-Json -Depth 10|Out-File -Encoding utf8 $file }" 2>nul
-    echo [OK] Plugin removed
-) else (
-    echo Plugin not installed
+if exist "%USERPROFILE%\.claude\plugins\cache\chaos-harness" (
+    rmdir /s /q "%USERPROFILE%\.claude\plugins\cache\chaos-harness"
+)
+if exist "%MARKETPLACE_DIR%" (
+    rmdir /s /q "%MARKETPLACE_DIR%"
 )
 
+echo Unregistering plugin...
+powershell -Command "$file='%USERPROFILE%\.claude\plugins\installed_plugins.json'; if(Test-Path $file){ $json=Get-Content $file|ConvertFrom-Json; $json.plugins.PSObject.Properties.Remove('chaos-harness@chaos-harness'); $json|ConvertTo-Json -Depth 10|Out-File -Encoding utf8 $file }" 2>nul
+
+echo Unregistering marketplace...
+powershell -Command "$file='%USERPROFILE%\.claude\plugins\known_marketplaces.json'; if(Test-Path $file){ $json=Get-Content $file|ConvertFrom-Json; $json.PSObject.Properties.Remove('chaos-harness'); $json|ConvertTo-Json -Depth 10|Out-File -Encoding utf8 $file }" 2>nul
+
+echo Disabling plugin in settings...
+powershell -Command "$file='%USERPROFILE%\.claude\settings.json'; if(Test-Path $file){ $json=Get-Content $file|ConvertFrom-Json; $json.enabledPlugins.PSObject.Properties.Remove('chaos-harness@chaos-harness'); $json.extraKnownMarketplaces.PSObject.Properties.Remove('chaos-harness'); $json|ConvertTo-Json -Depth 10|Out-File -Encoding utf8 $file }" 2>nul
+
+echo [OK] Plugin removed
 echo Uninstall complete
 exit /b 0
 
@@ -66,7 +97,7 @@ echo ========================================================
 echo   Installation Complete!
 echo ========================================================
 echo.
-echo Available Commands:
+echo Available Slash Commands:
 echo.
 echo   /chaos-harness:overview             # Main entry
 echo   /chaos-harness:project-scanner      # Scan project
