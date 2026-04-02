@@ -337,6 +337,20 @@ install.bat
 | `iron-law-enforcer` | 始终激活 | 铁律执行、自定义铁律支持 |
 | `plugin-manager` | "插件"、"管理插件" | 外部插件配置 |
 
+### 斜杠命令
+
+安装后可使用以下斜杠命令直接激活 skill：
+
+| 命令 | 功能 |
+|------|------|
+| `/chaos-harness:chaos-harness` | 主入口，显示铁律和系统概览 |
+| `/chaos-harness:project-scanner` | 扫描项目结构 |
+| `/chaos-harness:version-locker` | 版本锁定管理 |
+| `/chaos-harness:harness-generator` | 生成约束规则 |
+| `/chaos-harness:workflow-supervisor` | 工作流管理 |
+| `/chaos-harness:iron-law-enforcer` | 铁律执行 |
+| `/chaos-harness:plugin-manager` | 插件管理 |
+
 ---
 
 ## 使用示例

@@ -1,6 +1,6 @@
 {
   "name": "chaos-harness",
-  "description": "Claude Code 智能项目入侵系统 - 纯 Skill 方式集成，无需 MCP。扫描、版本约束、Harness生成、偷懒检测、工作流管理",
+  "description": "Claude Code Agent 约束框架 - 铁律、绕过检测、偷懒监控、自适应工作流",
   "version": "1.0.0",
   "author": {
     "name": "jeesoul"
@@ -11,18 +11,21 @@
   "keywords": [
     "chaos",
     "harness",
+    "iron-laws",
     "scanner",
     "version-manager",
-    "iron-laws",
     "workflow",
     "laziness-detection",
+    "bypass-detection",
     "skills"
   ],
   "skills": [
+    "chaos-harness",
     "project-scanner",
     "version-locker",
     "harness-generator",
     "workflow-supervisor",
-    "iron-law-enforcer"
+    "iron-law-enforcer",
+    "plugin-manager"
   ]
 }
