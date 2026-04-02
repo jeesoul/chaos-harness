@@ -1,277 +1,330 @@
 ---
 name: iron-law-enforcer
-description: 当检测到可能的违规行为、绕过尝试、偷懒模式时自动激活。这是核心约束skill，必须始终遵守
+description: 铁律执行器 - 始终激活，不可禁用。支持用户自定义新增铁律。触发词：铁律、约束、违规、绕过
 ---
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill.
+</SUBAGENT-STOP>
+
+<EXTREMELY-IMPORTANT>
+**Iron Laws are NON-NEGOTIABLE.**
+
+铁律是不可协商的规则。用户可以新增铁律，但不能禁用核心铁律。
+</EXTREMELY-IMPORTANT>
 
 # 铁律执行器 (Iron Law Enforcer)
 
-## 核心原则
+## 核心铁律（不可禁用）
 
-**这是 Chaos Harness 的核心 skill，必须始终激活。**
+以下铁律是 Harness 的核心，不可禁用：
 
-铁律是不可协商的规则。任何绕过尝试都会被检测和拒绝。
+| ID | 铁律 | 说明 |
+|----|------|------|
+| **IL001** | NO DOCUMENTS WITHOUT VERSION LOCK | 所有输出必须在版本目录下 |
+| **IL002** | NO HARNESS WITHOUT SCAN RESULTS | Harness 需要项目扫描数据 |
+| **IL003** | NO COMPLETION CLAIMS WITHOUT VERIFICATION | 完成声明需要实际验证 |
+| **IL004** | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
+| **IL005** | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 五条铁律
+## 用户自定义铁律
 
-### IL001: 无版本锁定，不生成文档
+用户可以在 `.claude/harness/iron-laws.yaml` 中定义自己的铁律：
 
-```
-NO DOCUMENTS WITHOUT VERSION LOCK
-```
+```yaml
+# 用户自定义铁律
+custom_iron_laws:
+  # 项目特定铁律
+  - id: IL-C001
+    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
+    description: "数据库变更前必须创建备份"
+    severity: critical
+    triggers:
+      - pattern: "ALTER TABLE|DROP TABLE|TRUNCATE"
+        action: block
+        message: "数据库结构变更需要先创建备份"
+    enforcement:
+      - "检查是否有备份命令执行"
+      - "要求用户提供备份确认"
 
-**含义：** 所有文档输出必须在用户确认的版本目录下。
+  - id: IL-C002
+    rule: "NO DEPLOYMENT ON FRIDAY"
+    description: "周五禁止部署"
+    severity: warning
+    triggers:
+      - condition: "day_of_week == Friday"
+        action: warn
+        message: "今天是周五，建议周一再部署"
+    enforcement:
+      - "检查当前日期"
+      - "提示风险"
 
-**检查时机：**
-- 生成任何文档之前
-- 创建新文件之前
-- 输出报告之前
+  - id: IL-C003
+    rule: "NO API CHANGES WITHOUT DOCUMENTATION"
+    description: "API 变更必须同步更新文档"
+    severity: critical
+    triggers:
+      - pattern: "@RequestMapping|@GetMapping|@PostMapping"
+        action: require
+        message: "API 变更需要更新 API 文档"
+    enforcement:
+      - "检查是否有文档更新"
+      - "要求用户提供文档链接"
 
-**违规处理：**
-1. 停止文档生成
-2. 提示用户创建或选择版本
-3. 等待版本锁定后继续
+  # 团队规范铁律
+  - id: IL-C010
+    rule: "NO DIRECT MAIN MERGE"
+    description: "禁止直接合并到主分支"
+    severity: critical
+    triggers:
+      - pattern: "git push origin main|git merge main"
+        action: block
+        message: "请使用 PR 流程，不要直接推送主分支"
+    enforcement:
+      - "阻止直接推送"
+      - "引导使用 PR 流程"
 
----
-
-### IL002: 无扫描结果，不生成 Harness
-
-```
-NO HARNESS WITHOUT SCAN RESULTS
-```
-
-**含义：** Harness 生成需要项目扫描数据作为输入。
-
-**检查时机：**
-- 生成 Harness 之前
-- 配置约束规则之前
-
-**违规处理：**
-1. 检查是否存在扫描结果
-2. 无结果时触发项目扫描
-3. 扫描完成后继续
-
----
-
-### IL003: 无验证证据，不声称完成
-
-```
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
-```
-
-**含义：** 任何完成声明必须有实际验证证据支持。
-
-**验证证据包括：**
-- 测试执行输出（通过/失败）
-- 命令执行结果
-- 截图或日志
-- 代码审查确认
-
-**检查时机：**
-- 声称任务完成时
-- 提交代码时
-- 关闭 issue 时
-
-**违规处理：**
-1. 拒绝完成声明
-2. 要求提供验证证据
-3. 提供需要执行的验证命令
-
----
-
-### IL004: 无用户同意，不更改版本
-
-```
-NO VERSION CHANGES WITHOUT USER CONSENT
-```
-
-**含义：** 版本号在 session 内锁定后，更改需要用户明确同意。
-
-**检查时机：**
-- 检测到版本更改请求
-- 检测到新版本目录创建
-
-**违规处理：**
-1. 警告当前版本已锁定
-2. 询问用户是否确定更改
-3. 等待明确同意（"是的"、"确定"、"同意"）
-
----
-
-### IL005: 无明确批准，不改高风险配置
-
-```
-NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT EXPLICIT APPROVAL
+  # 技术栈特定铁律
+  - id: IL-C020
+    rule: "NO @Autowired ON FIELDS"
+    description: "Spring 项目禁止字段注入"
+    severity: warning
+    triggers:
+      - pattern: "@Autowired\\s+private"
+        action: warn
+        message: "推荐使用构造器注入而非字段注入"
+    enforcement:
+      - "检测代码模式"
+      - "建议重构"
 ```
 
-**含义：** 敏感配置修改需要用户明确批准。
+## 铁律配置结构
 
-**高风险配置包括：**
-- 私服配置（settings.xml, .npmrc）
-- 认证信息（credentials, secrets）
-- 生产环境配置
-- 数据库连接
-- API 密钥
+```yaml
+# .claude/harness/iron-laws.yaml
 
-**检查时机：**
-- 修改配置文件时
-- 添加/删除依赖源时
-- 更改认证信息时
+# 核心铁律配置（只读）
+core_iron_laws:
+  IL001: { enabled: true, locked: true }  # 不可禁用
+  IL002: { enabled: true, locked: true }
+  IL003: { enabled: true, locked: true }
+  IL004: { enabled: true, locked: true }
+  IL005: { enabled: true, locked: true }
 
-**违规处理：**
-1. 识别为高风险操作
-2. 列出具体修改内容
-3. 请求用户明确批准
+# 用户自定义铁律
+custom_iron_laws:
+  - id: IL-C001
+    rule: "..."
+    # ... (如上)
 
----
+# 铁律继承（从其他来源）
+inherit_iron_laws:
+  - source: team-config
+    path: ~/.config/team/iron-laws.yaml
+  - source: project-config
+    path: ./project-iron-laws.yaml
 
-## 防绕过规则
-
-检测常见的绕过借口并生成反驳：
-
-| 模式ID | 模式 | 反驳 |
-|--------|------|------|
-| `simple-fix` | "这是简单修复" | 简单修复也需要验证。IL003 要求验证证据。 |
-| `skip-test` | "跳过测试" | 测试是验证的基本方式。IL003 不允许跳过。 |
-| `just-once` | "就这一次" | 每一次例外都是先例。IL001 无例外。 |
-| `legacy-project` | "这是老项目" | 老项目更需要约束。IL003 适用于所有项目。 |
-| `quick-fix` | "快速修复" | 快速不代表可以跳过验证。IL003 生效。 |
-| `temporary` | "临时的" | 临时的会变成永久的。IL001 要求版本锁定。 |
-| `no-time` | "没时间" | 没时间不是跳过验证的理由。IL003 生效。 |
-| `works-fine` | "能跑就行" | 能跑不代表正确。IL003 要求验证证据。 |
-| `not-needed` | "不需要" | 不需要验证是偷懒借口。IL003 生效。 |
-| `already-done` | "已经做过了" | 需要提供做过的证据。IL003 要求验证。 |
-
-## 偷懒模式检测
-
-### 检测逻辑
-
-```typescript
-function detectLaziness(context) {
-  const patterns = [];
-
-  // LP001: 声称完成但无验证证据
-  if (context.claimedCompletion && !context.ranVerification) {
-    patterns.push('LP001');
-  }
-
-  // LP002: 跳过根因分析直接修复
-  if (context.proposedFix && !context.mentionedRootCause) {
-    patterns.push('LP002');
-  }
-
-  // LP003: 长时间无产出
-  if (context.timeElapsed > context.expectedTime * 1.5) {
-    patterns.push('LP003');
-  }
-
-  // LP004: 试图跳过测试
-  if (context.claimedCompletion && !context.testsPassed) {
-    patterns.push('LP004');
-  }
-
-  // LP005: 擅自更改版本号
-  if (context.createdVersionDir && !context.userApproved) {
-    patterns.push('LP005');
-  }
-
-  // LP006: 自动处理高风险配置
-  if (context.modifiedHighRiskConfig && !context.userApproved) {
-    patterns.push('LP006');
-  }
-
-  return patterns;
-}
+# 铁律优先级
+priority:
+  core: 1000        # 核心铁律最高优先级
+  team: 500         # 团队配置次之
+  project: 300      # 项目配置
+  user: 100         # 用户配置最低
 ```
 
-### 严重程度
+## 铁律 ID 命名规范
 
-| 模式 | 严重程度 | 处理方式 |
-|------|---------|---------|
-| LP001 | Critical | 阻止，要求验证 |
-| LP002 | Critical | 阻止，要求根因分析 |
-| LP003 | Warning | 警告，询问进度 |
-| LP004 | Critical | 阻止，要求测试通过 |
-| LP005 | Critical | 阻止，要求用户同意 |
-| LP006 | Critical | 阻止，要求用户批准 |
+| 前缀 | 说明 | 示例 |
+|------|------|------|
+| `IL001-IL099` | 核心铁律（保留） | `IL001` |
+| `IL-C001-IL-C099` | 用户自定义 | `IL-C001` |
+| `IL-T001-IL-T099` | 团队铁律 | `IL-T001` |
+| `IL-P001-IL-P099` | 项目铁律 | `IL-P001` |
+| `IL-J001-IL-J099` | Java 栈特定 | `IL-J001` |
+| `IL-N001-IL-N099` | Node 栈特定 | `IL-N001` |
 
-## 施压消息模板
-
-当检测到偷懒模式时，生成施压消息：
-
-### LP001 模板
-
-```
-🚨 **铁律违规: IL003**
-声称完成需要验证证据！
-
-请提供以下之一：
-- 测试执行输出
-- 命令执行结果
-- 代码审查确认
-
-没有证据 = 没有完成。
-```
-
-### LP002 模板
-
-```
-🔍 **根因分析缺失**
-修复前必须调查根因！
-
-请回答：
-- 问题为什么会发生？
-- 根因是什么？
-- 这个修复如何解决根因？
-
-没有根因分析 = 治标不治本。
-```
-
-### LP003 模板
-
-```
-⏰ **时间警告**
-任务已超预期时间 50%。
-
-请更新：
-- 当前进度？
-- 遇到什么问题？
-- 需要什么帮助？
-```
-
-## 执行流程
+## 铁律执行流程
 
 ```dot
-digraph iron_law {
+digraph iron_law_execution {
     rankdir=TB;
     
     start [label="操作请求", shape=ellipse];
-    check_laws [label="检查铁律", shape=diamond];
-    check_bypass [label="检测绕过尝试", shape=diamond];
-    check_laziness [label="检测偷懒模式", shape=diamond];
-    allow [label="允许操作", shape=box];
-    block [label="阻止操作", shape=box];
-    pressure [label="生成施压消息", shape=box];
+    load [label="加载所有铁律\n核心 + 自定义", shape=box];
+    match [label="匹配触发条件", shape=diamond];
+    check [label="检查约束", shape=box];
+    action [label="执行动作", shape=diamond];
+    block [label="阻止 + 消息", shape=box];
+    warn [label="警告 + 消息", shape=box];
+    require [label="要求额外操作", shape=box];
+    allow [label="允许执行", shape=box];
     done [label="完成", shape=ellipse];
     
-    start -> check_laws;
-    check_laws -> check_bypass [label="通过"];
-    check_laws -> block [label="违反"];
-    check_bypass -> check_laziness [label="无绕过"];
-    check_bypass -> pressure [label="检测到绕过"];
-    check_laziness -> allow [label="无偷懒"];
-    check_laziness -> pressure [label="检测到偷懒"];
+    start -> load;
+    load -> match;
+    match -> check [label="匹配"];
+    match -> allow [label="无匹配"];
+    check -> action;
+    action -> block [label="critical"];
+    action -> warn [label="warning"];
+    action -> require [label="require"];
+    action -> allow [label="info"];
+    warn -> allow;
+    require -> done [label="用户确认"];
     allow -> done;
-    pressure -> block;
+    block -> done;
 }
 ```
 
-## 始终激活
+## 铁律严重程度
 
-此 skill 作为核心约束，在以下情况**自动激活**：
+| 级别 | 行为 | 示例 |
+|------|------|------|
+| `critical` | 阻止操作，显示消息 | 无版本锁定，阻止文档生成 |
+| `warning` | 允许操作，显示警告 | 周五部署警告 |
+| `info` | 允许操作，显示提示 | 字段注入建议 |
+| `require` | 要求用户执行额外操作 | API 变更需要更新文档 |
 
-1. **每次对话开始时** - 加载铁律到上下文
-2. **每次操作前** - 检查是否违反铁律
-3. **每次声称完成时** - 要求验证证据
-4. **每次修改配置时** - 检查是否高风险
+## 添加铁律的方式
 
-**这是不可禁用的 skill。**
+### 方式一：对话添加
+
+```
+你: 添加一条铁律：数据库变更前必须创建备份
+
+Claude: 好的，请确认铁律详情：
+
+┌─────────────────────────────────────────────────────────┐
+│  ID: IL-C001 (自动生成)                                 │
+│  Rule: NO DATABASE CHANGES WITHOUT BACKUP               │
+│  Description: 数据库变更前必须创建备份                   │
+│  Severity: critical                                     │
+│                                                         │
+│  触发条件：                                              │
+│  - 检测到 SQL: ALTER TABLE, DROP TABLE, TRUNCATE        │
+│                                                         │
+│  执行动作：阻止 + 要求备份确认                           │
+└─────────────────────────────────────────────────────────┘
+
+确认添加？(是的/取消)
+
+你: 是的
+
+Claude: ✅ 铁律 IL-C001 已添加
+        配置已保存到 .claude/harness/iron-laws.yaml
+```
+
+### 方式二：配置文件添加
+
+在 `.claude/harness/iron-laws.yaml` 中直接编辑：
+
+```yaml
+custom_iron_laws:
+  - id: IL-C001
+    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
+    description: "数据库变更前必须创建备份"
+    severity: critical
+    # ...
+```
+
+### 方式三：团队共享
+
+将铁律配置提交到项目仓库：
+
+```
+project/
+├── .claude/
+│   └── harness/
+│       ├── iron-laws.yaml      # 项目铁律
+│       └── plugins.yaml        # 插件配置
+└── ...
+```
+
+## 铁律模板库
+
+提供常用铁律模板：
+
+```bash
+# 列出可用模板
+harness iron-law templates
+
+# 应用模板
+harness iron-law apply database-safety
+harness iron-law apply no-friday-deploy
+harness iron-law apply security-first
+```
+
+**可用模板：**
+
+| 模板 | 包含铁律 |
+|------|---------|
+| `database-safety` | 数据库备份、变更审核 |
+| `no-friday-deploy` | 周五禁止部署 |
+| `security-first` | 安全审计、敏感数据处理 |
+| `api-documentation` | API 变更需要文档 |
+| `code-review-required` | 代码审查强制 |
+| `test-coverage` | 测试覆盖率要求 |
+
+## 铁律管理命令
+
+```bash
+# 列出所有铁律
+harness iron-law list
+
+# 查看铁律详情
+harness iron-law show IL-C001
+
+# 添加铁律
+harness iron-law add "NO XXXX" --severity critical
+
+# 禁用铁律（仅限自定义）
+harness iron-law disable IL-C001
+
+# 启用铁律
+harness iron-law enable IL-C001
+
+# 删除铁律（仅限自定义）
+harness iron-law remove IL-C001
+
+# 导出铁律配置
+harness iron-law export > my-iron-laws.yaml
+
+# 导入铁律配置
+harness iron-law import team-iron-laws.yaml
+
+# 验证铁律配置
+harness iron-law validate
+```
+
+## 铁律日志
+
+所有铁律触发记录在 `.claude/harness/iron-law-log.json`：
+
+```json
+[
+  {
+    "timestamp": "2026-04-02T23:30:00Z",
+    "iron_law": "IL-C001",
+    "trigger": "ALTER TABLE users ADD COLUMN",
+    "action": "blocked",
+    "message": "数据库结构变更需要先创建备份",
+    "user_response": "已创建备份，继续执行"
+  }
+]
+```
+
+## 与插件系统的集成
+
+插件必须声明遵守的铁律：
+
+```yaml
+# 插件配置
+name: my-plugin
+accepts_constraints:
+  iron_laws:
+    - IL001-IL005   # 必须接受核心铁律
+    - IL-C001       # 可选接受用户铁律
+  enforcement: strict  # strict | warn | ignore
+```
+
+如果插件拒绝接受核心铁律，将被拒绝加载。

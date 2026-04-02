@@ -123,7 +123,13 @@ show_usage() {
     echo "   - version-locker     (版本锁定)"
     echo "   - harness-generator  (Harness生成)"
     echo "   - workflow-supervisor (工作流监督)"
-    echo "   - iron-law-enforcer  (铁律执行，始终激活)"
+    echo "   - iron-law-enforcer  (铁律执行，支持自定义)"
+    echo "   - plugin-manager     (插件管理)"
+    echo ""
+    echo -e "${YELLOW}插件管理:${NC}"
+    echo "   查看插件列表"
+    echo "   安装插件 github:owner/plugin"
+    echo "   添加铁律：周五禁止部署"
     echo ""
 }
 

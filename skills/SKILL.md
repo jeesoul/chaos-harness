@@ -1,6 +1,6 @@
 ---
 name: chaos-harness
-description: Use when starting any conversation - establishes the Iron Laws that govern all behavior. 触发词：扫描项目、生成Harness、工作流、铁律、偷懒检测
+description: Use when starting any conversation - establishes the Iron Laws that govern all behavior. 支持用户自定义铁律和插件扩展。触发词：扫描项目、生成Harness、工作流、铁律、偷懒检测、插件管理
 ---
 
 <SUBAGENT-STOP>
@@ -8,11 +8,10 @@ If you were dispatched as a subagent to execute a specific task, skip this skill
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
-**Iron Laws are NON-NEGOTIABLE.** 
+**Iron Laws are NON-NEGOTIABLE.**
 
-If you think there is even a 1% chance an Iron Law applies, you MUST enforce it.
-
-This is not optional. You cannot rationalize your way out of Iron Laws.
+核心铁律不可禁用，但用户可以新增自定义铁律。
+所有插件必须在 Harness 约束下运行。
 </EXTREMELY-IMPORTANT>
 
 # Chaos Harness (万物入侵)
@@ -21,19 +20,38 @@ This is not optional. You cannot rationalize your way out of Iron Laws.
 
 ## 核心铁律
 
-以下铁律在所有情况下必须遵守：
+以下铁律在所有情况下必须遵守（不可禁用）：
 
 | ID | 铁律 | 说明 |
 |----|------|------|
-| IL001 | NO DOCUMENTS WITHOUT VERSION LOCK | 所有文档必须在版本目录下 |
-| IL002 | NO HARNESS WITHOUT SCAN RESULTS | Harness 需要项目扫描数据 |
-| IL003 | NO COMPLETION CLAIMS WITHOUT VERIFICATION | 完成声明需要实际验证 |
-| IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
-| IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
+| **IL001** | NO DOCUMENTS WITHOUT VERSION LOCK | 所有文档必须在版本目录下 |
+| **IL002** | NO HARNESS WITHOUT SCAN RESULTS | Harness 需要项目扫描数据 |
+| **IL003** | NO COMPLETION CLAIMS WITHOUT VERIFICATION | 完成声明需要实际验证 |
+| **IL004** | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
+| **IL005** | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
+
+## 用户自定义铁律
+
+用户可以在 `.claude/harness/iron-laws.yaml` 中定义自己的铁律：
+
+```yaml
+custom_iron_laws:
+  - id: IL-C001
+    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
+    description: "数据库变更前必须创建备份"
+    severity: critical
+    triggers:
+      - pattern: "ALTER TABLE|DROP TABLE"
+        action: block
+```
+
+**添加铁律：**
+```
+你: 添加铁律：周五禁止部署
+Claude: [创建 IL-C002] 已添加自定义铁律
+```
 
 ## 子 Skills
-
-根据用户请求激活对应的子 skill：
 
 | Skill | 激活条件 | 功能 |
 |-------|---------|------|
@@ -41,36 +59,69 @@ This is not optional. You cannot rationalize your way out of Iron Laws.
 | `version-locker` | 创建版本、锁定版本 | 版本管理和锁定 |
 | `harness-generator` | 生成 Harness、创建约束 | 生成铁律和防绕过规则 |
 | `workflow-supervisor` | 工作流、阶段管理 | 12阶段工作流管理 |
-| `iron-law-enforcer` | **始终激活** | 铁律执行和违规检测 |
+| `iron-law-enforcer` | **始终激活** | 铁律执行、支持用户自定义 |
+| `plugin-manager` | 插件管理、配置 | 管理外部插件和铁律扩展 |
 
-## 工作流程
+## 插件系统
 
-```dot
-digraph chaos_harness {
-    rankdir=TB;
-    
-    start [label="用户请求", shape=ellipse];
-    detect [label="检测意图", shape=diamond];
-    scanner [label="project-scanner", shape=box];
-    version [label="version-locker", shape=box];
-    harness [label="harness-generator", shape=box];
-    workflow [label="workflow-supervisor", shape=box];
-    enforce [label="iron-law-enforcer\n(始终运行)", shape=box, style=filled];
-    done [label="完成", shape=ellipse];
-    
-    start -> detect;
-    detect -> scanner [label="扫描请求"];
-    detect -> version [label="版本请求"];
-    detect -> harness [label="Harness请求"];
-    detect -> workflow [label="工作流请求"];
-    
-    scanner -> enforce;
-    version -> enforce;
-    harness -> enforce;
-    workflow -> enforce;
-    
-    enforce -> done;
-}
+Chaos Harness 支持引入外部插件，但所有插件必须：
+
+1. **接受铁律约束** — 无法绕过 Harness 铁律
+2. **在版本目录下工作** — 遵循 IL001
+3. **提供验证证据** — 遵循 IL003
+
+### 插件集成示例
+
+```yaml
+# 外部插件示例配置
+superpowers:
+  enabled: true
+  source: github:obra/superpowers
+  stages:
+    - W01  # brainstorming
+    - W03  # writing-plans
+    - W08  # tdd
+    - W09  # code-review
+```
+
+### 插件管理
+
+```
+你: 安装 superpowers 插件
+你: 禁用 openspec 的 W06 阶段
+你: 查看插件列表
+你: 添加自定义插件 local:~/.claude/plugins/my-plugin
+```
+
+## 架构图
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Chaos Harness                           │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │                    Iron Laws (铁律)                    │ │
+│  │         核心铁律 + 用户自定义铁律                       │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                          │                                  │
+│                          ▼                                  │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │                  Plugin Manager                        │ │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  │ │
+│  │  │super-   │  │open-    │  │custom-  │  │  ...    │  │ │
+│  │  │powers   │  │spec     │  │plugins  │  │         │  │ │
+│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘  │ │
+│  └───────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## 配置文件位置
+
+```
+~/.claude/harness/
+├── plugins.yaml           # 插件配置
+├── iron-laws.yaml         # 自定义铁律
+├── plugin-log.json        # 插件执行日志
+└── iron-law-log.json      # 铁律触发日志
 ```
 
 ## 防绕过规则
