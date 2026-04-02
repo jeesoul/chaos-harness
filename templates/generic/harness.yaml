@@ -1,69 +1,85 @@
 identity:
-  name: "generic-harness"
+  name: generic-harness
   version: "1.0.0"
   createdAt: "2026-04-02"
-  createdBy: "scanner"
+  createdBy: scanner
   suitableFor:
-    - "generic"
-    - "unknown"
-    - "fallback"
-  confidenceThreshold: 0.50
+    - generic
+    - unknown
+  confidenceThreshold: 0.5
 
 selfCheck:
   activationConditions:
-    - field: "projectType"
+    - field: "projectType.type"
       operator: "exists"
-      description: "Project type must be detected"
+      value: ""
+      description: "Any project type detected"
   warningConditions:
     - field: "projectType.confidence"
-      operator: "lessThan"
-      value: "0.5"
-      description: "Very low confidence, manual review strongly recommended"
+      operator: "equals"
+      value: "0"
+      description: "Project type unknown with no confidence"
   changeMonitor:
     watchedFiles:
-      - "*"
-    threshold: 0.30
+      - "package.json"
+      - "pom.xml"
+      - "build.gradle"
+      - "requirements.txt"
+      - "Cargo.toml"
+    threshold: 3
 
 ironLaws:
   - id: "IL001"
-    rule: "没有验证就不声称完成"
-    enforcement: "block"
-    violationAction: "阻止提交，要求重新验证"
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    enforcement: block
+    violationAction: "Require version directory selection before generating documents"
   - id: "IL002"
-    rule: "没有根因分析就不修复bug"
-    enforcement: "block"
-    violationAction: "阻止修复，要求Phase 1调查"
+    rule: "NO HARNESS WITHOUT SCAN RESULTS"
+    enforcement: block
+    violationAction: "Run scanner first to gather project information"
   - id: "IL003"
-    rule: "测试失败必须修复"
-    enforcement: "block"
-    violationAction: "阻止进入下一阶段"
+    rule: "NO ENVIRONMENT CLAIMS WITHOUT ACTUAL EXECUTION"
+    enforcement: block
+    violationAction: "Execute environment checks before reporting status"
   - id: "IL004"
-    rule: "版本号不可随意更改"
-    enforcement: "block"
-    violationAction: "阻止文档写入"
+    rule: "NO WORKFLOW STEP SKIP WITHOUT EXPLICIT USER CONSENT"
+    enforcement: warn
+    violationAction: "Log skipped step and require user acknowledgment"
   - id: "IL005"
-    rule: "配置变更必须用户确认"
-    enforcement: "block"
-    violationAction: "暂停操作"
+    rule: "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE"
+    enforcement: block
+    violationAction: "Require verification step before marking complete"
 
 recommendations:
   - id: "R001"
-    rule: "建立测试框架"
-    skipCondition: "用户明确说跳过"
+    rule: "Run project scanner to identify project type"
+    skipCondition: "Scanner already run with high confidence"
   - id: "R002"
-    rule: "使用版本控制"
-    skipCondition: "无版本控制环境"
+    rule: "Document project structure before making changes"
+    skipCondition: "Documentation already exists"
+
+dynamicRules:
+  privateRepositories: []
+  buildCommands:
+    standard: "echo 'No build command detected'"
+    withTests: "echo 'No test command detected'"
+  testFramework:
+    primary: "unknown"
+  inferredCodeStyle:
+    namingConvention:
+      className: "unknown"
+      methodName: "unknown"
+      constantName: "unknown"
+    importStyle: "unknown"
 
 antiBypass:
   - id: "AB001"
-    excuse: "这是简单修改，不需要测试"
-    rebuttal: "简单修改也需要验证，防止回归"
-    ironLawRef: "IL003"
+    excuse: "I don't know what kind of project this is"
+    rebuttal: "Run the scanner to identify the project type. Use generic rules until then."
+    ironLawRef: "R001"
   - id: "AB002"
-    excuse: "用户没说版本号，我默认用最新的"
-    rebuttal: "用户没说=版本不变"
-    ironLawRef: "IL004"
-  - id: "AB003"
-    excuse: "这个bug很简单，直接改一行就行"
-    rebuttal: "简单bug也有根因，不分析可能导致类似bug重复出现"
+    excuse: "Generic rules don't apply to my project"
+    rebuttal: "Generic rules provide baseline safety. Override with specific template after identification."
     ironLawRef: "IL002"
+
+effectivenessLog: "version-logs/effectiveness.md"

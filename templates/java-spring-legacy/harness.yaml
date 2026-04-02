@@ -1,109 +1,108 @@
 identity:
-  name: "java-spring-legacy-harness"
+  name: java-spring-legacy-harness
   version: "1.0.0"
   createdAt: "2026-04-02"
-  createdBy: "scanner"
+  createdBy: scanner
   suitableFor:
-    - "java-spring-legacy"
-    - "Java 8"
-    - "Spring Boot 2"
+    - java-spring-legacy
+    - spring-boot-legacy
+    - java-1.8
+    - jdk8
+    - legacy
   confidenceThreshold: 0.75
 
 selfCheck:
   activationConditions:
-    - field: "projectType"
+    - field: "projectType.type"
       operator: "equals"
       value: "java-spring-legacy"
-      description: "Project type must be java-spring-legacy"
-    - field: "javaVersion"
+      description: "Project is legacy Java Spring Boot (JDK 8)"
+    - field: "language.version"
       operator: "matches"
-      value: "^1\\.8\\."
-      description: "Java version must be 1.8.x"
+      value: '1\.[0-8]'
+      description: "Using Java 8 or earlier"
   warningConditions:
-    - field: "projectType.confidence"
-      operator: "matches"
-      value: "^0\\.[0-6]"
-      description: "Low confidence, recommend manual review"
-    - field: "springVersion"
-      operator: "matches"
-      value: "^1\\."
-      description: "Spring Boot 1.x detected, may need migration planning"
-    - field: "dependencies.outdated"
-      operator: "greaterThan"
-      value: "5"
-      description: "Many outdated dependencies, security review recommended"
+    - field: "localEnv"
+      operator: "contains"
+      value: "jdk-legacy"
+      description: "JDK 8 environment issues detected"
   changeMonitor:
     watchedFiles:
       - "pom.xml"
-      - "src/main/java/**/*.java"
-      - "src/main/resources/application*.properties"
-      - "src/main/resources/application*.yml"
-    threshold: 0.25
+      - "build.gradle"
+      - "application.yml"
+      - "application.properties"
+      - ".java-version"
+    threshold: 5
 
 ironLaws:
   - id: "IL001"
-    rule: "没有验证就不声称完成"
-    enforcement: "block"
-    violationAction: "阻止提交，要求重新验证"
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    enforcement: block
+    violationAction: "Require version directory selection before generating documents"
   - id: "IL002"
-    rule: "没有根因分析就不修复bug"
-    enforcement: "block"
-    violationAction: "阻止修复，要求Phase 1调查"
+    rule: "NO HARNESS WITHOUT SCAN RESULTS"
+    enforcement: block
+    violationAction: "Run scanner first to gather project information"
   - id: "IL003"
-    rule: "测试失败必须修复"
-    enforcement: "block"
-    violationAction: "阻止进入下一阶段"
+    rule: "NO ENVIRONMENT CLAIMS WITHOUT ACTUAL EXECUTION"
+    enforcement: block
+    violationAction: "Execute environment checks before reporting status"
   - id: "IL004"
-    rule: "版本号不可随意更改"
-    enforcement: "block"
-    violationAction: "阻止文档写入"
+    rule: "NO WORKFLOW STEP SKIP WITHOUT EXPLICIT USER CONSENT"
+    enforcement: warn
+    violationAction: "Log skipped step and require user acknowledgment"
   - id: "IL005"
-    rule: "私服配置变更必须用户确认"
-    enforcement: "block"
-    violationAction: "暂停操作"
+    rule: "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE"
+    enforcement: block
+    violationAction: "Require verification step before marking complete"
   - id: "IL006"
-    rule: "JDK 8兼容性必须保持"
-    enforcement: "block"
-    violationAction: "阻止使用JDK 11+特性"
-  - id: "IL007"
-    rule: "javax包命名空间不可更改"
-    enforcement: "block"
-    violationAction: "阻止jakarta命名空间迁移"
+    rule: "JDK 8 PROJECTS REQUIRE LEGACY COMPATIBILITY CHECKS"
+    enforcement: warn
+    violationAction: "Verify JDK 8 compatibility for all changes"
 
 recommendations:
   - id: "R001"
-    rule: "使用checkstyle检查代码风格"
-    skipCondition: "用户明确说跳过"
+    rule: "Use Spring Boot 2.x compatible dependencies"
+    skipCondition: "Already on Spring Boot 3.x"
+    skipRecord: "Record Spring Boot version in scan results"
   - id: "R002"
-    rule: "单元测试覆盖率>=50%"
-    skipCondition: "历史项目无测试框架"
+    rule: "Avoid Java 9+ language features"
+    skipCondition: "Project planned for upgrade"
   - id: "R003"
-    rule: "考虑升级到Spring Boot 2.7 LTS"
-    skipCondition: "用户明确拒绝升级"
+    rule: "Run tests with JDK 8 environment"
+    skipCondition: "No tests available"
   - id: "R004"
-    rule: "审查已弃用的API使用"
-    skipCondition: "快速修复场景"
-  - id: "R005"
-    rule: "检查依赖安全漏洞"
+    rule: "Document legacy workarounds in VERSION-LOG.md"
+    skipCondition: "No workarounds needed"
+
+dynamicRules:
+  privateRepositories: []
+  buildCommands:
+    standard: "mvn clean install -DskipTests"
+    withTests: "mvn clean install"
+  testFramework:
+    primary: "junit4"
+    mock: "mockito"
+  inferredCodeStyle:
+    namingConvention:
+      className: "PascalCase"
+      methodName: "camelCase"
+      constantName: "SCREAMING_SNAKE_CASE"
+    importStyle: "wildcard-avoid"
 
 antiBypass:
   - id: "AB001"
-    excuse: "这是简单修改，不需要测试"
-    rebuttal: "简单修改也需要验证，防止回归"
-    ironLawRef: "IL003"
-  - id: "AB002"
-    excuse: "用户没说版本号，我默认用最新的"
-    rebuttal: "用户没说=版本不变"
-    ironLawRef: "IL004"
-  - id: "AB003"
-    excuse: "这个bug很简单，直接改一行就行"
-    rebuttal: "简单bug也有根因，不分析可能导致类似bug重复出现"
-    ironLawRef: "IL002"
-  - id: "AB004"
-    excuse: "JDK 11新特性更方便，可以用"
-    rebuttal: "legacy项目必须保持JDK 8兼容性"
+    excuse: "JDK 8 is too old to worry about"
+    rebuttal: "JDK 8 is still widely used in enterprises. Proper handling prevents production issues."
     ironLawRef: "IL006"
-  - id: "AB005"
-    excuse: "jakarta是新的标准，应该迁移"
-    rebuttal: "legacy项目保持javax命名空间，迁移需要完整计划"
-    ironLawRef: "IL007"
+  - id: "AB002"
+    excuse: "Legacy code doesn't need tests"
+    rebuttal: "Legacy code needs tests more than new code to prevent regressions during changes."
+    ironLawRef: "R003"
+  - id: "AB003"
+    excuse: "I'll upgrade to newer Java later"
+    rebuttal: "Document the upgrade plan in VERSION-LOG.md and track progress properly."
+    ironLawRef: "IL001"
+
+effectivenessLog: "version-logs/effectiveness.md"
