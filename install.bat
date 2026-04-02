@@ -86,7 +86,7 @@ echo 使用方式:
 echo.
 echo 1. 重启 Claude Code 或开始新会话
 echo.
-echo 2. Skills 会自动激活，直接对话即可：
+echo 2. 自然语言触发（对话即可）：
 echo.
 echo    # 扫描项目
 echo    帮我扫描当前项目
@@ -97,19 +97,25 @@ echo.
 echo    # 版本管理
 echo    创建版本 v0.1
 echo.
-echo    # 工作流
-echo    创建工作流
-echo.
 echo    # 铁律
 echo    列出所有铁律
 echo.
+echo 3. 斜杠命令触发：
+echo.
+echo    /chaos-harness:project-scanner     # 扫描项目
+echo    /chaos-harness:version-locker      # 版本锁定
+echo    /chaos-harness:harness-generator   # 生成约束
+echo    /chaos-harness:workflow-supervisor # 工作流
+echo    /chaos-harness:iron-law-enforcer   # 铁律执行
+echo    /chaos-harness:plugin-manager      # 插件管理
+echo.
 echo 已安装的 Skills:
-echo    - project-scanner    (项目扫描)
-echo    - version-locker     (版本锁定)
-echo    - harness-generator  (Harness生成)
+echo    - project-scanner     (项目扫描)
+echo    - version-locker      (版本锁定)
+echo    - harness-generator   (Harness生成)
 echo    - workflow-supervisor (工作流监督)
-echo    - iron-law-enforcer  (铁律执行，支持自定义)
-echo    - plugin-manager     (插件管理)
+echo    - iron-law-enforcer   (铁律执行)
+echo    - plugin-manager      (插件管理)
 echo.
 echo 插件管理:
 echo    查看插件列表
