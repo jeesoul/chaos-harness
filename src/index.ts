@@ -75,3 +75,43 @@ export type {
   FixAction,
   CheckOptions
 } from './core/env-fixer/index.js';
+
+// Harness Generator
+export {
+  generateHarness,
+  validateHarness,
+  exportHarnessYaml,
+  exportHarnessMarkdown,
+  evaluateHarness,
+  loadTemplate,
+  findBestTemplate,
+  listTemplates,
+  evaluateActivationConditions,
+  evaluateWarningConditions,
+  calculateActivationScore,
+  shouldActivate,
+  buildDynamicRules,
+  extractPrivateRepos,
+  inferBuildCommands,
+  detectTestFramework,
+  inferCodeStyle,
+  detectBypassAttempt,
+  generateRebuttal,
+  getIronLawForBypass,
+  DEFAULT_ANTI_BYPASS_RULES,
+  EffectivenessTracker,
+  formatEffectivenessMarkdown
+} from './core/harness-generator/index.js';
+export type {
+  HarnessConfig,
+  HarnessIdentity,
+  HarnessGenerateOptions,
+  HarnessValidationResult,
+  IronLaw,
+  Recommendation,
+  SelfCheckCondition,
+  SelfCheckResult,
+  DynamicRules,
+  AntiBypassRule,
+  EffectivenessRecord
+} from './core/harness-generator/index.js';
