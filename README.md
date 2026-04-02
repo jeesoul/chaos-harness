@@ -4,7 +4,6 @@
 > 
 > 混沌需要秩序，Harness 提供秩序。
 
-[![npm version](https://img.shields.io/npm/v/chaos-harness.svg)](https://www.npmjs.com/package/chaos-harness)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 一个为 Claude Code 设计的智能项目入侵系统，实现项目扫描、版本约束、Harness 生成、偷懒检测和全流程工作流管理。
@@ -47,40 +46,70 @@
 
 ## 安装
 
+### 方式一：从 GitHub 克隆安装（推荐）
+
+**步骤 1：克隆仓库**
+
 ```bash
-npm install chaos-harness
+git clone https://github.com/jeesoul/chaos-harness.git
+cd chaos-harness
 ```
 
----
-
-## 与 Claude Code 集成
-
-### 方式一：作为 MCP Server 集成（推荐）
-
-MCP (Model Context Protocol) 是 Claude Code 的标准扩展协议。
-
-**步骤 1：安装包**
+**步骤 2：安装依赖并构建**
 
 ```bash
-npm install -g chaos-harness
+npm install
+npm run build
+```
+
+**步骤 3：运行安装脚本**
+
+**macOS / Linux:**
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+**Windows:**
+```cmd
+install.bat
+```
+
+**步骤 4：重启 Claude Code**
+
+安装脚本会自动：
+- 复制插件到 `~/.claude/plugins/chaos-harness/`
+- 配置 MCP Server 到 Claude Code 配置文件
+
+### 方式二：手动配置
+
+如果安装脚本无法运行，可以手动配置：
+
+**步骤 1：克隆并构建**
+
+```bash
+git clone https://github.com/jeesoul/chaos-harness.git
+cd chaos-harness
+npm install
+npm run build
 ```
 
 **步骤 2：配置 Claude Code**
 
-在 Claude Code 配置文件中添加 MCP Server：
+编辑 Claude Code 配置文件：
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-**配置文件位置：**
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Linux: `~/.config/Claude/claude_desktop_config.json`
-
-**配置内容：**
+添加以下内容：
 
 ```json
 {
   "mcpServers": {
     "chaos-harness": {
-      "command": "chaos-harness-mcp"
+      "command": "node",
+      "args": ["/你的路径/chaos-harness/bin/mcp-server.js"],
+      "cwd": "/你的路径/chaos-harness"
     }
   }
 }
@@ -88,122 +117,57 @@ npm install -g chaos-harness
 
 **步骤 3：重启 Claude Code**
 
-重启后，Claude Code 会自动加载 17 个 Chaos Harness 工具。
+---
 
-**使用示例：**
+## 使用方式
 
-在 Claude Code 中直接对话：
+安装完成后，在 Claude Code 中直接对话即可使用：
+
+### 扫描项目
 
 ```
 用户: 帮我扫描当前项目
 Claude: [调用 chaos_scan 工具]
         项目类型: java-spring
         置信度: 95%
-        ...
+        语言: Java 17
+        构建工具: Maven
+```
 
+### 生成 Harness
+
+```
 用户: 生成这个项目的 Harness
 Claude: [调用 chaos_generate_harness 工具]
-        已生成 Harness，包含 5 条铁律...
+        已生成 Harness，包含:
+        - 5 条铁律
+        - 10 条防绕过规则
+        - 6 个漏洞封堵模式
+```
 
-用户: 我觉得这个修复很简单，可以跳过测试吗？
+### 检测偷懒模式
+
+```
+用户: 检测 agent-1 是否有偷懒行为
+Claude: [调用 chaos_detect_laziness 工具]
+        检测到:
+        - LP001: 声称完成但无验证证据 (Critical)
+        建议: 要求提供验证证据
+```
+
+### 检测绕过尝试
+
+```
+用户: 这个修复很简单，可以跳过测试吗？
 Claude: [调用 chaos_detect_bypass 工具]
-        ⚠️ 检测到绕过尝试！铁律 IL003：NO COMPLETION CLAIMS WITHOUT VERIFICATION
-```
-
-### 方式二：作为 Skill 集成
-
-如果你想创建一个 Claude Code Skill：
-
-**步骤 1：创建 Skill 目录**
-
-```bash
-mkdir -p ~/.claude/skills/chaos-harness
-```
-
-**步骤 2：创建 SKILL.md**
-
-```markdown
-# Chaos Harness Skill
-
-Chaos demands order. Harness provides it.
-
-## 功能
-
-- 项目扫描与类型检测
-- 版本锁定与约束
-- Harness 生成（铁律、防绕过）
-- 偷懒模式检测
-- 工作流管理
-
-## 使用
-
-当用户请求以下操作时自动激活：
-- 扫描项目
-- 生成 Harness
-- 检测偷懒
-- 创建工作流
-
-## 工具
-
-使用 MCP Server 提供的 17 个工具。
-```
-
-**步骤 3：配置 Claude Code**
-
-在项目根目录创建 `.claude/settings.json`：
-
-```json
-{
-  "skills": ["chaos-harness"]
-}
-```
-
----
-
-## 方式三：作为 npm 包使用
-
-直接在代码中导入使用：
-
-```typescript
-import {
-  scan,
-  VersionManager,
-  generateHarness,
-  createWorkflowExecutor,
-  quickDetectLaziness
-} from 'chaos-harness';
-
-// 1. 扫描项目
-const result = await scan({ projectRoot: './my-project' });
-console.log(`项目类型: ${result.projectType.type}`);
-console.log(`置信度: ${result.projectType.confidence}`);
-
-// 2. 版本管理
-const vm = new VersionManager('./output');
-await vm.initialize({ autoCreate: true, defaultVersion: 'v0.1' });
-
-// 3. 生成 Harness
-const harness = await generateHarness({
-  scanResult: result,
-  outputPath: './output/v0.1/Harness'
-});
-
-// 4. 创建工作流
-const workflow = createWorkflowExecutor({
-  projectRoot: './my-project',
-  fileCount: 10,
-  lineCount: 200,
-  enableSupervisor: true
-});
-
-// 5. 检测偷懒模式
-const patterns = quickDetectLaziness('agent-1', {
-  claimedCompletion: true,
-  ranVerification: false
-});
-if (patterns.includes('LP001')) {
-  console.log('⚠️ 声称完成但无验证证据！');
-}
+        ⚠️ 检测到绕过尝试！
+        
+        匹配规则: simple-fix
+        铁律引用: IL003
+        
+        反驳理由:
+        即使看起来简单的修复也可能引入回归问题。
+        铁律 IL003 要求所有完成声明必须有验证证据。
 ```
 
 ---
@@ -229,109 +193,6 @@ if (patterns.includes('LP001')) {
 | Workflow | `chaos_get_stage_definition` | 获取阶段定义 |
 | Workflow | `chaos_list_stages` | 列出所有阶段 |
 | Workflow | `chaos_list_iron_laws` | 列出铁律 |
-
----
-
-## API 参考
-
-### 扫描器 (Scanner)
-
-```typescript
-import { scan, generateScanReport } from 'chaos-harness';
-
-// 扫描项目
-const result = await scan({
-  projectRoot: './project',
-  configFilePriority: ['pom.xml', 'package.json', 'requirements.txt']
-});
-
-// 生成报告
-const report = generateScanReport(result, 'v0.1');
-```
-
-### 版本管理器 (Version Manager)
-
-```typescript
-import { VersionManager, parseVersion, validateVersion } from 'chaos-harness';
-
-const vm = new VersionManager('./output');
-
-await vm.initialize({
-  autoCreate: true,        // 自动创建版本目录
-  defaultVersion: 'v0.1',  // 默认版本
-  specifiedVersion: 'v1.0' // 指定版本
-});
-
-// 检查锁定状态
-const isLocked = await vm.isLocked();
-
-// 获取当前版本
-const version = await vm.getCurrentVersion();
-
-// 解析和验证版本号
-const parsed = parseVersion('v1.2');
-const valid = validateVersion('v1.2');
-```
-
-### Harness 生成器
-
-```typescript
-import {
-  generateHarness,
-  validateHarness,
-  detectBypassAttempt,
-  generateRebuttal
-} from 'chaos-harness';
-
-// 生成 Harness
-const harness = await generateHarness({
-  scanResult: result,
-  outputPath: './output/v0.1/Harness',
-  template: 'java-spring'
-});
-
-// 验证 Harness
-const validation = validateHarness(harness);
-
-// 检测绕过尝试
-const bypass = detectBypassAttempt('这是一个简单的修复');
-if (bypass.detected) {
-  const rebuttal = generateRebuttal(bypass.matchedRule);
-  console.log(rebuttal);
-}
-```
-
-### 工作流引擎
-
-```typescript
-import {
-  createWorkflowExecutor,
-  determineProjectScale,
-  quickDetectLaziness
-} from 'chaos-harness';
-
-// 判断项目规模
-const scale = determineProjectScale(10, 300);
-// 返回: 'small' | 'medium' | 'large'
-
-// 创建工作流执行器
-const workflow = createWorkflowExecutor({
-  projectRoot: './project',
-  fileCount: 10,
-  lineCount: 200,
-  enableSupervisor: true
-});
-
-// 获取当前阶段
-const stage = workflow.getCurrentStage();
-
-// 获取进度
-const progress = workflow.getProgress();
-
-// 请求跳过 (必经阶段会被拒绝)
-const result = workflow.requestSkip('W08_development', '测试原因');
-console.log(result.allowed); // false 对于必经阶段
-```
 
 ---
 
@@ -361,6 +222,41 @@ Chaos Harness 包含 5 个预设模板：
 
 ---
 
+## API 参考（npm 包使用）
+
+如果你想在代码中直接使用：
+
+```typescript
+import {
+  scan,
+  VersionManager,
+  generateHarness,
+  createWorkflowExecutor,
+  quickDetectLaziness
+} from 'chaos-harness';
+
+// 扫描项目
+const result = await scan({ projectRoot: './my-project' });
+
+// 版本管理
+const vm = new VersionManager('./output');
+await vm.initialize({ autoCreate: true, defaultVersion: 'v0.1' });
+
+// 生成 Harness
+const harness = await generateHarness({
+  scanResult: result,
+  outputPath: './output/v0.1/Harness'
+});
+
+// 检测偷懒模式
+const patterns = quickDetectLaziness('agent-1', {
+  claimedCompletion: true,
+  ranVerification: false
+});
+```
+
+---
+
 ## 开发
 
 ```bash
@@ -375,6 +271,20 @@ npm test
 
 # 测试覆盖率
 npm run test:coverage
+```
+
+---
+
+## 卸载
+
+**macOS / Linux:**
+```bash
+./install.sh --uninstall
+```
+
+**Windows:**
+```cmd
+install.bat --uninstall
 ```
 
 ---

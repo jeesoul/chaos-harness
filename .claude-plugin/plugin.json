@@ -1,0 +1,21 @@
+{
+  "name": "chaos-harness",
+  "description": "Chaos demands order. Harness provides it. - Claude Code 智能项目入侵系统：扫描、版本约束、Harness生成、偷懒检测、工作流管理",
+  "version": "1.0.0",
+  "author": {
+    "name": "jeesoul"
+  },
+  "homepage": "https://github.com/jeesoul/chaos-harness",
+  "repository": "https://github.com/jeesoul/chaos-harness",
+  "license": "MIT",
+  "keywords": [
+    "chaos",
+    "harness",
+    "scanner",
+    "version-manager",
+    "iron-laws",
+    "workflow",
+    "mcp",
+    "laziness-detection"
+  ]
+}

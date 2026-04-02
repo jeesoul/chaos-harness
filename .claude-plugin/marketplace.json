@@ -1,0 +1,18 @@
+{
+  "name": "chaos-harness",
+  "description": "Claude Code 智能项目入侵系统 Marketplace",
+  "owner": {
+    "name": "jeesoul"
+  },
+  "plugins": [
+    {
+      "name": "chaos-harness",
+      "description": "Chaos demands order. Harness provides it. - 智能项目入侵、版本约束、Harness生成、偷懒检测、工作流管理",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "jeesoul"
+      }
+    }
+  ]
+}
