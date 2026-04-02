@@ -1,5 +1,5 @@
 ---
-name: chaos-harness
+name: overview
 description: Use when starting any conversation - establishes the Iron Laws that govern all behavior. 支持用户自定义铁律和插件扩展。触发词：扫描项目、生成Harness、工作流、铁律、偷懒检测、插件管理
 ---
 
