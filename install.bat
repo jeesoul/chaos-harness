@@ -1,126 +1,127 @@
 @echo off
-REM Chaos Harness 安装脚本 (Windows)
-REM 纯 Skill 方式集成，无需 MCP
+chcp 65001 >nul 2>&1
+REM Chaos Harness Installation Script (Windows)
+REM Pure Skill integration, no MCP required
 
 setlocal enabledelayedexpansion
 
-echo ╔════════════════════════════════════════════╗
-echo ║     Chaos Harness 安装脚本                 ║
-echo ║     Chaos demands order. Harness provides it. ║
-echo ╚════════════════════════════════════════════╝
+echo ========================================================
+echo     Chaos Harness Installation Script
+echo     Chaos demands order. Harness provides it.
+echo ========================================================
 echo.
 
-REM 获取脚本所在目录
+REM Get script directory
 set "SCRIPT_DIR=%~dp0"
 set "PLUGIN_NAME=chaos-harness"
 
-REM 设置目标目录
+REM Set target directory
 set "PLUGIN_DIR=%USERPROFILE%\.claude\plugins"
 set "TARGET_DIR=%PLUGIN_DIR%\%PLUGIN_NAME%"
 
-REM 卸载模式
+REM Uninstall mode
 if "%1"=="--uninstall" goto uninstall
 
-REM 安装
-echo 正在安装 Chaos Harness 插件...
+REM Install
+echo Installing Chaos Harness plugin...
 
-REM 创建插件目录
+REM Create plugin directory
 if not exist "%PLUGIN_DIR%" mkdir "%PLUGIN_DIR%"
 
-REM 删除旧版本
+REM Remove old version
 if exist "%TARGET_DIR%" (
-    echo 删除旧版本...
+    echo Removing old version...
     rmdir /s /q "%TARGET_DIR%"
 )
 
-REM 创建目标目录
+REM Create target directory
 mkdir "%TARGET_DIR%"
 
-REM 复制插件配置
-echo 复制插件配置...
+REM Copy plugin config
+echo Copying plugin config...
 xcopy /s /e /i /q "%SCRIPT_DIR%.claude-plugin" "%TARGET_DIR%\.claude-plugin\" >nul
 
-REM 复制 skills（核心！）
-echo 复制 skills...
+REM Copy skills (core!)
+echo Copying skills...
 xcopy /s /e /i /q "%SCRIPT_DIR%skills" "%TARGET_DIR%\skills\" >nul
 
-REM 复制 CLAUDE.md
+REM Copy CLAUDE.md
 if exist "%SCRIPT_DIR%CLAUDE.md" (
     copy /y "%SCRIPT_DIR%CLAUDE.md" "%TARGET_DIR%\" >nul
 )
 
-REM 复制 README.md
+REM Copy README.md
 if exist "%SCRIPT_DIR%README.md" (
     copy /y "%SCRIPT_DIR%README.md" "%TARGET_DIR%\" >nul
 )
 
-REM 复制 templates
+REM Copy templates
 if exist "%SCRIPT_DIR%templates" (
     xcopy /s /e /i /q "%SCRIPT_DIR%templates" "%TARGET_DIR%\templates\" >nul
 )
 
-echo √ 插件已安装到: %TARGET_DIR%
+echo [OK] Plugin installed to: %TARGET_DIR%
 
 goto done
 
 :uninstall
-echo 正在卸载 Chaos Harness...
+echo Uninstalling Chaos Harness...
 
 if exist "%TARGET_DIR%" (
     rmdir /s /q "%TARGET_DIR%"
-    echo √ 插件已删除
+    echo [OK] Plugin removed
 ) else (
-    echo 插件未安装
+    echo Plugin not installed
 )
 
-echo 卸载完成
+echo Uninstall complete
 exit /b 0
 
 :done
 echo.
-echo ══════════════════════════════════════════════
-echo   安装完成！
-echo ══════════════════════════════════════════════
+echo ========================================================
+echo   Installation Complete!
+echo ========================================================
 echo.
-echo 使用方式:
+echo Usage:
 echo.
-echo 1. 重启 Claude Code 或开始新会话
+echo 1. Restart Claude Code or start a new session
 echo.
-echo 2. 自然语言触发（对话即可）：
+echo 2. Natural language triggers (just talk):
 echo.
-echo    # 扫描项目
-echo    帮我扫描当前项目
+echo    # Scan project
+echo    scan current project
 echo.
-echo    # 生成 Harness
-echo    生成这个项目的 Harness
+echo    # Generate Harness
+echo    generate harness for this project
 echo.
-echo    # 版本管理
-echo    创建版本 v0.1
+echo    # Version management
+echo    create version v0.1
 echo.
-echo    # 铁律
-echo    列出所有铁律
+echo    # Iron laws
+echo    list all iron laws
 echo.
-echo 3. 斜杠命令触发：
+echo 3. Slash commands:
 echo.
-echo    /chaos-harness:project-scanner     # 扫描项目
-echo    /chaos-harness:version-locker      # 版本锁定
-echo    /chaos-harness:harness-generator   # 生成约束
-echo    /chaos-harness:workflow-supervisor # 工作流
-echo    /chaos-harness:iron-law-enforcer   # 铁律执行
-echo    /chaos-harness:plugin-manager      # 插件管理
+echo    /chaos-harness:project-scanner     # Scan project
+echo    /chaos-harness:version-locker      # Version lock
+echo    /chaos-harness:harness-generator   # Generate constraints
+echo    /chaos-harness:workflow-supervisor # Workflow
+echo    /chaos-harness:iron-law-enforcer   # Iron law enforcement
+echo    /chaos-harness:plugin-manager      # Plugin management
 echo.
-echo 已安装的 Skills:
-echo    - project-scanner     (项目扫描)
-echo    - version-locker      (版本锁定)
-echo    - harness-generator   (Harness生成)
-echo    - workflow-supervisor (工作流监督)
-echo    - iron-law-enforcer   (铁律执行)
-echo    - plugin-manager      (插件管理)
+echo Installed Skills:
+echo    - project-scanner     (Project scanning)
+echo    - version-locker      (Version locking)
+echo    - harness-generator   (Harness generation)
+echo    - workflow-supervisor (Workflow supervision)
+echo    - iron-law-enforcer   (Iron law enforcement)
+echo    - plugin-manager      (Plugin management)
 echo.
-echo 插件管理:
-echo    查看插件列表
-echo    安装插件 github:owner/plugin
-echo    添加铁律：周五禁止部署
+echo Plugin Management:
+echo    view plugin list
+echo    install plugin github:owner/plugin
+echo    add iron law: no deployment on friday
 echo.
 
 endlocal
