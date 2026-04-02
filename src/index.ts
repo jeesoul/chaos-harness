@@ -51,3 +51,27 @@ export type {
 
 // Version
 export const VERSION = '0.1.0';
+
+// Environment Fixer
+export {
+  checkAndSuggestFix,
+  generateEnvironmentMarkdown,
+  classifyRisk,
+  checkPrivateRepo,
+  analyzeJdkLegacy,
+  generateFixGuide,
+  shouldAutoExecute,
+  needsUserConfirmation,
+  RiskLevel
+} from './core/env-fixer/index.js';
+export type {
+  EnvironmentReport,
+  EnvironmentCheckResult,
+  EnvironmentIssue,
+  FixGuide,
+  FixStep,
+  JdkLegacyInfo,
+  PrivateRepoCheckResult,
+  FixAction,
+  CheckOptions
+} from './core/env-fixer/index.js';

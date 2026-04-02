@@ -31,9 +31,9 @@ export function analyzeJdkLegacy(
                   javaVersion === '8' ||
                   javaVersion.startsWith('1.8.');
 
-  const isSpringBoot2 = springBootVersion && springBootVersion.startsWith('2.');
+  const isSpringBoot2 = springBootVersion !== undefined && springBootVersion.startsWith('2.');
 
-  const isLegacy = isJdk8 || (isSpringBoot2 ?? false);
+  const isLegacy = isJdk8 || isSpringBoot2;
 
   return {
     isLegacy,
