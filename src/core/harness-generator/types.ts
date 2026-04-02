@@ -31,6 +31,26 @@ export interface SelfCheckResult {
 }
 
 /**
+ * 说服力原则 (基于 Cialdini 研究)
+ * - Authority: 权威语言 "YOU MUST", "Never"
+ * - Commitment: 要求声明和追踪
+ * - Scarcity: 时间限制 "Before proceeding"
+ * - SocialProof: 普遍模式 "Every time", "= failure"
+ * - Unity: 协作语言 "your human partner"
+ */
+export type PersuasionPrinciple = 'authority' | 'commitment' | 'scarcity' | 'socialProof' | 'unity';
+
+/**
+ * 漏洞封堵模式
+ * 显式声明常见的绕过尝试和反驳
+ */
+export interface LoopholeClosure {
+  pattern: string;
+  rebuttal: string;
+  ironLawRef?: string;
+}
+
+/**
  * 铁律规则
  */
 export interface IronLaw {
@@ -38,6 +58,23 @@ export interface IronLaw {
   rule: string;
   enforcement: 'block' | 'warn' | 'log';
   violationAction: string;
+  /** 显式漏洞封堵 */
+  loopholes?: LoopholeClosure[];
+}
+
+/**
+ * Red Flag - 违规前兆思维
+ * 当 Agent 有这些想法时，说明即将违规
+ */
+export interface RedFlag {
+  /** 触发性想法 */
+  thought: string;
+  /** 现实情况 */
+  reality: string;
+  /** 关联铁律 */
+  ironLawRef?: string;
+  /** 使用的说服力原则 */
+  persuasionPrinciple?: PersuasionPrinciple;
 }
 
 /**
@@ -71,6 +108,8 @@ export interface AntiBypassRule {
   excuse: string;
   rebuttal: string;
   ironLawRef?: string;
+  /** 使用的说服力原则 */
+  persuasionPrinciple?: PersuasionPrinciple;
 }
 
 /**
@@ -86,6 +125,49 @@ export interface EffectivenessRecord {
 }
 
 /**
+ * 两阶段审查结果
+ */
+export interface TwoStageReviewResult {
+  specCompliance: {
+    passed: boolean;
+    missingRequirements: string[];
+    extraFeatures: string[];
+    issues: string[];
+  };
+  codeQuality: {
+    passed: boolean;
+    strengths: string[];
+    issues: ReviewIssue[];
+  };
+  overallPassed: boolean;
+  summary: string;
+}
+
+/**
+ * 审查问题
+ */
+export interface ReviewIssue {
+  severity: 'critical' | 'important' | 'minor';
+  description: string;
+  file?: string;
+  line?: number;
+  suggestion?: string;
+}
+
+/**
+ * 审查请求
+ */
+export interface ReviewRequest {
+  planPath: string;
+  implementationPaths: string[];
+  testResults?: {
+    passed: boolean;
+    coverage?: number;
+    failures: string[];
+  };
+}
+
+/**
  * 完整Harness配置
  */
 export interface HarnessConfig {
@@ -97,8 +179,12 @@ export interface HarnessConfig {
       watchedFiles: string[];
       threshold: number;
     };
+    /** Red Flags - 违规前兆思维检测 */
+    redFlags?: RedFlag[];
   };
   ironLaws: IronLaw[];
+  /** 全局漏洞封堵模式 */
+  loopholeClosure?: LoopholeClosure[];
   recommendations: Recommendation[];
   dynamicRules: DynamicRules;
   antiBypass: AntiBypassRule[];

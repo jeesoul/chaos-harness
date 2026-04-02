@@ -24,8 +24,19 @@ import {
   detectBypassAttempt,
   generateRebuttal,
   getIronLawForBypass,
-  DEFAULT_ANTI_BYPASS_RULES
+  DEFAULT_ANTI_BYPASS_RULES,
+  detectRedFlag,
+  generateRedFlagWarning,
+  DEFAULT_RED_FLAGS,
+  DEFAULT_LOOPHOLE_CLOSURES,
+  PERSUASION_PATTERNS
 } from './anti-bypass.js';
+import {
+  performTwoStageReview,
+  reviewSpecCompliance,
+  reviewCodeQuality,
+  formatReviewMarkdown
+} from './two-stage-review.js';
 import {
   EffectivenessTracker,
   formatEffectivenessMarkdown
@@ -290,6 +301,17 @@ export {
   generateRebuttal,
   getIronLawForBypass,
   DEFAULT_ANTI_BYPASS_RULES,
+  detectRedFlag,
+  generateRedFlagWarning,
+  DEFAULT_RED_FLAGS,
+  DEFAULT_LOOPHOLE_CLOSURES,
+  PERSUASION_PATTERNS,
+
+  // Two-stage review
+  performTwoStageReview,
+  reviewSpecCompliance,
+  reviewCodeQuality,
+  formatReviewMarkdown,
 
   // Effectiveness
   EffectivenessTracker,
@@ -303,10 +325,16 @@ export type {
   HarnessGenerateOptions,
   HarnessValidationResult,
   IronLaw,
+  LoopholeClosure,
   Recommendation,
   SelfCheckCondition,
   SelfCheckResult,
+  RedFlag,
+  PersuasionPrinciple,
   DynamicRules,
   AntiBypassRule,
-  EffectivenessRecord
+  EffectivenessRecord,
+  TwoStageReviewResult,
+  ReviewIssue,
+  ReviewRequest
 } from './types.js';

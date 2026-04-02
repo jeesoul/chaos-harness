@@ -100,6 +100,15 @@ export {
   generateRebuttal,
   getIronLawForBypass,
   DEFAULT_ANTI_BYPASS_RULES,
+  detectRedFlag,
+  generateRedFlagWarning,
+  DEFAULT_RED_FLAGS,
+  DEFAULT_LOOPHOLE_CLOSURES,
+  PERSUASION_PATTERNS,
+  performTwoStageReview,
+  reviewSpecCompliance,
+  reviewCodeQuality,
+  formatReviewMarkdown,
   EffectivenessTracker,
   formatEffectivenessMarkdown
 } from './core/harness-generator/index.js';
@@ -109,10 +118,16 @@ export type {
   HarnessGenerateOptions,
   HarnessValidationResult,
   IronLaw,
+  LoopholeClosure,
   Recommendation,
   SelfCheckCondition,
   SelfCheckResult,
+  RedFlag,
+  PersuasionPrinciple,
   DynamicRules,
   AntiBypassRule,
-  EffectivenessRecord
+  EffectivenessRecord,
+  TwoStageReviewResult,
+  ReviewIssue,
+  ReviewRequest
 } from './core/harness-generator/index.js';
