@@ -1,6 +1,6 @@
 {
   "name": "chaos-harness",
-  "description": "Claude Code Agent 约束框架 - 铁律、绕过检测、偷懒监控、自适应工作流",
+  "description": "Claude Code Agent Constraint Framework - Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow",
   "version": "1.0.0",
   "author": {
     "name": "jeesoul"
@@ -17,15 +17,7 @@
     "workflow",
     "laziness-detection",
     "bypass-detection",
-    "skills"
-  ],
-  "skills": [
-    "chaos-harness",
-    "project-scanner",
-    "version-locker",
-    "harness-generator",
-    "workflow-supervisor",
-    "iron-law-enforcer",
-    "plugin-manager"
+    "skills",
+    "agent-constraints"
   ]
 }
