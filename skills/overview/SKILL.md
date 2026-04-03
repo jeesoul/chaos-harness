@@ -65,6 +65,7 @@ Claude: [创建 IL-C002] 已添加自定义铁律
 | `workflow-supervisor` | 工作流、阶段管理 | 12阶段工作流管理 |
 | `iron-law-enforcer` | **始终激活** | 铁律执行、支持用户自定义 |
 | `plugin-manager` | 插件管理、配置 | 管理外部插件和铁律扩展 |
+| `collaboration-reviewer` | 评审、审查、协作 | 多Agent协作评审、插件协助、用户确认 |
 
 ## 插件系统
 

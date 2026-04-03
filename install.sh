@@ -306,6 +306,7 @@ show_usage() {
     echo "  /chaos-harness:plugin-manager       # Plugin management"
     echo "  /chaos-harness:hooks-manager        # Hooks management"
     echo "  /chaos-harness:project-state        # State persistence"
+    echo "  /chaos-harness:collaboration-reviewer # Multi-agent collaboration"
     echo ""
     echo -e "${YELLOW}Natural Language Triggers:${NC}"
     echo "  - 'scan current project'"

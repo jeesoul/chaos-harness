@@ -113,6 +113,7 @@ echo   /chaos-harness:iron-law-enforcer    # Iron law enforcement
 echo   /chaos-harness:plugin-manager       # Plugin management
 echo   /chaos-harness:hooks-manager        # Hooks management
 echo   /chaos-harness:project-state        # State persistence
+echo   /chaos-harness:collaboration-reviewer # Multi-agent collaboration
 echo.
 echo Natural Language Triggers:
 echo   - "scan current project"

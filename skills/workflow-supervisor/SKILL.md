@@ -98,14 +98,14 @@ digraph workflow {
 | 阶段 | 名称 | 输入 | 输出 | 角色 |
 |------|------|------|------|------|
 | W01 | 需求设计 | 项目描述 | 需求文档 | architect |
-| W02 | 需求评审 | 需求文档 | 评审报告 | architect |
+| W02 | 需求评审 | 需求文档 | 评审报告 | **collaboration-reviewer** |
 | W03 | 架构设计 | 需求文档 | 架构文档 | architect |
-| W04 | 架构评审 | 架构文档 | 评审报告 | architect |
+| W04 | 架构评审 | 架构文档 | 评审报告 | **collaboration-reviewer** |
 | W05 | 技术选型 | 架构文档 | 技术方案 | architect |
 | W06 | API设计 | 技术方案 | API文档 | backend_dev |
 | W07 | Agent分配 | 全部文档 | 分配方案 | supervisor |
 | W08 | 开发实现 | 设计文档 | 代码 | backend/frontend |
-| W09 | 代码审查 | 代码 | 审查报告 | architect |
+| W09 | 代码审查 | 代码 | 审查报告 | **collaboration-reviewer** |
 | W10 | 测试验证 | 代码 | 测试报告 | tester |
 | W11 | 文档完善 | 全部产出 | 文档 | backend_dev |
 | W12 | 发布部署 | 全部产出 | 发布包 | backend_dev |
