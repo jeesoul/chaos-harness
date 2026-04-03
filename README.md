@@ -209,6 +209,78 @@ LP002: 直接修复未分析根因             →    L003: 根因分析规则
 }
 ```
 
+### 💾 项目状态持久化
+
+**解决会话断开后"从零开始"的问题：**
+
+```
+问题场景：
+─────────────────────────────────────────────────────────
+昨天: 用 Chaos Harness 做到 W08 开发阶段，版本 v0.1
+关机
+今天: 重新打开 Claude Code → 不知道之前做到哪了
+─────────────────────────────────────────────────────────
+```
+
+**项目级状态存储：**
+
+```
+project-root/
+├── .chaos-harness/              # 项目状态目录
+│   ├── state.json               # 核心状态
+│   ├── scan-result.json         # 扫描结果缓存
+│   ├── decisions-log.json       # 关键决策记录
+│   └── harness.yaml             # 当前 Harness 配置
+└── output/v0.1/                 # 版本输出目录
+```
+
+**会话恢复流程：**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🔄 会话恢复                                                 │
+├─────────────────────────────────────────────────────────────┤
+│  项目: my-project                                            │
+│  版本: v0.1                                                  │
+│  阶段: W08 开发实现                                          │
+│  上次: 2小时前                                               │
+│                                                             │
+│  上次进度：                                                  │
+│  - 完成了 UserService 实现                                   │
+│  - 正在处理 OrderService                                    │
+│  - 3 个单元测试待编写                                        │
+│                                                             │
+│  继续上次工作？                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**状态文件结构：**
+
+```json
+{
+  "project_name": "my-project",
+  "current_version": "v0.1",
+  "workflow": {
+    "scale": "medium",
+    "current_stage": "W08_development",
+    "stages_completed": ["W01", "W03"],
+    "stages_pending": ["W09", "W10", "W12"]
+  },
+  "last_session": "2026-04-03T10:30:00Z",
+  "statistics": {
+    "total_sessions": 5,
+    "iron_law_triggers": 3
+  }
+}
+```
+
+**状态隔离原则：**
+
+| 存储位置 | 内容 | 共享范围 |
+|---------|------|---------|
+| `~/.claude/harness/` | 学习记录、自定义铁律 | 所有项目共享 |
+| `project/.chaos-harness/` | 项目状态、进度、决策 | 仅当前项目 |
+
 ### 🎯 智能自适应
 
 自动感知项目环境，动态调整约束强度：
@@ -479,6 +551,8 @@ install.bat                            # Windows
 你: 添加铁律：周五禁止部署
 你: 查看钩子状态
 你: 查看学习日志
+你: 继续上次进度
+你: 查看项目状态
 ```
 
 ### 斜杠命令
@@ -492,6 +566,7 @@ install.bat                            # Windows
 /chaos-harness:iron-law-enforcer    # 铁律执行
 /chaos-harness:plugin-manager       # 插件管理
 /chaos-harness:hooks-manager        # 钩子管理
+/chaos-harness:project-state        # 状态持久化
 ```
 
 ### 示例：完成验证
@@ -568,17 +643,18 @@ npm run coverage      # 覆盖率报告
 
 ```
 chaos-harness/
-├── hooks/                      # M10 钩子系统
+├── hooks/                      # 钩子系统
 │   ├── hooks.json              # 钩子配置
 │   ├── run-hook.cmd            # 跨平台 wrapper
-│   ├── session-start           # 会话开始注入
+│   ├── session-start           # 会话开始注入 + 状态恢复
 │   ├── iron-law-check          # 铁律检查
 │   ├── laziness-detect         # 偷懒检测
 │   ├── learning-update         # 学习记录
 │   ├── workflow-track          # 工作流追踪
-│   ├── stop                    # 完成声明分析
+│   ├── stop                    # 完成声明分析 + 状态保存
 │   └── pre-compact             # 压缩前保存
 ├── skills/                     # Skill 模块定义
+│   ├── project-state/          # 状态持久化与恢复
 │   ├── hooks-manager/          # 钩子管理
 │   ├── iron-law-enforcer/      # 铁律执行
 │   ├── project-scanner/        # 项目扫描
@@ -586,20 +662,24 @@ chaos-harness/
 │   ├── harness-generator/      # Harness 生成
 │   ├── workflow-supervisor/    # 工作流监督
 │   └── plugin-manager/         # 插件管理
+├── commands/                   # 命令入口
 ├── src/core/                   # 核心 API 实现
-│   ├── scanner/                # 扫描器
-│   ├── version-manager/        # 版本管理
-│   ├── env-fixer/              # 环境修复
-│   ├── harness-generator/      # Harness 生成
-│   ├── workflow-engine/        # 工作流引擎
-│   └── mcp-server/             # MCP Server
 ├── templates/                  # 配置模板
-│   ├── hooks.yaml              # 钩子配置模板
-│   ├── plugins.yaml            # 插件配置模板
-│   ├── iron-laws.yaml          # 自定义铁律模板
-│   └── [java-spring, etc]/     # Harness 模板
-├── tests/                      # 测试套件 (623 tests)
+├── tests/                      # 测试套件
 └── docs/                       # 文档
+```
+
+**项目使用后生成的文件：**
+
+```
+your-project/
+├── .chaos-harness/             # 项目状态（git 可选忽略）
+│   ├── state.json              # 核心状态
+│   ├── scan-result.json        # 扫描缓存
+│   ├── decisions-log.json      # 决策记录
+│   └── harness.yaml            # Harness 配置
+└── output/                     # 版本输出
+    └── v0.1/
 ```
 
 ---

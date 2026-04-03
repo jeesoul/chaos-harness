@@ -1,17 +1,17 @@
 #!/bin/bash
 # session-start - SessionStart hook script
-# Injects iron laws and workflow context at session start
+# Injects iron laws and restores project state at session start
 
 set -e
 
-# Data directory
-DATA_DIR="$HOME/.claude/harness"
-IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
-PLUGIN_LOG="$DATA_DIR/plugin-log.json"
-WORKFLOW_STATE="$DATA_DIR/workflow-state.yaml"
+# Data directories
+GLOBAL_DATA_DIR="$HOME/.claude/harness"
+PROJECT_STATE_DIR=""
+IRON_LAW_LOG="$GLOBAL_DATA_DIR/iron-law-log.json"
+PLUGIN_LOG="$GLOBAL_DATA_DIR/plugin-log.json"
 
-# Ensure data directory exists
-mkdir -p "$DATA_DIR"
+# Ensure global data directory exists
+mkdir -p "$GLOBAL_DATA_DIR"
 
 # Initialize log files if they don't exist
 if [[ ! -f "$IRON_LAW_LOG" ]]; then
@@ -22,9 +22,36 @@ if [[ ! -f "$PLUGIN_LOG" ]]; then
     echo '[]' > "$PLUGIN_LOG"
 fi
 
-# Output iron laws context (silent injection - no visible output to user)
-# This gets injected into Claude's context via hook mechanism
+# Detect project root (look for common project markers)
+detect_project_root() {
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/.chaos-harness/state.json" ]] || \
+           [[ -f "$dir/pom.xml" ]] || \
+           [[ -f "$dir/package.json" ]] || \
+           [[ -f "$dir/requirements.txt" ]] || \
+           [[ -d "$dir/.git" ]]; then
+            echo "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "$PWD"
+}
 
+PROJECT_ROOT=$(detect_project_root)
+PROJECT_STATE_DIR="$PROJECT_ROOT/.chaos-harness"
+PROJECT_STATE_FILE="$PROJECT_STATE_DIR/state.json"
+
+# Check if project state exists
+check_project_state() {
+    if [[ -f "$PROJECT_STATE_FILE" ]]; then
+        return 0  # State exists
+    fi
+    return 1  # No state
+}
+
+# Output iron laws context
 cat << 'IRON_LAWS_CONTEXT'
 <CHAOS_HARNESS_CONTEXT>
 **Iron Laws Active (不可协商):**
@@ -58,18 +85,51 @@ cat << 'IRON_LAWS_CONTEXT'
 </CHAOS_HARNESS_CONTEXT>
 IRON_LAWS_CONTEXT
 
-# Check for workflow state
-if [[ -f "$WORKFLOW_STATE" ]]; then
-    # Read and output current workflow state
-    echo "<WORKFLOW_STATE>"
-    cat "$WORKFLOW_STATE"
-    echo "</WORKFLOW_STATE>"
+# Project state recovery
+if check_project_state; then
+    echo ""
+    echo "<CHAOS_HARNESS_STATE_RECOVERY>"
+    echo "项目状态文件已检测到: $PROJECT_STATE_FILE"
+    echo ""
+    echo "**建议操作:**"
+    echo "使用 /chaos-harness:project-state 或说 '继续上次进度' 恢复会话。"
+    echo ""
+
+    # Extract key info for quick display
+    if command -v jq &> /dev/null; then
+        CURRENT_VERSION=$(cat "$PROJECT_STATE_FILE" | jq -r '.current_version // "未设置"')
+        CURRENT_STAGE=$(cat "$PROJECT_STATE_FILE" | jq -r '.workflow.current_stage // "未开始"')
+        LAST_SESSION=$(cat "$PROJECT_STATE_FILE" | jq -r '.last_session // "N/A"')
+        PROJECT_NAME=$(cat "$PROJECT_STATE_FILE" | jq -r '.project_name // "Unknown"')
+
+        echo "**快速状态:**"
+        echo "- 项目: $PROJECT_NAME"
+        echo "- 版本: $CURRENT_VERSION"
+        echo "- 阶段: $CURRENT_STAGE"
+        echo "- 上次会话: $LAST_SESSION"
+    fi
+
+    echo "</CHAOS_HARNESS_STATE_RECOVERY>"
+else
+    echo ""
+    echo "<CHAOS_HARNESS_NEW_PROJECT>"
+    echo "未检测到项目状态文件。"
+    echo ""
+    echo "这是一个新项目或首次使用 Chaos Harness。"
+    echo ""
+    echo "**建议操作:**"
+    echo "1. 使用 /chaos-harness:project-scanner 扫描项目"
+    echo "2. 使用 /chaos-harness:version-locker 创建版本"
+    echo "3. 使用 /chaos-harness:harness-generator 生成约束"
+    echo ""
+    echo "或说 '开始使用 chaos-harness' 进行初始化。"
+    echo "</CHAOS_HARNESS_NEW_PROJECT>"
 fi
 
 # Log session start
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 SESSION_ID=$(date +%s)
 
-echo "$(cat "$PLUGIN_LOG")" | jq --arg ts "$TIMESTAMP" --arg sid "$SESSION_ID" '. += [{"event": "session_start", "timestamp": $ts, "session_id": $sid}]' > "$PLUGIN_LOG"
+echo "$(cat "$PLUGIN_LOG")" | jq --arg ts "$TIMESTAMP" --arg sid "$SESSION_ID" --arg root "$PROJECT_ROOT" '. += [{"event": "session_start", "timestamp": $ts, "session_id": $sid, "project_root": $root}]' > "$PLUGIN_LOG"
 
 exit 0

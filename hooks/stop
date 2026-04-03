@@ -1,13 +1,33 @@
 #!/bin/bash
 # stop - Stop hook script
 # Analyzes turn for completion claims and laziness patterns
+# Saves project state for next session recovery
 
 set -e
 
 DATA_DIR="$HOME/.claude/harness"
 LAZINESS_LOG="$DATA_DIR/laziness-log.json"
 IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
-WORKFLOW_STATE="$DATA_DIR/workflow-state.yaml"
+
+# Detect project root
+detect_project_root() {
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/.chaos-harness/state.json" ]] || \
+           [[ -f "$dir/pom.xml" ]] || \
+           [[ -f "$dir/package.json" ]] || \
+           [[ -d "$dir/.git" ]]; then
+            echo "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "$PWD"
+}
+
+PROJECT_ROOT=$(detect_project_root)
+PROJECT_STATE_DIR="$PROJECT_ROOT/.chaos-harness"
+PROJECT_STATE_FILE="$PROJECT_STATE_DIR/state.json"
 
 # Ensure data directory exists
 mkdir -p "$DATA_DIR"
@@ -16,6 +36,26 @@ mkdir -p "$DATA_DIR"
 if [[ ! -f "$LAZINESS_LOG" ]]; then
     echo '[]' > "$LAZINESS_LOG"
 fi
+
+# Save project state before turn ends
+save_project_state() {
+    if [[ ! -f "$PROJECT_STATE_FILE" ]]; then
+        return  # No state file yet
+    fi
+
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    # Update last_session timestamp
+    if command -v jq &> /dev/null; then
+        local tmp_file="/tmp/state_$$.json"
+        jq --arg ts "$TIMESTAMP" '.last_session = $ts' "$PROJECT_STATE_FILE" > "$tmp_file" && \
+        cat "$tmp_file" > "$PROJECT_STATE_FILE" && rm -f "$tmp_file"
+
+        # Increment session count
+        jq '.statistics.total_sessions = (.statistics.total_sessions // 0) + 1' "$PROJECT_STATE_FILE" > "$tmp_file" && \
+        cat "$tmp_file" > "$PROJECT_STATE_FILE" && rm -f "$tmp_file"
+    fi
+}
 
 # Check for bypass keywords
 check_bypass_keywords() {
@@ -175,5 +215,8 @@ fi
 # Analyze input
 check_bypass_keywords "$INPUT" || true
 check_il003 "$INPUT" || true
+
+# Save project state for next session
+save_project_state
 
 exit 0

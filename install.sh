@@ -283,6 +283,7 @@ show_usage() {
     echo "  /chaos-harness:iron-law-enforcer    # Iron law enforcement"
     echo "  /chaos-harness:plugin-manager       # Plugin management"
     echo "  /chaos-harness:hooks-manager        # Hooks management"
+    echo "  /chaos-harness:project-state        # State persistence"
     echo ""
     echo -e "${YELLOW}Natural Language Triggers:${NC}"
     echo "  - 'scan current project'"
