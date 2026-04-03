@@ -66,11 +66,11 @@ IL005: NO HIGH-RISK CONFIG WITHOUT APPROVAL     # 敏感配置需审批
 
 ### 方式 1: 从 GitHub 安装 (推荐)
 
-在 Claude Code 中执行：
+在终端执行：
 
-```
-! claude plugins marketplace add github:jeesoul/chaos-harness
-! claude plugins install chaos-harness
+```bash
+claude plugins marketplace add github:jeesoul/chaos-harness
+claude plugins install chaos-harness@chaos-harness
 ```
 
 ### 方式 2: 从本地安装
@@ -78,23 +78,40 @@ IL005: NO HIGH-RISK CONFIG WITHOUT APPROVAL     # 敏感配置需审批
 ```bash
 # 1. 克隆仓库
 git clone https://github.com/jeesoul/chaos-harness.git
+cd chaos-harness
 
-# 2. 在 Claude Code 中执行：
-! claude plugins marketplace add /path/to/chaos-harness
-! claude plugins install chaos-harness
+# 2. 注册 marketplace 并安装
+claude plugins marketplace add "$(pwd)"
+claude plugins install chaos-harness@chaos-harness
+```
+
+**Windows 用户：**
+
+```cmd
+claude plugins marketplace add "D:\path\to\chaos-harness"
+claude plugins install chaos-harness@chaos-harness
 ```
 
 ### 验证安装
 
-```
+```bash
+# 重启 Claude Code 后测试
 /chaos-harness:overview
 ```
 
 ### 卸载
 
+```bash
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins marketplace remove chaos-harness
 ```
-! claude plugins uninstall chaos-harness
-```
+
+### 常见问题
+
+| 现象 | 原因 | 解决 |
+|------|------|------|
+| 命令显示 `/overview` 而非 `/chaos-harness:overview` | scope 注册错误 | 按上述步骤重新安装 |
+| 安装后重启仍无效 | 没有通过 marketplace 安装 | 确保执行了 `claude plugins install` |
 
 ---
 
