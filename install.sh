@@ -19,7 +19,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 PLUGIN_NAME="chaos-harness"
-MARKETPLACE_NAME="chaos-harness"
+MARKETPLACE_NAME="chaos-harness-marketplace"
 VERSION="1.0.0"
 
 echo -e "${GREEN}================================================${NC}"
