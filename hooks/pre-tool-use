@@ -1,0 +1,26 @@
+#!/bin/bash
+# Pre Tool Use Hook for Chaos Harness
+# Called before Bash tool execution
+# Args: $1 = tool name (Bash)
+
+TOOL_NAME="${1:-unknown}"
+
+# Read stdin for tool input
+INPUT=$(cat)
+
+# Log the tool call (optional, for debugging)
+LOG_DIR="${CLAUDE_PROJECT_ROOT:-.}/.harness/logs"
+mkdir -p "$LOG_DIR" 2>/dev/null
+
+# Check for high-risk commands (IL005 trigger)
+if [[ "$INPUT" =~ (DROP\s+TABLE|TRUNCATE|DELETE\s+FROM|ALTER\s+TABLE) ]]; then
+    echo "[IL005 WARNING] Database modification command detected. Requires approval."
+fi
+
+# Check for production access patterns
+if [[ "$INPUT" =~ (prod|production|主库|正式环境) ]]; then
+    echo "[IL005 WARNING] Production environment access detected. Requires approval."
+fi
+
+# Pass through - don't block
+exit 0
