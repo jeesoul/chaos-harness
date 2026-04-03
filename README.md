@@ -64,39 +64,98 @@ IL005: NO HIGH-RISK CONFIG WITHOUT APPROVAL     # 敏感配置需审批
 
 ## 安装
 
-```bash
-# 克隆仓库
-git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness
-
-# 安装
-./install.sh    # macOS/Linux
-install.bat     # Windows
-
-# 重启 Claude Code
-```
-
-### ⚠️ 重要说明
-
-**Skills 必须安装到个人技能目录才能被 Skill 工具发现：**
-
-```
-~/.claude/skills/chaos-harness-overview/SKILL.md  ← Skill工具发现路径
-~/.claude/plugins/cache/...                        ← 仅用于插件管理，不影响Skill发现
-```
-
-安装脚本会自动复制技能到正确位置。如果命令无法使用，运行诊断：
+### 方法 1: 双击安装脚本 (推荐)
 
 ```bash
-./quick-check.bat   # Windows 快速检查
-./diagnose-full.bat # Windows 完整诊断
+# Windows
+install.bat          # 双击运行
+
+# macOS/Linux
+./install.sh         # 终端运行
+
+# 重启 Claude Code 后使用
+/chaos-harness:overview
 ```
+
+### 方法 2: 手动安装
+
+如果自动安装失败，按以下步骤：
+
+1. **复制文件到插件目录：**
+   ```bash
+   # Windows
+   xcopy /s /e /i "chaos-harness\skills" "%USERPROFILE%\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\"
+   xcopy /s /e /i "chaos-harness\commands" "%USERPROFILE%\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\"
+   xcopy /s /e /i "chaos-harness\.claude-plugin" "%USERPROFILE%\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\.claude-plugin\"
+
+   # macOS/Linux
+   cp -r skills ~/.claude/plugins/cache/chaos-harness/chaos-harness/1.0.0/
+   cp -r commands ~/.claude/plugins/cache/chaos-harness/chaos-harness/1.0.0/
+   cp -r .claude-plugin ~/.claude/plugins/cache/chaos-harness/chaos-harness/1.0.0/
+   ```
+
+2. **注册插件：**
+   编辑 `~/.claude/plugins/installed_plugins.json`，添加：
+   ```json
+   {
+     "chaos-harness@chaos-harness": [{
+       "scope": "user",
+       "installPath": "~/.claude/plugins/cache/chaos-harness/chaos-harness/1.0.0",
+       "version": "1.0.0",
+       "installedAt": "2026-04-03T00:00:00.000Z"
+     }]
+   }
+   ```
+
+3. **启用插件：**
+   编辑 `~/.claude/settings.json`，添加：
+   ```json
+   {
+     "enabledPlugins": {
+       "chaos-harness@chaos-harness": true
+     }
+   }
+   ```
+
+4. **重启 Claude Code**
+
+### 验证安装
+
+运行诊断脚本：
+```bash
+diagnose-another-machine.bat   # Windows 完整诊断
+quick-check.bat                # Windows 快速检查
+```
+
+或手动检查：
+```bash
+# 检查插件是否注册
+cat ~/.claude/plugins/installed_plugins.json | grep chaos-harness
+
+# 检查插件是否启用
+cat ~/.claude/settings.json | grep chaos-harness
+
+# 检查目录结构
+ls ~/.claude/plugins/cache/chaos-harness/chaos-harness/1.0.0/skills/overview/
+```
+
+### 常见问题
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| 命令不显示 | installed_plugins.json 缺少注册 | 运行 install.bat |
+| 命令不执行 | settings.json 未启用 | 添加 enabledPlugins |
+| 找不到 skill | cache 目录结构不完整 | 检查 skills/ 目录 |
+| 用户名不同 | installPath 路径错误 | 手动修正路径 |
 
 ### 卸载
 
 ```bash
-./uninstall.sh   # macOS/Linux
-uninstall.bat    # Windows
+# Windows
+install.bat --uninstall
+
+# macOS/Linux
+./uninstall.sh
 ```
 
 ---

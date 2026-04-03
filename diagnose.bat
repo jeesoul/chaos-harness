@@ -1,181 +1,73 @@
 @echo off
-chcp 65001 >nul 2>&1
-REM Chaos Harness Diagnostic Script
-REM Checks installation and reports issues
+REM Chaos Harness One-Click Fix Script
 
 echo ========================================================
-echo     Chaos Harness Diagnostic Script
+echo   Chaos Harness One-Click Fix
 echo ========================================================
 echo.
 
-set "PLUGIN_NAME=chaos-harness"
-set "MARKETPLACE_NAME=chaos-harness"
-set "VERSION=1.0.0"
-set "CACHE_DIR=%USERPROFILE%\.claude\plugins\cache\%MARKETPLACE_NAME%\%PLUGIN_NAME%\%VERSION%"
-set "MARKETPLACE_DIR=%USERPROFILE%\.claude\plugins\marketplaces\%MARKETPLACE_NAME%"
+set "SCRIPT_DIR=%~dp0"
+set "CACHE_DIR=%USERPROFILE%\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0"
 
-echo [1] Checking installation directories...
-echo.
-
-REM Check cache directory
-echo Cache Directory:
-if exist "%CACHE_DIR%" (
-    echo   [OK] %CACHE_DIR%
-) else (
-    echo   [ERROR] NOT FOUND: %CACHE_DIR%
-    echo   Please run install.bat first.
-    goto :end_check
-)
+echo Step 1: Creating directories...
+if not exist "%CACHE_DIR%\skills" mkdir "%CACHE_DIR%\skills"
+if not exist "%CACHE_DIR%\commands" mkdir "%CACHE_DIR%\commands"
+if not exist "%CACHE_DIR%\.claude-plugin" mkdir "%CACHE_DIR%\.claude-plugin"
+echo [OK] Directories created
 
 echo.
-
-echo [2] Checking critical files...
-echo.
-
-set "ERRORS=0"
-
-REM Check plugin.json
-if exist "%CACHE_DIR%\.claude-plugin\plugin.json" (
-    echo   [OK] .claude-plugin\plugin.json
-) else (
-    echo   [ERROR] Missing: .claude-plugin\plugin.json
-    set /a ERRORS+=1
-)
-
-REM Check skills
-if exist "%CACHE_DIR%\skills\overview\SKILL.md" (
-    echo   [OK] skills\overview\SKILL.md
-) else (
-    echo   [ERROR] Missing: skills\overview\SKILL.md
-    set /a ERRORS+=1
-)
-
-if exist "%CACHE_DIR%\skills\project-scanner\SKILL.md" (
-    echo   [OK] skills\project-scanner\SKILL.md
-) else (
-    echo   [ERROR] Missing: skills\project-scanner\SKILL.md
-    set /a ERRORS+=1
-)
-
-REM Check commands
-if exist "%CACHE_DIR%\commands\overview.md" (
-    echo   [OK] commands\overview.md
-) else (
-    echo   [ERROR] Missing: commands\overview.md
-    set /a ERRORS+=1
-)
-
-REM Check hooks
-if exist "%CACHE_DIR%\hooks\hooks.json" (
-    echo   [OK] hooks\hooks.json
-) else (
-    echo   [ERROR] Missing: hooks\hooks.json
-    set /a ERRORS+=1
-)
+echo Step 2: Copying files...
+if exist "%SCRIPT_DIR%skills" xcopy /s /e /i /q /y "%SCRIPT_DIR%skills" "%CACHE_DIR%\skills\"
+if exist "%SCRIPT_DIR%commands" xcopy /s /e /i /q /y "%SCRIPT_DIR%commands" "%CACHE_DIR%\commands\"
+if exist "%SCRIPT_DIR%.claude-plugin" xcopy /s /e /i /q /y "%SCRIPT_DIR%.claude-plugin" "%CACHE_DIR%\.claude-plugin\"
+echo [OK] Files copied
 
 echo.
+echo Step 3: Creating registration PowerShell script...
+set "REG_SCRIPT=%TEMP%\fix-chaos-harness.ps1"
 
-echo [3] Checking plugin registration...
+echo $ErrorActionPreference = 'Stop' > "%REG_SCRIPT%"
+echo $ts = Get-Date -Format 'yyyy-MM-ddTHH:mm:ss.000Z' >> "%REG_SCRIPT%"
+echo. >> "%REG_SCRIPT%"
+echo $installedFile = "$env:USERPROFILE\.claude\plugins\installed_plugins.json" >> "%REG_SCRIPT%"
+echo $installedDir = Split-Path $installedFile >> "%REG_SCRIPT%"
+echo if (-not (Test-Path $installedDir)) { New-Item -ItemType Directory -Force -Path $installedDir ^| Out-Null } >> "%REG_SCRIPT%"
+echo if (-not (Test-Path $installedFile)) { '{"version":2,"plugins":{}}' ^| Out-File -Encoding utf8 $installedFile } >> "%REG_SCRIPT%"
+echo $json = Get-Content $installedFile ^| ConvertFrom-Json >> "%REG_SCRIPT%"
+echo if ($null -eq $json.plugins) { $json ^| Add-Member -NotePropertyName 'plugins' -NotePropertyValue @{} -Force } >> "%REG_SCRIPT%"
+echo $entry = @{scope='user'; installPath='%CACHE_DIR%'; version='1.0.0'; installedAt=$ts; lastUpdated=$ts} >> "%REG_SCRIPT%"
+echo $json.plugins ^| Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue @($entry) -Force >> "%REG_SCRIPT%"
+echo $json ^| ConvertTo-Json -Depth 10 ^| Out-File -Encoding utf8 $installedFile >> "%REG_SCRIPT%"
+echo Write-Host '[OK] Registered in installed_plugins.json' >> "%REG_SCRIPT%"
+echo. >> "%REG_SCRIPT%"
+echo $settingsFile = "$env:USERPROFILE\.claude\settings.json" >> "%REG_SCRIPT%"
+echo $settingsDir = Split-Path $settingsFile >> "%REG_SCRIPT%"
+echo if (-not (Test-Path $settingsDir)) { New-Item -ItemType Directory -Force -Path $settingsDir ^| Out-Null } >> "%REG_SCRIPT%"
+echo if (Test-Path $settingsFile) { $json = Get-Content $settingsFile ^| ConvertFrom-Json } else { $json = [PSCustomObject]@{} } >> "%REG_SCRIPT%"
+echo if ($null -eq $json.enabledPlugins) { $json ^| Add-Member -NotePropertyName 'enabledPlugins' -NotePropertyValue ([PSCustomObject]@{}) -Force } >> "%REG_SCRIPT%"
+echo $json.enabledPlugins ^| Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue $true -Force >> "%REG_SCRIPT%"
+echo $json ^| ConvertTo-Json -Depth 10 ^| Out-File -Encoding utf8 $settingsFile >> "%REG_SCRIPT%"
+echo Write-Host '[OK] Enabled in settings.json' >> "%REG_SCRIPT%"
+
 echo.
-
-REM Check installed_plugins.json
-set "INSTALLED_FILE=%USERPROFILE%\.claude\plugins\installed_plugins.json"
-if exist "%INSTALLED_FILE%" (
-    findstr /C:"chaos-harness@chaos-harness" "%INSTALLED_FILE%" >nul 2>&1
-    if errorlevel 1 (
-        echo   [ERROR] Not registered in installed_plugins.json
-        set /a ERRORS+=1
-    ) else (
-        echo   [OK] Registered in installed_plugins.json
-    )
-) else (
-    echo   [ERROR] installed_plugins.json not found
-    set /a ERRORS+=1
+echo Step 4: Running registration...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%REG_SCRIPT%"
+if errorlevel 1 (
+    echo [ERROR] Registration failed
+    echo Try running install.bat instead
+    goto :end
 )
 
-REM Check known_marketplaces.json
-set "MARKETPLACE_FILE=%USERPROFILE%\.claude\plugins\known_marketplaces.json"
-if exist "%MARKETPLACE_FILE%" (
-    findstr /C:"chaos-harness" "%MARKETPLACE_FILE%" >nul 2>&1
-    if errorlevel 1 (
-        echo   [WARN] Not found in known_marketplaces.json
-    ) else (
-        echo   [OK] Registered in known_marketplaces.json
-    )
-) else (
-    echo   [WARN] known_marketplaces.json not found
-)
+del /f /q "%REG_SCRIPT%" 2>nul
 
 echo.
-
-echo [4] Checking settings...
-echo.
-
-set "SETTINGS_FILE=%USERPROFILE%\.claude\settings.json"
-if exist "%SETTINGS_FILE%" (
-    echo   File: %SETTINGS_FILE%
-    findstr /C:"chaos-harness@chaos-harness" "%SETTINGS_FILE%" >nul 2>&1
-    if errorlevel 1 (
-        echo   [ERROR] "chaos-harness@chaos-harness" not found in enabledPlugins
-        echo   This is likely why commands don't work!
-        set /a ERRORS+=1
-    ) else (
-        echo   [OK] Enabled in settings.json
-    )
-) else (
-    echo   [ERROR] settings.json not found
-    echo   This is likely why commands don't work!
-    set /a ERRORS+=1
-)
-
-echo.
-
-echo [5] Checking personal skills directory (CRITICAL for Skill tool)...
-echo.
-
-set "PERSONAL_SKILLS_DIR=%USERPROFILE%\.claude\skills"
-if exist "%PERSONAL_SKILLS_DIR%\chaos-harness-overview" (
-    echo   [OK] chaos-harness-overview skill found
-) else (
-    echo   [ERROR] chaos-harness-overview skill NOT found in personal skills directory
-    echo   This is why /chaos-harness:overview doesn't work!
-    echo   Skills must be in personal skills directory for Skill tool to discover them.
-    set /a ERRORS+=1
-)
-
-echo.
-
-:end_check
 echo ========================================================
-echo Summary
+echo   Fix Complete!
 echo ========================================================
+echo.
+echo Please restart Claude Code and test:
+echo   /chaos-harness:overview
+echo.
 
-if "%ERRORS%"=="0" (
-    echo.
-    echo [SUCCESS] All checks passed!
-    echo.
-    echo Installation looks correct. If commands still don't work:
-    echo   1. Close ALL Claude Code windows
-    echo   2. Start a NEW Claude Code session
-    echo   3. Try: /chaos-harness:overview
-    echo.
-    echo If still not working, the skill might need a restart:
-    echo   - In Claude Code, type: /skills
-    echo   - Check if chaos-harness appears in the list
-) else (
-    echo.
-    echo [FAILED] Found %ERRORS% error(s)
-    echo.
-    echo To fix:
-    echo   1. Close Claude Code
-    echo   2. Run: uninstall.bat (if exists)
-    echo   3. Run: install.bat
-    echo   4. Start a NEW Claude Code session
-    echo.
-    echo If problems persist, check:
-    echo   - Are you running from the correct directory?
-    echo   - Do you have write permissions?
-)
-
-echo ========================================================
+:end
 pause
