@@ -175,12 +175,16 @@ install.bat --uninstall
 ### 斜杠命令
 
 ```
-/chaos-harness:overview             # 主入口
-/chaos-harness:project-scanner      # 扫描项目
-/chaos-harness:version-locker       # 版本管理
-/chaos-harness:harness-generator    # 生成约束
-/chaos-harness:workflow-supervisor  # 工作流
-/chaos-harness:iron-law-enforcer    # 铁律执行
+/chaos-harness:overview              # 主入口、系统概览
+/chaos-harness:project-scanner       # 扫描项目、检测类型
+/chaos-harness:version-locker        # 版本管理、目录锁定
+/chaos-harness:harness-generator     # 生成约束、铁律规则
+/chaos-harness:workflow-supervisor   # 工作流、阶段管理
+/chaos-harness:iron-law-enforcer     # 铁律执行、绕过检测
+/chaos-harness:collaboration-reviewer # 多Agent协作评审
+/chaos-harness:hooks-manager         # 钩子管理、日志查看
+/chaos-harness:plugin-manager        # 插件管理、扩展配置
+/chaos-harness:project-state         # 项目状态、进度恢复
 ```
 
 ### 示例：完成验证
