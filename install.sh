@@ -31,13 +31,32 @@ echo ""
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Get plugin cache directory
+# Get plugin cache directory (Windows format for JSON)
 get_cache_dir() {
-    echo "$HOME/.claude/plugins/cache/$MARKETPLACE_NAME/$PLUGIN_NAME/$VERSION"
+    # Convert Unix path to Windows format for JSON compatibility
+    local unix_path="$HOME/.claude/plugins/cache/$MARKETPLACE_NAME/$PLUGIN_NAME/$VERSION"
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+        # Convert /c/Users/... to C:\Users\...
+        local win_path=$(echo "$unix_path" | sed 's|^/\([a-z]\)/|\U\1:/|' | sed 's|/|\\|g')
+        echo "$win_path"
+    else
+        echo "$unix_path"
+    fi
 }
 
 get_marketplace_dir() {
     echo "$HOME/.claude/plugins/marketplaces/$MARKETPLACE_NAME"
+}
+
+# Get marketplace directory in Windows format for JSON
+get_marketplace_dir_win() {
+    local unix_path="$HOME/.claude/plugins/marketplaces/$MARKETPLACE_NAME"
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+        local win_path=$(echo "$unix_path" | sed 's|^/\([a-z]\)/|\U\1:/|' | sed 's|/|\\|g')
+        echo "$win_path"
+    else
+        echo "$unix_path"
+    fi
 }
 
 # Install plugin
@@ -131,7 +150,7 @@ uninstall_plugin() {
 # Register marketplace in known_marketplaces.json
 register_marketplace() {
     local marketplaces_file="$HOME/.claude/plugins/known_marketplaces.json"
-    local marketplace_dir=$(get_marketplace_dir)
+    local marketplace_dir=$(get_marketplace_dir_win)
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 
     echo -e "${YELLOW}Registering marketplace...${NC}"
