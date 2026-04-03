@@ -113,15 +113,18 @@ echo.
 
 set "SETTINGS_FILE=%USERPROFILE%\.claude\settings.json"
 if exist "%SETTINGS_FILE%" (
+    echo   File: %SETTINGS_FILE%
     findstr /C:"chaos-harness@chaos-harness" "%SETTINGS_FILE%" >nul 2>&1
     if errorlevel 1 (
-        echo   [ERROR] Not enabled in settings.json
+        echo   [ERROR] "chaos-harness@chaos-harness" not found in enabledPlugins
+        echo   This is likely why commands don't work!
         set /a ERRORS+=1
     ) else (
         echo   [OK] Enabled in settings.json
     )
 ) else (
     echo   [ERROR] settings.json not found
+    echo   This is likely why commands don't work!
     set /a ERRORS+=1
 )
 
