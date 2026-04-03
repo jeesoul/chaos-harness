@@ -33,29 +33,56 @@ if not exist "%MARKETPLACE_DIR%" mkdir "%MARKETPLACE_DIR%"
 
 REM Copy plugin files to marketplace
 echo Copying to marketplace directory...
-xcopy /s /e /i /q "%SCRIPT_DIR%.claude-plugin" "%MARKETPLACE_DIR%\.claude-plugin\" >nul
-xcopy /s /e /i /q "%SCRIPT_DIR%skills" "%MARKETPLACE_DIR%\skills\" >nul
+xcopy /s /e /i /q /y "%SCRIPT_DIR%.claude-plugin" "%MARKETPLACE_DIR%\.claude-plugin\" >nul
+xcopy /s /e /i /q /y "%SCRIPT_DIR%skills" "%MARKETPLACE_DIR%\skills\" >nul
 if exist "%SCRIPT_DIR%CLAUDE.md" copy /y "%SCRIPT_DIR%CLAUDE.md" "%MARKETPLACE_DIR%\" >nul
 if exist "%SCRIPT_DIR%README.md" copy /y "%SCRIPT_DIR%README.md" "%MARKETPLACE_DIR%\" >nul
-if exist "%SCRIPT_DIR%templates" xcopy /s /e /i /q "%SCRIPT_DIR%templates" "%MARKETPLACE_DIR%\templates\" >nul
-if exist "%SCRIPT_DIR%commands" xcopy /s /e /i /q "%SCRIPT_DIR%commands" "%MARKETPLACE_DIR%\commands\" >nul
-if exist "%SCRIPT_DIR%hooks" xcopy /s /e /i /q "%SCRIPT_DIR%hooks" "%MARKETPLACE_DIR%\hooks\" >nul
+if exist "%SCRIPT_DIR%templates" xcopy /s /e /i /q /y "%SCRIPT_DIR%templates" "%MARKETPLACE_DIR%\templates\" >nul
+if exist "%SCRIPT_DIR%commands" xcopy /s /e /i /q /y "%SCRIPT_DIR%commands" "%MARKETPLACE_DIR%\commands\" >nul
+if exist "%SCRIPT_DIR%hooks" xcopy /s /e /i /q /y "%SCRIPT_DIR%hooks" "%MARKETPLACE_DIR%\hooks\" >nul
 
 REM Create cache directory
 if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
 
 REM Copy to cache directory
 echo Copying to cache directory...
-xcopy /s /e /i /q "%MARKETPLACE_DIR%\.claude-plugin" "%CACHE_DIR%\.claude-plugin\" >nul
-xcopy /s /e /i /q "%MARKETPLACE_DIR%\skills" "%CACHE_DIR%\skills\" >nul
-xcopy /s /e /i /q "%MARKETPLACE_DIR%\templates" "%CACHE_DIR%\templates\" >nul
-xcopy /s /e /i /q "%MARKETPLACE_DIR%\hooks" "%CACHE_DIR%\hooks\" >nul
-if exist "%MARKETPLACE_DIR%\commands" xcopy /s /e /i /q "%MARKETPLACE_DIR%\commands" "%CACHE_DIR%\commands\" >nul
+xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\.claude-plugin" "%CACHE_DIR%\.claude-plugin\" >nul
+xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\skills" "%CACHE_DIR%\skills\" >nul
+xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\templates" "%CACHE_DIR%\templates\" >nul
+xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\hooks" "%CACHE_DIR%\hooks\" >nul
+if exist "%MARKETPLACE_DIR%\commands" xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\commands" "%CACHE_DIR%\commands\" >nul
 if exist "%MARKETPLACE_DIR%\CLAUDE.md" copy /y "%MARKETPLACE_DIR%\CLAUDE.md" "%CACHE_DIR%\" >nul
 if exist "%MARKETPLACE_DIR%\README.md" copy /y "%MARKETPLACE_DIR%\README.md" "%CACHE_DIR%\" >nul
 
 REM Remove orphaned marker if exists (Claude Code may create this during reinstall)
 if exist "%CACHE_DIR%\.orphaned_at" del /f /q "%CACHE_DIR%\.orphaned_at" 2>nul
+
+REM Verify installation
+echo Verifying installation...
+set "VERIFY_FAILED=0"
+
+if not exist "%CACHE_DIR%\skills\overview\SKILL.md" (
+    echo [ERROR] Missing: skills\overview\SKILL.md
+    set "VERIFY_FAILED=1"
+)
+
+if not exist "%CACHE_DIR%\commands\overview.md" (
+    echo [ERROR] Missing: commands\overview.md
+    set "VERIFY_FAILED=1"
+)
+
+if not exist "%CACHE_DIR%\.claude-plugin\plugin.json" (
+    echo [ERROR] Missing: .claude-plugin\plugin.json
+    set "VERIFY_FAILED=1"
+)
+
+if "%VERIFY_FAILED%"=="1" (
+    echo [ERROR] Installation verification failed
+    echo Please check if all files are present in the source directory
+    goto done
+)
+
+echo [OK] All files verified
 
 REM Register marketplace
 echo Registering marketplace...
