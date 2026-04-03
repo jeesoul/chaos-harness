@@ -1,0 +1,132 @@
+#!/bin/bash
+# laziness-detect - PostToolUse hook for Bash operations
+# Detects laziness patterns LP001-LP006
+
+set -e
+
+# Arguments: $1 = tool name (Bash), $2+ = tool output
+TOOL_NAME="$1"
+TOOL_OUTPUT="$2"
+
+DATA_DIR="$HOME/.claude/harness"
+LAZINESS_LOG="$DATA_DIR/laziness-log.json"
+
+# Ensure data directory exists
+mkdir -p "$DATA_DIR"
+
+# Initialize log if not exists
+if [[ ! -f "$LAZINESS_LOG" ]]; then
+    echo '[]' > "$LAZINESS_LOG"
+fi
+
+# LP001: Completion claims without verification
+# Pattern: "done", "completed", "finished" without test/verify commands
+
+check_lp001() {
+    local output="$1"
+
+    # Completion keywords
+    local completion_words=("done" "completed" "finished" "搞定" "完成" "搞完了")
+
+    # Verification keywords
+    local verify_words=("test" "verify" "check" "run" "测试" "验证" "检查")
+
+    local has_completion=false
+    local has_verification=false
+
+    for word in "${completion_words[@]}"; do
+        if [[ "$output" =~ $word ]]; then
+            has_completion=true
+            break
+        fi
+    done
+
+    for word in "${verify_words[@]}"; do
+        if [[ "$output" =~ $word ]]; then
+            has_verification=true
+            break
+        fi
+    done
+
+    if [[ "$has_completion" == true && "$has_verification" == false ]]; then
+        log_laziness "LP001" "completion_without_verification" "critical"
+        return 1
+    fi
+
+    return 0
+}
+
+# LP002: Fix without root cause
+# Pattern: "fix", "修复" without "why", "cause", "原因", "root"
+
+check_lp002() {
+    local output="$1"
+
+    local fix_words=("fix" "fixed" "repair" "修复" "改了" "解决了")
+    local cause_words=("why" "cause" "root" "reason" "原因" "根因" "为什么")
+
+    local has_fix=false
+    local has_cause=false
+
+    for word in "${fix_words[@]}"; do
+        if [[ "$output" =~ $word ]]; then
+            has_fix=true
+            break
+        fi
+    done
+
+    for word in "${cause_words[@]}"; do
+        if [[ "$output" =~ $word ]]; then
+            has_cause=true
+            break
+        fi
+    done
+
+    if [[ "$has_fix" == true && "$has_cause" == false ]]; then
+        log_laziness "LP002" "fix_without_root_cause" "critical"
+        return 1
+    fi
+
+    return 0
+}
+
+# LP004: Test skip attempts
+# Pattern: "skip test", "跳过测试", "不需要测试"
+
+check_lp004() {
+    local output="$1"
+
+    local skip_patterns=("skip test" "skip test" "no test" "跳过测试" "不需要测试" "不用测试" "简单不用测")
+
+    for pattern in "${skip_patterns[@]}"; do
+        if [[ "$output" =~ $pattern ]]; then
+            log_laziness "LP004" "test_skip_attempt" "critical"
+            return 1
+        fi
+    done
+
+    return 0
+}
+
+# Log laziness pattern
+log_laziness() {
+    local pattern_id="$1"
+    local pattern_type="$2"
+    local severity="$3"
+
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    echo "$(cat "$LAZINESS_LOG")" | jq \
+        --arg ts "$TIMESTAMP" \
+        --arg pid "$pattern_id" \
+        --arg ptype "$pattern_type" \
+        --arg sev "$severity" \
+        '. += [{"timestamp": $ts, "pattern": $pid, "type": $ptype, "severity": $sev}]' > "$LAZINESS_LOG"
+}
+
+# Run detection (non-blocking - just log and potentially warn)
+check_lp001 "$TOOL_OUTPUT" || true
+check_lp002 "$TOOL_OUTPUT" || true
+check_lp004 "$TOOL_OUTPUT" || true
+
+exit 0

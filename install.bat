@@ -39,6 +39,7 @@ if exist "%SCRIPT_DIR%CLAUDE.md" copy /y "%SCRIPT_DIR%CLAUDE.md" "%MARKETPLACE_D
 if exist "%SCRIPT_DIR%README.md" copy /y "%SCRIPT_DIR%README.md" "%MARKETPLACE_DIR%\" >nul
 if exist "%SCRIPT_DIR%templates" xcopy /s /e /i /q "%SCRIPT_DIR%templates" "%MARKETPLACE_DIR%\templates\" >nul
 if exist "%SCRIPT_DIR%commands" xcopy /s /e /i /q "%SCRIPT_DIR%commands" "%MARKETPLACE_DIR%\commands\" >nul
+if exist "%SCRIPT_DIR%hooks" xcopy /s /e /i /q "%SCRIPT_DIR%hooks" "%MARKETPLACE_DIR%\hooks\" >nul
 
 REM Create cache directory
 if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
@@ -48,6 +49,7 @@ echo Copying to cache directory...
 xcopy /s /e /i /q "%MARKETPLACE_DIR%\.claude-plugin" "%CACHE_DIR%\.claude-plugin\" >nul
 xcopy /s /e /i /q "%MARKETPLACE_DIR%\skills" "%CACHE_DIR%\skills\" >nul
 xcopy /s /e /i /q "%MARKETPLACE_DIR%\templates" "%CACHE_DIR%\templates\" >nul
+xcopy /s /e /i /q "%MARKETPLACE_DIR%\hooks" "%CACHE_DIR%\hooks\" >nul
 if exist "%MARKETPLACE_DIR%\commands" xcopy /s /e /i /q "%MARKETPLACE_DIR%\commands" "%CACHE_DIR%\commands\" >nul
 if exist "%MARKETPLACE_DIR%\CLAUDE.md" copy /y "%MARKETPLACE_DIR%\CLAUDE.md" "%CACHE_DIR%\" >nul
 if exist "%MARKETPLACE_DIR%\README.md" copy /y "%MARKETPLACE_DIR%\README.md" "%CACHE_DIR%\" >nul
@@ -106,6 +108,7 @@ echo   /chaos-harness:harness-generator    # Generate constraints
 echo   /chaos-harness:workflow-supervisor  # Workflow management
 echo   /chaos-harness:iron-law-enforcer    # Iron law enforcement
 echo   /chaos-harness:plugin-manager       # Plugin management
+echo   /chaos-harness:hooks-manager        # Hooks management
 echo.
 echo Natural Language Triggers:
 echo   - "scan current project"

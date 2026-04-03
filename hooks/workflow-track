@@ -1,0 +1,101 @@
+#!/bin/bash
+# workflow-track - PreToolUse hook for Glob|Grep|Read operations
+# Tracks project iteration progress and detects timeouts
+
+set -e
+
+DATA_DIR="$HOME/.claude/harness"
+WORKFLOW_STATE="$DATA_DIR/workflow-state.yaml"
+WORKFLOW_LOG="$DATA_DIR/workflow-log.json"
+
+# Ensure data directory exists
+mkdir -p "$DATA_DIR"
+
+# Initialize workflow log if not exists
+if [[ ! -f "$WORKFLOW_LOG" ]]; then
+    echo '[]' > "$WORKFLOW_LOG"
+fi
+
+# Check workflow state exists
+if [[ ! -f "$WORKFLOW_STATE" ]]; then
+    # No active workflow, just track tool usage
+    track_tool_usage
+    exit 0
+fi
+
+# Track tool usage for iteration metrics
+track_tool_usage() {
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    TOOL_TYPE="$1"
+
+    echo "$(cat "$WORKFLOW_LOG")" | jq \
+        --arg ts "$TIMESTAMP" \
+        --arg tool "$TOOL_TYPE" \
+        '. += [{"event": "tool_use", "tool": $tool, "timestamp": $ts}]' > "$WORKFLOW_LOG"
+}
+
+# Check for stage timeout (LP003 detection)
+check_timeout() {
+    if [[ ! -f "$WORKFLOW_STATE" ]]; then
+        return 0
+    fi
+
+    # Parse current stage start time from YAML
+    # Simplified - just check if workflow has been active for too long
+    local workflow_start=$(grep "workflow_start:" "$WORKFLOW_STATE" | cut -d' ' -f2)
+
+    if [[ -z "$workflow_start" ]]; then
+        return 0
+    fi
+
+    # Calculate elapsed time (simplified - assumes ISO timestamp)
+    local now=$(date +%s)
+    local start=$(date -d "$workflow_start" +%s 2>/dev/null || echo "$now")
+
+    local elapsed=$((now - start))
+
+    # Timeout thresholds by project scale
+    local scale=$(grep "project_scale:" "$WORKFLOW_STATE" | cut -d' ' -f2)
+
+    local timeout_threshold=7200  # 2 hours default
+
+    case "$scale" in
+        "small")
+            timeout_threshold=3600  # 1 hour
+            ;;
+        "medium")
+            timeout_threshold=7200  # 2 hours
+            ;;
+        "large")
+            timeout_threshold=14400  # 4 hours
+            ;;
+    esac
+
+    # If elapsed > threshold * 1.5, warn LP003
+    if [[ $elapsed -gt $((timeout_threshold * 3 / 2)) ]]; then
+        log_timeout "$elapsed" "$timeout_threshold"
+        return 1
+    fi
+
+    return 0
+}
+
+# Log timeout warning
+log_timeout() {
+    local elapsed="$1"
+    local threshold="$2"
+
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    echo "$(cat "$WORKFLOW_LOG")" | jq \
+        --arg ts "$TIMESTAMP" \
+        --arg elapsed "$elapsed" \
+        --arg threshold "$threshold" \
+        '. += [{"event": "timeout_warning", "pattern": "LP003", "elapsed_seconds": $elapsed, "threshold_seconds": $threshold, "timestamp": $ts}]' > "$WORKFLOW_LOG"
+}
+
+# Run tracking and checks
+track_tool_usage "query"
+check_timeout || true
+
+exit 0

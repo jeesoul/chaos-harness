@@ -1,0 +1,99 @@
+#!/bin/bash
+# pre-compact - PreCompact hook script
+# Preserves essential context before conversation compaction
+
+set -e
+
+DATA_DIR="$HOME/.claude/harness"
+COMPACT_ARCHIVE="$DATA_DIR/compact-archive.json"
+LEARNING_LOG="$DATA_DIR/learning-log.json"
+IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
+WORKFLOW_STATE="$DATA_DIR/workflow-state.yaml"
+
+# Ensure data directory exists
+mkdir -p "$DATA_DIR"
+
+# Initialize archive if not exists
+if [[ ! -f "$COMPACT_ARCHIVE" ]]; then
+    echo '{"archives": []}' > "$COMPACT_ARCHIVE"
+fi
+
+# Create timestamp for this archive
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+ARCHIVE_ID="compact-$(date +%s)"
+
+# Collect essential context
+collect_context() {
+    local context='{"id": "'"$ARCHIVE_ID"'", "timestamp": "'"$TIMESTAMP"'", '
+
+    # Collect learnings
+    if [[ -f "$LEARNING_LOG" ]]; then
+        local recent_learnings=$(cat "$LEARNING_LOG" | jq '.[-10:]')
+        context+='"recent_learnings": '"$recent_learnings"', '
+    else
+        context+='"recent_learnings": [], '
+    fi
+
+    # Collect iron law violations
+    if [[ -f "$IRON_LAW_LOG" ]]; then
+        local recent_violations=$(cat "$IRON_LAW_LOG" | jq '.[-5:]')
+        context+='"recent_violations": '"$recent_violations"', '
+    else
+        context+='"recent_violations": [], '
+    fi
+
+    # Collect workflow state
+    if [[ -f "$WORKFLOW_STATE" ]]; then
+        local workflow_content=$(cat "$WORKFLOW_STATE")
+        # Escape for JSON
+        workflow_content=$(echo "$workflow_content" | jq -Rs '.')
+        context+='"workflow_state": '"$workflow_content"', '
+    else
+        context+='"workflow_state": null, '
+    fi
+
+    # Collect summary of key decisions (from stdin if provided)
+    local summary=""
+    if [[ -p /dev/stdin ]]; then
+        summary=$(cat | jq -Rs '.')
+    else
+        summary='"No summary provided"'
+    fi
+    context+='"summary": '"$summary"''
+
+    context+='}'
+
+    echo "$context"
+}
+
+# Archive the context
+archive_context() {
+    local context="$1"
+
+    # Add to archive
+    echo "$(cat "$COMPACT_ARCHIVE")" | jq \
+        --argjson ctx "$context" \
+        '.archives += [$ctx]' > "$COMPACT_ARCHIVE"
+
+    # Keep only last 10 archives to prevent unlimited growth
+    echo "$(cat "$COMPACT_ARCHIVE")" | jq '.archives = .archives[-10:]' > "$COMPACT_ARCHIVE"
+}
+
+# Output preservation instructions for Claude
+echo "PRE-COMPACT PRESERVATION:"
+echo "Saving essential context to $COMPACT_ARCHIVE"
+echo ""
+echo "Context preserved:"
+echo "- Recent learnings (last 10)"
+echo "- Iron law violations (last 5)"
+echo "- Workflow state"
+echo "- Summary"
+echo ""
+echo "This context can be restored after compaction."
+echo "To restore: Read $COMPACT_ARCHIVE and extract latest archive."
+
+# Collect and archive
+CONTEXT=$(collect_context)
+archive_context "$CONTEXT"
+
+exit 0

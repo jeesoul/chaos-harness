@@ -1,6 +1,6 @@
 {
   "name": "chaos-harness",
-  "description": "Claude Code Agent Constraint Framework - Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow",
+  "description": "Claude Code Agent Constraint Framework - Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow, Self-Correction Hooks",
   "version": "1.0.0",
   "author": {
     "name": "jeesoul"
@@ -18,6 +18,21 @@
     "laziness-detection",
     "bypass-detection",
     "skills",
-    "agent-constraints"
-  ]
+    "agent-constraints",
+    "hooks",
+    "self-correction",
+    "self-learning"
+  ],
+  "hooks": {
+    "config": "hooks/hooks.json",
+    "scripts": [
+      "hooks/session-start",
+      "hooks/iron-law-check",
+      "hooks/laziness-detect",
+      "hooks/learning-update",
+      "hooks/workflow-track",
+      "hooks/stop",
+      "hooks/pre-compact"
+    ]
+  }
 }

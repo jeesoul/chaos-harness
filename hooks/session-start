@@ -1,0 +1,75 @@
+#!/bin/bash
+# session-start - SessionStart hook script
+# Injects iron laws and workflow context at session start
+
+set -e
+
+# Data directory
+DATA_DIR="$HOME/.claude/harness"
+IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
+PLUGIN_LOG="$DATA_DIR/plugin-log.json"
+WORKFLOW_STATE="$DATA_DIR/workflow-state.yaml"
+
+# Ensure data directory exists
+mkdir -p "$DATA_DIR"
+
+# Initialize log files if they don't exist
+if [[ ! -f "$IRON_LAW_LOG" ]]; then
+    echo '[]' > "$IRON_LAW_LOG"
+fi
+
+if [[ ! -f "$PLUGIN_LOG" ]]; then
+    echo '[]' > "$PLUGIN_LOG"
+fi
+
+# Output iron laws context (silent injection - no visible output to user)
+# This gets injected into Claude's context via hook mechanism
+
+cat << 'IRON_LAWS_CONTEXT'
+<CHAOS_HARNESS_CONTEXT>
+**Iron Laws Active (不可协商):**
+
+| ID | 铁律 | 说明 |
+|----|------|------|
+| IL001 | NO DOCUMENTS WITHOUT VERSION LOCK | 所有输出必须在版本目录下 |
+| IL002 | NO HARNESS WITHOUT SCAN RESULTS | Harness需要项目扫描数据 |
+| IL003 | NO COMPLETION CLAIMS WITHOUT VERIFICATION | 完成声明需要实际验证 |
+| IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
+| IL005 | NO HIGH-RISK CONFIG MODS WITHOUT APPROVAL | 敏感配置修改需要批准 |
+
+**Laziness Patterns Detected (偷懒模式):**
+
+| ID | 模式 | 严重程度 |
+|----|------|---------|
+| LP001 | 声称完成但无验证证据 | critical |
+| LP002 | 跳过根因分析直接修复 | critical |
+| LP003 | 长时间无产出 (timeout) | warning |
+| LP004 | 试图跳过测试 | critical |
+| LP005 | 擅自更改版本号 | critical |
+| LP006 | 自动处理高风险配置 | critical |
+
+**Bypass Detection Keywords:**
+- "简单修复" / "simple fix"
+- "跳过测试" / "skip test"
+- "就这一次" / "just this once"
+- "快速处理" / "quick fix"
+
+如果检测到上述模式，必须反驳并提供正确路径。
+</CHAOS_HARNESS_CONTEXT>
+IRON_LAWS_CONTEXT
+
+# Check for workflow state
+if [[ -f "$WORKFLOW_STATE" ]]; then
+    # Read and output current workflow state
+    echo "<WORKFLOW_STATE>"
+    cat "$WORKFLOW_STATE"
+    echo "</WORKFLOW_STATE>"
+fi
+
+# Log session start
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+SESSION_ID=$(date +%s)
+
+echo "$(cat "$PLUGIN_LOG")" | jq --arg ts "$TIMESTAMP" --arg sid "$SESSION_ID" '. += [{"event": "session_start", "timestamp": $ts, "session_id": $sid}]' > "$PLUGIN_LOG"
+
+exit 0

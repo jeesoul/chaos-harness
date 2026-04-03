@@ -71,6 +71,10 @@ install_plugin() {
         cp -r "$SCRIPT_DIR/commands" "$marketplace_dir/"
     fi
 
+    if [ -d "$SCRIPT_DIR/hooks" ]; then
+        cp -r "$SCRIPT_DIR/hooks" "$marketplace_dir/"
+    fi
+
     # Create cache directory
     mkdir -p "$cache_dir"
 
@@ -79,6 +83,7 @@ install_plugin() {
     cp -r "$marketplace_dir/.claude-plugin" "$cache_dir/"
     cp -r "$marketplace_dir/skills" "$cache_dir/"
     cp -r "$marketplace_dir/templates" "$cache_dir/"
+    cp -r "$marketplace_dir/hooks" "$cache_dir/"
     [ -f "$marketplace_dir/CLAUDE.md" ] && cp "$marketplace_dir/CLAUDE.md" "$cache_dir/"
     [ -f "$marketplace_dir/README.md" ] && cp "$marketplace_dir/README.md" "$cache_dir/"
     [ -d "$marketplace_dir/commands" ] && cp -r "$marketplace_dir/commands" "$cache_dir/"
@@ -277,6 +282,7 @@ show_usage() {
     echo "  /chaos-harness:workflow-supervisor  # Workflow management"
     echo "  /chaos-harness:iron-law-enforcer    # Iron law enforcement"
     echo "  /chaos-harness:plugin-manager       # Plugin management"
+    echo "  /chaos-harness:hooks-manager        # Hooks management"
     echo ""
     echo -e "${YELLOW}Natural Language Triggers:${NC}"
     echo "  - 'scan current project'"

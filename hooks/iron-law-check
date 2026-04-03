@@ -1,0 +1,115 @@
+#!/bin/bash
+# iron-law-check - PreToolUse hook for Write|Edit operations
+# Validates operations against iron laws IL001-IL005
+
+set -e
+
+# Arguments: $1 = tool name (Write or Edit), $2+ = tool input JSON
+TOOL_NAME="$1"
+TOOL_INPUT="$2"
+
+DATA_DIR="$HOME/.claude/harness"
+IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
+
+# Ensure data directory exists
+mkdir -p "$DATA_DIR"
+
+# Parse file path from tool input (simplified - works with Claude Code's JSON format)
+FILE_PATH=$(echo "$TOOL_INPUT" | jq -r '.file_path // .path // empty')
+
+# If no file path, allow the operation
+if [[ -z "$FILE_PATH" ]]; then
+    exit 0
+fi
+
+# Check IL001: Version directory validation
+# All documents must be under a version directory (vX.Y format)
+
+check_il001() {
+    local path="$1"
+
+    # Check if path contains version directory pattern (v followed by digits and dot)
+    if [[ "$path" =~ v[0-9]+\.[0-9]+ ]]; then
+        return 0  # Valid - contains version
+    fi
+
+    # Check if path is in output/ directory (which should have version subdirs)
+    if [[ "$path" =~ ^.*output/[^v] ]]; then
+        # Path is in output but not in version subdir
+        echo "IL001 BLOCKED: NO DOCUMENTS WITHOUT VERSION LOCK"
+        echo "File path: $path"
+        echo "Required: output/vX.Y/... format"
+        echo "Action: Create version directory first or use existing version path"
+
+        # Log the violation
+        log_violation "IL001" "version_missing" "$path"
+
+        exit 1  # Block the operation
+    fi
+
+    # Allow operations outside output/ directory (e.g., src/, tests/)
+    return 0
+}
+
+# Check IL005: High-risk config modifications
+# Sensitive config files require approval
+
+check_il005() {
+    local path="$1"
+
+    # List of high-risk config files
+    local risky_configs=(
+        ".env"
+        "settings.json"
+        "credentials"
+        "secrets"
+        "private"
+        "auth"
+        "password"
+        "token"
+    )
+
+    for risky in "${risky_configs[@]}"; do
+        if [[ "$path" =~ $risky ]]; then
+            echo "IL005 WARNING: NO HIGH-RISK CONFIG MODS WITHOUT APPROVAL"
+            echo "File path: $path"
+            echo "Risk level: HIGH"
+            echo "Action: Confirm with user before modifying sensitive config"
+
+            # Log the warning (don't block, just warn)
+            log_violation "IL005" "high_risk_config" "$path" "warning"
+
+            # For hook, we just warn - actual blocking happens in Claude's response
+            return 0
+        fi
+    done
+
+    return 0
+}
+
+# Log iron law violation
+log_violation() {
+    local law_id="$1"
+    local trigger="$2"
+    local path="$3"
+    local action="${4:-blocked}"
+
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    if [[ -f "$IRON_LAW_LOG" ]]; then
+        echo "$(cat "$IRON_LAW_LOG")" | jq \
+            --arg ts "$TIMESTAMP" \
+            --arg law "$law_id" \
+            --arg trig "$trigger" \
+            --arg path "$path" \
+            --arg act "$action" \
+            '. += [{"timestamp": $ts, "iron_law": $law, "trigger": $trig, "path": $path, "action": $act}]' > "$IRON_LAW_LOG"
+    fi
+}
+
+# Run checks
+check_il001 "$FILE_PATH"
+check_il005 "$FILE_PATH"
+
+# All checks passed
+exit 0

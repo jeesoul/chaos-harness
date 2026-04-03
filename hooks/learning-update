@@ -1,0 +1,91 @@
+#!/bin/bash
+# learning-update - PostToolUse hook for Write|Edit operations
+# Records learnings from errors and iron law violations
+
+set -e
+
+DATA_DIR="$HOME/.claude/harness"
+LEARNING_LOG="$DATA_DIR/learning-log.json"
+IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
+
+# Ensure data directory exists
+mkdir -p "$DATA_DIR"
+
+# Initialize learning log if not exists
+if [[ ! -f "$LEARNING_LOG" ]]; then
+    echo '[]' > "$LEARNING_LOG"
+fi
+
+# Extract recent iron law violations and convert to learnings
+generate_learnings() {
+    if [[ ! -f "$IRON_LAW_LOG" ]]; then
+        return
+    fi
+
+    # Get violations from last hour
+    ONE_HOUR_AGO=$(date -u -d '1 hour ago' +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -v-1H +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "")
+
+    if [[ -z "$ONE_HOUR_AGO" ]]; then
+        # Fallback: just get recent violations
+        RECENT_VIOLATIONS=$(cat "$IRON_LAW_LOG" | jq '.[-5:]')
+    else
+        RECENT_VIOLATIONS=$(cat "$IRON_LAW_LOG" | jq --arg ts "$ONE_HOUR_AGO" '[.[] | select(.timestamp >= $ts)]')
+    fi
+
+    # Process each violation into a learning
+    echo "$RECENT_VIOLATIONS" | jq -c '.[]' | while read -r violation; do
+        local law_id=$(echo "$violation" | jq -r '.iron_law')
+        local trigger=$(echo "$violation" | jq -r '.trigger')
+        local path=$(echo "$violation" | jq -r '.path')
+        local timestamp=$(echo "$violation" | jq -r '.timestamp')
+
+        # Generate learning entry
+        local learning_title=""
+        local learning_content=""
+
+        case "$law_id" in
+            "IL001")
+                learning_title="Version Directory Required"
+                learning_content="All outputs must be under version directory (vX.Y format). Path '$path' violated this rule. Create version first: chaos-harness version-create"
+                ;;
+            "IL005")
+                learning_title="High-Risk Config Modification"
+                learning_content="Sensitive config file '$path' requires user approval before modification."
+                ;;
+            *)
+                learning_title="Iron Law Violation: $law_id"
+                learning_content="Trigger: $trigger on path '$path'"
+                ;;
+        esac
+
+        # Add to learning log
+        add_learning "$law_id" "$learning_title" "$learning_content" "$timestamp"
+    done
+}
+
+# Add learning entry
+add_learning() {
+    local source="$1"
+    local title="$2"
+    local content="$3"
+    local ts="$4"
+
+    NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    # Generate unique learning ID
+    LEARNING_ID="L$(date +%s)"
+
+    echo "$(cat "$LEARNING_LOG")" | jq \
+        --arg id "$LEARNING_ID" \
+        --arg src "$source" \
+        --arg title "$title" \
+        --arg content "$content" \
+        --arg ts "$NOW" \
+        --arg orig_ts "$ts" \
+        '. += [{"id": $id, "source": $src, "title": $title, "content": $content, "timestamp": $ts, "original_event": $orig_ts}]' > "$LEARNING_LOG"
+}
+
+# Run learning generation
+generate_learnings
+
+exit 0
