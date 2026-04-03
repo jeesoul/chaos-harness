@@ -3,6 +3,10 @@ name: overview
 description: Use when starting any conversation - establishes the Iron Laws that govern all behavior. 支持用户自定义铁律和插件扩展。触发词：扫描项目、生成Harness、工作流、铁律、偷懒检测、插件管理
 ---
 
+<IMMEDIATE-ACTION>
+加载此 skill 后，立即展示 Chaos Harness 概览和可用功能。不要等待用户进一步指示。
+</IMMEDIATE-ACTION>
+
 <SUBAGENT-STOP>
 If you were dispatched as a subagent to execute a specific task, skip this skill.
 </SUBAGENT-STOP>
