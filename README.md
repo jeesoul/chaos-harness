@@ -17,6 +17,11 @@
 
 通过**铁律引擎**强制执行确定性行为，通过**自适应系统**动态构建项目专属约束生态，实现从"被动约束"到"主动治理"的跃迁。
 
+**人人可用，灵活扩展：**
+- 个人开发者：规范开发习惯，提升代码质量
+- 团队协作：统一行为标准，降低沟通成本
+- 开源项目：定制专属约束，构建项目特色
+
 ---
 
 ## 差异化特性
@@ -29,10 +34,6 @@
     └──────────────── 自动迭代 ←───────────────────┘
 ```
 
-- **行为学习**：Hook 自动记录 Agent 决策路径与结果
-- **规则进化**：根据历史模式自动补充约束规则
-- **能力沉淀**：项目专属 Harness 持续增强
-
 ### 🔄 自适应 Harness 构建
 
 | 输入 | 分析 | 输出 |
@@ -40,11 +41,33 @@
 | 项目类型 | Java/Node/Python 自动识别 | 技术栈专属模板 |
 | 代码规模 | Small/Medium/Large 分级 | 自适应工作流 |
 | 团队行为 | 偷懒模式、绕过尝试统计 | 针对性铁律强化 |
-| 历史缺陷 | 模式匹配、根因聚类 | 预防性约束注入 |
+
+### 🔌 开放插件生态
+
+**支持第三方插件接入 Harness 约束体系：**
+
+```yaml
+# ~/.claude/harness/plugins.yaml
+plugins:
+  - name: superpowers
+    enabled: true
+    stages: [W01, W03, W08]  # 指定参与的工作流阶段
+    iron_laws: inherit       # 继承 Harness 铁律约束
+    
+  - name: custom-tool
+    enabled: true
+    iron_laws:
+      - IL-C001  # 自定义铁律
+```
+
+**插件接入后自动获得：**
+- 铁律约束：插件行为受 Harness 监督
+- 行为审计：操作日志自动记录
+- 工作流集成：按阶段协调执行
 
 ### ⚡ 动态约束注入
 
-不依赖静态配置，根据上下文实时调整：
+根据上下文实时调整，无需静态配置：
 
 ```yaml
 # 检测到私服配置 → 自动注入
@@ -52,11 +75,9 @@ iron_laws:
   - id: IL-AUTO-001
     rule: "NO DEPLOY WITHOUT PRIVATE REPO CHECK"
     auto_generated: true
-    source: "detected_nexus_config"
 
 # 检测到 JDK 8 → 自动降级兼容
 workflow:
-  stage: "build"
   compatibility_mode: "jdk8-legacy"
 ```
 
@@ -76,11 +97,10 @@ workflow:
 | IL004 | 版本变更需要用户确认 |
 | IL005 | 敏感配置修改需要审批 |
 
-**扩展机制**：支持自定义铁律、严重程度分级、触发模式配置。
+**扩展机制：** 支持自定义铁律、严重程度分级、触发模式配置。
 
 ### 行为检测系统
 
-**偷懒模式检测：**
 | 模式 | 检测条件 | 自动处置 |
 |------|---------|---------|
 | LP001 | 完成声明无验证 | 阻断 + 要求举证 |
@@ -88,29 +108,29 @@ workflow:
 | LP003 | 长时间无产出 | 施压 + 进度同步 |
 | LP004 | 尝试跳过测试 | 阻断 + 强制执行 |
 
-**绕过检测：** 自动识别 "简单修复"、"跳过测试"、"就这一次" 等 10+ 种绕过话术并驳回。
+**绕过检测：** 自动识别 "简单修复"、"跳过测试" 等 10+ 种绕过话术。
 
 ### 钩子生态
 
-全生命周期监控与自动干预：
+全生命周期监控：
 
 ```
 SessionStart → 注入铁律 + 恢复上下文
-PreToolUse  → 铁律预检 + 权限验证
+PreToolUse  → 铁律预检
 PostToolUse → 行为学习 + 模式识别
-Stop        → 完成验证 + 结果审计
-PreCompact  → 状态持久化 + 能力沉淀
+Stop        → 完成验证
+PreCompact  → 状态持久化
 ```
 
 ### 自适应工作流
 
 12 阶段工作流自动适配项目规模：
 
-| 规模 | 必经阶段 | 可跳过阶段 |
-|------|---------|-----------|
-| Small (≤100行) | 5 阶段 | 7 阶段 |
-| Medium (100-500行) | 8 阶段 | 4 阶段 |
-| Large (≥500行) | 全部 12 阶段 | 无 |
+| 规模 | 必经阶段 |
+|------|---------|
+| Small (≤100行) | 5 阶段 |
+| Medium (100-500行) | 8 阶段 |
+| Large (≥500行) | 全部 12 阶段 |
 
 ---
 
@@ -130,56 +150,56 @@ claude plugins install chaos-harness@chaos-harness
 
 | 命令 | 功能 |
 |------|------|
-| `/chaos-harness:overview` | 系统概览、铁律状态、学习进度 |
-| `/chaos-harness:project-scanner` | 项目分析、类型检测、自适应建议 |
-| `/chaos-harness:version-locker` | 版本管理、变更追踪、锁定机制 |
-| `/chaos-harness:harness-generator` | 约束生成、动态规则、专属模板 |
-| `/chaos-harness:workflow-supervisor` | 工作流编排、阶段控制、进度同步 |
-| `/chaos-harness:iron-law-enforcer` | 铁律执行、绕过拦截、自定义扩展 |
-| `/chaos-harness:collaboration-reviewer` | 多 Agent 协作、冲突检测、评审流程 |
-| `/chaos-harness:hooks-manager` | 钩子配置、学习日志、行为审计 |
-| `/chaos-harness:plugin-manager` | 插件管理、约束注入、生态扩展 |
-| `/chaos-harness:project-state` | 状态持久化、会话恢复、进度追踪 |
+| `overview` | 系统概览、铁律状态、学习进度 |
+| `project-scanner` | 项目分析、类型检测、自适应建议 |
+| `version-locker` | 版本管理、变更追踪 |
+| `harness-generator` | 约束生成、动态规则 |
+| `workflow-supervisor` | 工作流编排、阶段控制 |
+| `iron-law-enforcer` | 铁律执行、自定义扩展 |
+| `collaboration-reviewer` | 多 Agent 协作、冲突检测 |
+| `hooks-manager` | 钩子配置、行为审计 |
+| `plugin-manager` | 插件管理、第三方接入 |
+| `project-state` | 状态持久化、会话恢复 |
 
 ---
 
-## 技术架构
+## 自定义扩展
 
+### 添加铁律
+
+```yaml
+# ~/.claude/harness/iron-laws.yaml
+custom_iron_laws:
+  - id: IL-C001
+    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
+    severity: critical
+    triggers:
+      - pattern: "ALTER TABLE|DROP TABLE"
+        action: block
 ```
-┌────────────────────────────────────────────────────┐
-│                Chaos Harness Core                   │
-├────────────────────────────────────────────────────┤
-│  ┌──────────┐   ┌──────────┐   ┌──────────┐       │
-│  │ Iron Law │   │ Adaptive │   │ Learning │       │
-│  │  Engine  │   │  Builder │   │  System  │       │
-│  └────┬─────┘   └────┬─────┘   └────┬─────┘       │
-│       │              │              │              │
-│       └──────────────┼──────────────┘              │
-│                      ▼                             │
-│           ┌──────────────────┐                     │
-│           │ Hook Orchestrator│                     │
-│           └────────┬─────────┘                     │
-│       ┌────────────┼────────────┐                  │
-│       ▼            ▼            ▼                  │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐              │
-│  │Workflow │ │ Scanner │ │ Plugins │              │
-│  │ Engine  │ │   +     │ │ Manager │              │
-│  │         │ │Analyzer │ │         │              │
-│  └─────────┘ └─────────┘ └─────────┘              │
-└────────────────────────────────────────────────────┘
+
+### 接入第三方插件
+
+```yaml
+# ~/.claude/harness/plugins.yaml
+plugins:
+  - name: your-plugin
+    enabled: true
+    stages: [W01, W05, W08]
+    iron_laws: inherit
 ```
 
 ---
 
-## 模板生态
+## 模板支持
 
-| 模板 | 技术栈 | 特殊支持 |
-|------|--------|---------|
-| `java-spring` | Java 17/21 + Spring Boot 3.x | Spring 注解扫描 |
-| `java-spring-legacy` | JDK 8 + Spring Boot 2.x | 兼容模式、降级策略 |
-| `node-express` | Node.js Express | npm/yarn 智能识别 |
-| `python-django` | Python Django | 虚拟环境检测 |
-| `generic` | 通用项目 | 语言无关约束 |
+| 模板 | 技术栈 |
+|------|--------|
+| `java-spring` | Java 17/21 + Spring Boot 3.x |
+| `java-spring-legacy` | JDK 8 + Spring Boot 2.x |
+| `node-express` | Node.js Express |
+| `python-django` | Python Django |
+| `generic` | 通用项目 |
 
 ---
 
