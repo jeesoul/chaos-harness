@@ -70,7 +70,7 @@ IL005: NO HIGH-RISK CONFIG WITHOUT APPROVAL     # 敏感配置需审批
 git clone https://github.com/jeesoul/chaos-harness.git
 ```
 
-### 第二步：注册并安装
+### 第二步：注册 marketplace 并安装
 
 三个平台命令相同，仅路径格式不同：
 
