@@ -594,6 +594,74 @@ diagnose.bat     # Windows
 - 插件是否正确注册
 - settings.json 是否启用
 
+## 手动配置
+
+如果安装脚本失败，可以手动配置：
+
+### 1. 复制文件到缓存目录
+
+```bash
+# Windows
+set CACHE_DIR=%USERPROFILE%\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0
+xcopy /s /e /i /q /y .claude-plugin "%CACHE_DIR%\.claude-plugin\"
+xcopy /s /e /i /q /y skills "%CACHE_DIR%\skills\"
+xcopy /s /e /i /q /y commands "%CACHE_DIR%\commands\"
+xcopy /s /e /i /q /y hooks "%CACHE_DIR%\hooks\"
+xcopy /s /e /i /q /y templates "%CACHE_DIR%\templates\"
+
+# macOS/Linux
+CACHE_DIR="$HOME/.claude/plugins/cache/chaos-harness/chaos-harness/1.0.0"
+mkdir -p "$CACHE_DIR"
+cp -r .claude-plugin skills commands hooks templates "$CACHE_DIR/"
+```
+
+### 2. 注册插件
+
+编辑 `%USERPROFILE%\.claude\plugins\installed_plugins.json`：
+
+```json
+{
+  "version": 2,
+  "plugins": {
+    "chaos-harness@chaos-harness": [
+      {
+        "scope": "user",
+        "installPath": "C:\\Users\\你的用户名\\.claude\\plugins\\cache\\chaos-harness\\chaos-harness\\1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-04-03T00:00:00.000Z",
+        "lastUpdated": "2026-04-03T00:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+### 3. 启用插件
+
+编辑 `%USERPROFILE%\.claude\settings.json`，添加：
+
+```json
+{
+  "enabledPlugins": {
+    "chaos-harness@chaos-harness": true
+  },
+  "extraKnownMarketplaces": {
+    "chaos-harness": {
+      "source": {
+        "repo": "jeesoul/chaos-harness",
+        "source": "github"
+      }
+    }
+  }
+}
+```
+
+**注意：** 如果已有其他插件配置，只需将 `chaos-harness@chaos-harness` 添加到 `enabledPlugins` 对象中。
+
+### 4. 重启 Claude Code
+
+配置完成后重启 Claude Code，即可使用 `/chaos-harness:overview` 命令。
+
 ---
 
 ## 使用
