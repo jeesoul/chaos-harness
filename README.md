@@ -34,6 +34,10 @@
     └──────────────── 自动迭代 ←───────────────────┘
 ```
 
+- **行为学习**：Hook 自动记录 Agent 决策路径与结果
+- **规则进化**：根据历史模式自动补充约束规则
+- **能力沉淀**：项目专属 Harness 持续增强
+
 ### 🔄 自适应 Harness 构建
 
 | 输入 | 分析 | 输出 |
@@ -41,6 +45,7 @@
 | 项目类型 | Java/Node/Python 自动识别 | 技术栈专属模板 |
 | 代码规模 | Small/Medium/Large 分级 | 自适应工作流 |
 | 团队行为 | 偷懒模式、绕过尝试统计 | 针对性铁律强化 |
+| 历史缺陷 | 模式匹配、根因聚类 | 预防性约束注入 |
 
 ### 🔌 开放插件生态
 
@@ -80,6 +85,48 @@ iron_laws:
 workflow:
   compatibility_mode: "jdk8-legacy"
 ```
+
+---
+
+## 安装
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/jeesoul/chaos-harness.git
+
+# 2. 注册本地 marketplace（三平台命令相同）
+claude plugins marketplace add "路径/chaos-harness"    # Windows
+claude plugins marketplace add ~/path/to/chaos-harness  # macOS/Linux
+
+# 3. 安装插件
+claude plugins install chaos-harness@chaos-harness
+
+# 4. 重启 Claude Code，验证安装
+/chaos-harness:overview
+```
+
+**卸载：**
+```bash
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins marketplace remove chaos-harness
+```
+
+---
+
+## 命令
+
+| 命令 | 功能 |
+|------|------|
+| `/chaos-harness:overview` | 系统概览、铁律状态、学习进度 |
+| `/chaos-harness:project-scanner` | 项目分析、类型检测、自适应建议 |
+| `/chaos-harness:version-locker` | 版本管理、变更追踪 |
+| `/chaos-harness:harness-generator` | 约束生成、动态规则 |
+| `/chaos-harness:workflow-supervisor` | 工作流编排、阶段控制 |
+| `/chaos-harness:iron-law-enforcer` | 铁律执行、自定义扩展 |
+| `/chaos-harness:collaboration-reviewer` | 多 Agent 协作、冲突检测 |
+| `/chaos-harness:hooks-manager` | 钩子配置、行为审计 |
+| `/chaos-harness:plugin-manager` | 插件管理、第三方接入 |
+| `/chaos-harness:project-state` | 状态持久化、会话恢复 |
 
 ---
 
@@ -126,40 +173,11 @@ PreCompact  → 状态持久化
 
 12 阶段工作流自动适配项目规模：
 
-| 规模 | 必经阶段 |
-|------|---------|
-| Small (≤100行) | 5 阶段 |
-| Medium (100-500行) | 8 阶段 |
-| Large (≥500行) | 全部 12 阶段 |
-
----
-
-## 安装
-
-```bash
-git clone https://github.com/jeesoul/chaos-harness.git
-claude plugins marketplace add "路径"
-claude plugins install chaos-harness@chaos-harness
-# 重启 Claude Code
-/chaos-harness:overview
-```
-
----
-
-## 命令
-
-| 命令 | 功能 |
-|------|------|
-| `overview` | 系统概览、铁律状态、学习进度 |
-| `project-scanner` | 项目分析、类型检测、自适应建议 |
-| `version-locker` | 版本管理、变更追踪 |
-| `harness-generator` | 约束生成、动态规则 |
-| `workflow-supervisor` | 工作流编排、阶段控制 |
-| `iron-law-enforcer` | 铁律执行、自定义扩展 |
-| `collaboration-reviewer` | 多 Agent 协作、冲突检测 |
-| `hooks-manager` | 钩子配置、行为审计 |
-| `plugin-manager` | 插件管理、第三方接入 |
-| `project-state` | 状态持久化、会话恢复 |
+| 规模 | 定义 | 必经阶段 |
+|------|------|---------|
+| Small | ≤100行代码 | 5 阶段 |
+| Medium | 100-500行 | 8 阶段 |
+| Large | ≥500行 | 全部 12 阶段 |
 
 ---
 
@@ -200,6 +218,25 @@ plugins:
 | `node-express` | Node.js Express |
 | `python-django` | Python Django |
 | `generic` | 通用项目 |
+
+---
+
+## 更新日志
+
+### v1.0.0 (2026-04-03)
+
+**完整功能发布：**
+
+- ✅ M1: 项目扫描器 (88 tests)
+- ✅ M2: 版本管理系统 (189 tests)
+- ✅ M3: 环境检测与修复 (230 tests)
+- ✅ M4: Harness生成系统 (366 tests)
+- ✅ M5: 工作流引擎 (506 tests)
+- ✅ M6: MCP Server (541 tests)
+- ✅ M7: 集成测试 (623 tests)
+- ✅ M8: 开源发布 (623 tests)
+- ✅ M9: 插件系统 (623 tests)
+- ✅ M10: Hooks模块 (623 tests)
 
 ---
 

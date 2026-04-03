@@ -10,3 +10,6 @@ coverage/
 参考/
 docs/superpowers/specs/
 docs/superpowers/plans/
+
+# CLAUDE.md is local-only, NOT for public repo
+CLAUDE.md
