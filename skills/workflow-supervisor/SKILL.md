@@ -49,6 +49,22 @@ stages:
   # ...
 ```
 
+### Step 3.5: 创建扫描结果文件
+
+如果不存在 `output/{version}/scan-result.json`，使用已有数据创建：
+
+```json
+{
+  "projectType": "{detected type}",
+  "version": "{version}",
+  "backendFiles": {count},
+  "frontendFiles": {count},
+  "jdk": "{detected version}",
+  "springBoot": "{detected version}",
+  "scanTime": "{timestamp}"
+}
+```
+
 ### Step 4: 输出当前状态
 
 ```
@@ -108,7 +124,7 @@ digraph workflow {
 | W09 | 代码审查 | 代码 | 审查报告 | **collaboration-reviewer** |
 | W10 | 测试验证 | 代码 | 测试报告 | tester |
 | W11 | 文档完善 | 全部产出 | 文档 | backend_dev |
-| W12 | 发布部署 | 全部产出 | 发布包 | backend_dev |
+| W12 | 发布部署 | 全部产出 | 发布包 + **effectiveness-log** | backend_dev |
 
 ## 自适应流程
 
