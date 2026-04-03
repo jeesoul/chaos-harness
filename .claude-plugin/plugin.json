@@ -1,7 +1,7 @@
 {
   "name": "chaos-harness",
   "description": "Claude Code Agent Constraint Framework - Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow, Self-Correction Hooks",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "jeesoul"
   },
@@ -21,6 +21,123 @@
     "agent-constraints",
     "hooks",
     "self-correction",
-    "self-learning"
+    "self-learning",
+    "auto-toolkit-installer",
+    "playwright",
+    "chrome-devtools"
+  ],
+  "skills": [
+    {
+      "name": "overview",
+      "path": "skills/overview/SKILL.md",
+      "description": "系统概览、铁律状态、学习进度、项目统计"
+    },
+    {
+      "name": "project-scanner",
+      "path": "skills/project-scanner/SKILL.md",
+      "description": "项目扫描、类型检测、技术栈分析、自适应建议"
+    },
+    {
+      "name": "version-locker",
+      "path": "skills/version-locker/SKILL.md",
+      "description": "版本管理、锁定、创建、变更追踪"
+    },
+    {
+      "name": "harness-generator",
+      "path": "skills/harness-generator/SKILL.md",
+      "description": "约束生成、基于扫描数据生成专属 Harness"
+    },
+    {
+      "name": "workflow-supervisor",
+      "path": "skills/workflow-supervisor/SKILL.md",
+      "description": "工作流编排、阶段控制、进度监控、Agent协调"
+    },
+    {
+      "name": "iron-law-enforcer",
+      "path": "skills/iron-law-enforcer/SKILL.md",
+      "description": "铁律执行、自定义规则、绕过检测、驳回生成"
+    },
+    {
+      "name": "collaboration-reviewer",
+      "path": "skills/collaboration-reviewer/SKILL.md",
+      "description": "多Agent协作、角色分配、冲突检测、结果合并"
+    },
+    {
+      "name": "hooks-manager",
+      "path": "skills/hooks-manager/SKILL.md",
+      "description": "钩子配置、启用/禁用、日志查看、行为审计"
+    },
+    {
+      "name": "plugin-manager",
+      "path": "skills/plugin-manager/SKILL.md",
+      "description": "插件管理、第三方接入、约束配置、阶段映射"
+    },
+    {
+      "name": "project-state",
+      "path": "skills/project-state/SKILL.md",
+      "description": "状态持久化、进度保存、会话恢复、断点续传"
+    },
+    {
+      "name": "auto-toolkit-installer",
+      "path": "skills/auto-toolkit-installer/SKILL.md",
+      "description": "工具链检测、自动安装依赖工具、镜像加速"
+    }
+  ],
+  "commands": [
+    {
+      "name": "overview",
+      "path": "commands/overview.md",
+      "description": "系统概览、铁律状态、学习进度"
+    },
+    {
+      "name": "project-scanner",
+      "path": "commands/project-scanner.md",
+      "description": "项目扫描、类型检测、技术栈分析"
+    },
+    {
+      "name": "version-locker",
+      "path": "commands/version-locker.md",
+      "description": "版本管理、锁定、创建、变更追踪"
+    },
+    {
+      "name": "harness-generator",
+      "path": "commands/harness-generator.md",
+      "description": "约束生成、动态规则"
+    },
+    {
+      "name": "workflow-supervisor",
+      "path": "commands/workflow-supervisor.md",
+      "description": "工作流编排、阶段控制"
+    },
+    {
+      "name": "iron-law-enforcer",
+      "path": "commands/iron-law-enforcer.md",
+      "description": "铁律执行、自定义扩展"
+    },
+    {
+      "name": "collaboration-reviewer",
+      "path": "commands/collaboration-reviewer.md",
+      "description": "多Agent协作、冲突检测"
+    },
+    {
+      "name": "hooks-manager",
+      "path": "commands/hooks-manager.md",
+      "description": "钩子配置、行为审计"
+    },
+    {
+      "name": "plugin-manager",
+      "path": "commands/plugin-manager.md",
+      "description": "插件管理、第三方接入"
+    },
+    {
+      "name": "project-state",
+      "path": "commands/project-state.md",
+      "description": "状态持久化、会话恢复"
+    },
+    {
+      "name": "auto-toolkit-installer",
+      "path": "commands/auto-toolkit-installer.md",
+      "description": "工具链检测、自动安装、镜像加速"
+    }
   ]
 }
