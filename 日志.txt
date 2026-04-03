@@ -1,0 +1,599 @@
+PS D:\claudeSpace\chaos-harness-main> .\export-config.bat
+========================================================
+  Chaos Harness Config Export
+========================================================
+
+=== [1] installed_plugins.json ===
+
+锘縶
+    "version":  2,
+    "plugins":  {
+                    "planning-with-files@planning-with-files":  [
+                                                                    {
+                                                                        "scope":  "project",
+                                                                        "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\planning-with-files\\planning-with-files\\2.23.0",
+                                                                        "version":  "2.23.0",
+                                                                        "installedAt":  "2026-03-18T01:31:59.356Z",
+                                                                        "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                        "gitCommitSha":  "f54a290c3138c365088372b49725992e84fb2b47",
+                                                                        "projectPath":  "C:\\Users\\xydong18"
+                                                                    }
+                                                                ],
+                    "ui-ux-pro-max@ui-ux-pro-max-skill":  [
+                                                              {
+                                                                  "scope":  "project",
+                                                                  "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\ui-ux-pro-max-skill\\ui-ux-pro-max\\2.0.1",
+                                                                  "version":  "2.0.1",
+                                                                  "installedAt":  "2026-03-18T01:34:42.779Z",
+                                                                  "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                  "gitCommitSha":  "07f4ef3ac2568c25a3b0c8ef5165a86abc3e56e4",
+                                                                  "projectPath":  "C:\\Users\\xydong18"
+                                                              }
+                                                          ],
+                    "pua@tanweai-pua":  [
+                                            {
+                                                "scope":  "project",
+                                                "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\tanweai-pua\\pua\\1.2.0",
+                                                "version":  "1.2.0",
+                                                "installedAt":  "2026-03-18T03:57:23.785Z",
+                                                "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                "gitCommitSha":  "783844c80c606a0cbb723f50d0f9c126378a9029",
+                                                "projectPath":  "C:\\Users\\xydong18"
+                                            }
+                                        ],
+                    "skill-creator@claude-plugins-official":  [
+                                                                  {
+                                                                      "scope":  "project",
+                                                                      "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\claude-plugins-official\\skill-creator\\unknown",
+                                                                      "version":  "unknown",
+                                                                      "installedAt":  "2026-03-18T04:17:05.709Z",
+                                                                      "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                      "gitCommitSha":  "6b70f99f769f58b9b642dc8a271936b17862cf8c",
+                                                                      "projectPath":  "C:\\Users\\xydong18"
+                                                                  }
+                                                              ],
+                    "example-skills@anthropic-agent-skills":  [
+                                                                  {
+                                                                      "scope":  "project",
+                                                                      "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\anthropic-agent-skills\\example-skills\\b0cbd3df1533",
+                                                                      "version":  "b0cbd3df1533",
+                                                                      "installedAt":  "2026-03-18T04:24:34.345Z",
+                                                                      "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                      "gitCommitSha":  "b0cbd3df1533b396d281a6886d5132f623393a9c",
+                                                                      "projectPath":  "C:\\Users\\xydong18"
+                                                                  },
+                                                                  {
+                                                                      "scope":  "user",
+                                                                      "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\anthropic-agent-skills\\example-skills\\b0cbd3df1533",
+                                                                      "version":  "b0cbd3df1533",
+                                                                      "installedAt":  "2026-03-31T02:47:24.777Z",
+                                                                      "lastUpdated":  "2026-03-31T02:47:24.777Z",
+                                                                      "gitCommitSha":  "b0cbd3df1533b396d281a6886d5132f623393a9c"
+                                                                  }
+                                                              ],
+                    "superpowers@superpowers-marketplace":  [
+                                                                {
+                                                                    "scope":  "project",
+                                                                    "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\superpowers-marketplace\\superpowers\\5.0.2",
+                                                                    "version":  "5.0.2",
+                                                                    "installedAt":  "2026-03-20T02:00:00.000Z",
+                                                                    "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                    "projectPath":  "C:\\Users\\xydong18"
+                                                                }
+                                                            ],
+                    "superpowers-chrome@superpowers-marketplace":  [
+                                                                       {
+                                                                           "scope":  "project",
+                                                                           "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\superpowers-marketplace\\superpowers-chrome\\1.8.0",
+                                                                           "version":  "1.8.0",
+                                                                           "installedAt":  "2026-03-20T02:30:00.000Z",
+                                                                           "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                           "projectPath":  "C:\\Users\\xydong18"
+                                                                       }
+                                                                   ],
+                    "elements-of-style@superpowers-marketplace":  [
+                                                                      {
+                                                                          "scope":  "project",
+                                                                          "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\superpowers-marketplace\\elements-of-style\\1.0.0",
+                                                                          "version":  "1.0.0",
+                                                                          "installedAt":  "2026-03-20T02:30:00.000Z",
+                                                                          "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                          "projectPath":  "C:\\Users\\xydong18"
+                                                                      }
+                                                                  ],
+                    "episodic-memory@superpowers-marketplace":  [
+                                                                    {
+                                                                        "scope":  "project",
+                                                                        "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\superpowers-marketplace\\episodic-memory\\1.0.15",
+                                                                        "version":  "1.0.15",
+                                                                        "installedAt":  "2026-03-20T02:30:00.000Z",
+                                                                        "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                        "projectPath":  "C:\\Users\\xydong18"
+                                                                    }
+                                                                ],
+                    "superpowers-lab@superpowers-marketplace":  [
+                                                                    {
+                                                                        "scope":  "project",
+                                                                        "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\superpowers-marketplace\\superpowers-lab\\0.3.0",
+                                                                        "version":  "0.3.0",
+                                                                        "installedAt":  "2026-03-20T02:30:00.000Z",
+                                                                        "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                        "projectPath":  "C:\\Users\\xydong18"
+                                                                    }
+                                                                ],
+                    "superpowers-developing-for-claude-code@superpowers-marketplace":  [
+                                                                                           {
+                                                                                               "scope":  "project",
+                                                                                               "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\superpowers-marketplace\\superpowers-developing-for-claude-code\\0.3.1",
+                                                                                               "version":  "0.3.1",
+                                                                                               "installedAt":  "2026-03-20T02:30:00.000Z",
+                                                                                               "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                                               "projectPath":  "C:\\Users\\xydong18"
+                                                                                           }
+                                                                                       ],
+                    "claude-session-driver@superpowers-marketplace":  [
+                                                                          {
+                                                                              "scope":  "project",
+                                                                              "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\superpowers-marketplace\\claude-session-driver\\1.0.1",
+                                                                              "version":  "1.0.1",
+                                                                              "installedAt":  "2026-03-20T02:30:00.000Z",
+                                                                              "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                              "projectPath":  "C:\\Users\\xydong18"
+                                                                          }
+                                                                      ],
+                    "double-shot-latte@superpowers-marketplace":  [
+                                                                      {
+                                                                          "scope":  "project",
+                                                                          "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\superpowers-marketplace\\double-shot-latte\\1.2.0",
+                                                                          "version":  "1.2.0",
+                                                                          "installedAt":  "2026-03-20T02:30:00.000Z",
+                                                                          "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                          "projectPath":  "C:\\Users\\xydong18"
+                                                                      }
+                                                                  ],
+                    "hookify@claude-plugins-official":  [
+                                                            {
+                                                                "scope":  "user",
+                                                                "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\claude-plugins-official\\hookify\\unknown",
+                                                                "version":  "unknown",
+                                                                "installedAt":  "2026-03-25T15:26:41.073Z",
+                                                                "lastUpdated":  "2026-03-26T03:33:55.842Z"
+                                                            }
+                                                        ],
+                    "security-guidance@claude-plugins-official":  [
+                                                                      {
+                                                                          "scope":  "user",
+                                                                          "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\claude-plugins-official\\security-guidance\\unknown",
+                                                                          "version":  "unknown",
+                                                                          "installedAt":  "2026-03-25T15:26:41.073Z",
+                                                                          "lastUpdated":  "2026-03-26T03:33:55.842Z"
+                                                                      }
+                                                                  ],
+                    "ralph-loop@claude-plugins-official":  [
+                                                               {
+                                                                   "scope":  "project",
+                                                                   "installPath":  "C:\\Users\\xydong18\\.claude\\plugins\\cache\\claude-plugins-official\\ralph-loop\\1.0.0",
+                                                                   "version":  "1.0.0",
+                                                                   "installedAt":  "2026-03-31T02:46:59.489Z",
+                                                                   "lastUpdated":  "2026-04-03T07:18:30.932Z",
+                                                                   "projectPath":  "C:\\Users\\xydong18"
+                                                               }
+                                                           ],
+                    "chaos-harness@chaos-harness":  [
+                                                        {
+                                                            "scope":  "user",
+                                                            "lastUpdated":  "2026-04-03T00:00:00.000Z",
+                                                            "version":  "1.0.0",
+                                                            "installedAt":  "2026-04-03T00:00:00.000Z",
+                                                            "installPath":  "C:\\\\Users\\\\xydong18\\\\.claude\\\\plugins\\\\cache\\\\chaos-harness\\\\chaos-harness\\\\1.0.0"
+                                                        }
+                                                    ]
+                }
+}
+
+=== [2] settings.json ===
+
+锘縶
+    "alwaysThinkingEnabled":  true,
+    "effortLevel":  "high",
+    "enabledPlugins":  {
+                           "claude-session-driver@superpowers-marketplace":  true,
+                           "double-shot-latte@superpowers-marketplace":  true,
+                           "elements-of-style@superpowers-marketplace":  true,
+                           "episodic-memory@superpowers-marketplace":  true,
+                           "example-skills@anthropic-agent-skills":  true,
+                           "planning-with-files@planning-with-files":  true,
+                           "pua@pua-skills":  true,
+                           "pua@tanweai-pua":  true,
+                           "ralph-loop@claude-plugins-official":  true,
+                           "skill-creator@claude-plugins-official":  true,
+                           "superpowers-chrome@superpowers-marketplace":  true,
+                           "superpowers-dev@superpowers-marketplace":  true,
+                           "superpowers-developing-for-claude-code@superpowers-marketplace":  true,
+                           "superpowers-lab@superpowers-marketplace":  true,
+                           "superpowers@superpowers-marketplace":  true,
+                           "ui-ux-pro-max@ui-ux-pro-max-skill":  true,
+                           "chaos-harness@chaos-harness":  true
+                       },
+    "env":  {
+                "ANTHROPIC_AUTH_TOKEN":  "sk-sp-02e572c78d514fa08776fb0f3c4e9533",
+                "ANTHROPIC_BASE_URL":  "https://coding.dashscope.aliyuncs.com/apps/anthropic",
+                "ANTHROPIC_DEFAULT_HAIKU_MODEL":  "glm-5",
+                "ANTHROPIC_DEFAULT_OPUS_MODEL":  "glm-5",
+                "ANTHROPIC_DEFAULT_SONNET_MODEL":  "glm-5",
+                "ANTHROPIC_MODEL":  "glm-5",
+                "ANTHROPIC_REASONING_MODEL":  "glm-5",
+                "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS":  "1",
+                "ENABLE_TOOL_SEARCH":  "true"
+            },
+    "extraKnownMarketplaces":  {
+                                   "anthropic-agent-skills":  {
+                                                                  "source":  {
+                                                                                 "repo":  "anthropics/skills",
+                                                                                 "source":  "github"
+                                                                             }
+                                                              },
+                                   "claude-plugins-official":  {
+                                                                   "source":  {
+                                                                                  "source":  "git",
+                                                                                  "url":  "https://github.com/anthropics/claude-plugins-official.git"
+                                                                              }
+                                                               },
+                                   "planning-with-files":  {
+                                                               "source":  {
+                                                                              "repo":  "OthmanAdi/planning-with-files",
+                                                                              "source":  "github"
+                                                                          }
+                                                           },
+                                   "pua-skills":  {
+                                                      "source":  {
+                                                                     "repo":  "tanweai/pua",
+                                                                     "source":  "github"
+                                                                 }
+                                                  },
+                                   "superpowers-marketplace":  {
+                                                                   "source":  {
+                                                                                  "repo":  "obra/superpowers-marketplace",
+                                                                                  "source":  "github"
+                                                                              }
+                                                               },
+                                   "tanweai-pua":  {
+                                                       "source":  {
+                                                                      "repo":  "tanweai/pua",
+                                                                      "source":  "github"
+                                                                  }
+                                                   },
+                                   "ui-ux-pro-max-skill":  {
+                                                               "source":  {
+                                                                              "repo":  "nextlevelbuilder/ui-ux-pro-max-skill",
+                                                                              "source":  "github"
+                                                                          }
+                                                           }
+                               },
+    "includeCoAuthoredBy":  false,
+    "model":  "glm-5",
+    "permissions":  {
+                        "allow":  [
+                                      "Bash(git *)",
+                                      "Bash(npm test)",
+                                      "Bash(npm run *)",
+                                      "Bash(npx *)",
+                                      "Bash(node *)",
+                                      "Bash(pip *)",
+                                      "Bash(pip3 *)",
+                                      "Bash(python *)",
+                                      "Bash(python -m *)",
+                                      "Bash(mvn *)",
+                                      "Bash(java *)",
+                                      "Bash(ls *)",
+                                      "Bash(cat *)",
+                                      "Bash(tr *)",
+                                      "Bash(grep *)",
+                                      "Bash(head *)",
+                                      "Bash(mkdir *)",
+                                      "Bash(mkdir -p *)",
+                                      "Bash(cp *)",
+                                      "Bash(mv *)",
+                                      "Bash(cd * \u0026\u0026 *)",
+                                      "Bash(start *)",
+                                      "Bash(gh *)",
+                                      "Bash(svn *)",
+                                      "Bash(env *)",
+                                      "Bash(which *)",
+                                      "Bash(pwd)",
+                                      "Bash(curl *)",
+                                      "Bash(wget *)",
+                                      "Bash(make *)",
+                                      "Bash(gradle *)",
+                                      "Bash(cargo *)",
+                                      "Bash(go *)",
+                                      "Bash(tasklist *)",
+                                      "Bash(taskkill *)",
+                                      "Bash(cls)",
+                                      "Bash(ipconfig *)",
+                                      "Bash(ping *)",
+                                      "Bash(netstat *)",
+                                      "Bash(net *)",
+                                      "Bash(where *)",
+                                      "Bash(find *)",
+                                      "Bash(findstr *)",
+                                      "Bash(winget *)",
+                                      "Bash(choco *)",
+                                      "Bash(scoop *)",
+                                      "Bash(set *)",
+                                      "Bash(echo *)",
+                                      "Bash(powershell *)",
+                                      "Bash(wsl *)",
+                                      "Bash",
+                                      "Read",
+                                      "Write",
+                                      "Edit",
+                                      "Glob",
+                                      "Grep"
+                                  ],
+                        "deny":  [
+                                     "Bash(rm -rf *)",
+                                     "Bash(sudo *)"
+                                 ]
+                    }
+}
+
+=== [3] Cache Directory Structure ===
+
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\.claude-plugin
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\.orphaned_at
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\CLAUDE.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\.claude-plugin\marketplace.json
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\.claude-plugin\plugin.json
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\collaboration-reviewer.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\harness-generator.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\hooks-manager.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\iron-law-enforcer.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\overview.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\plugin-manager.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\project-scanner.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\project-state.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\version-locker.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\commands\workflow-supervisor.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\hooks.json
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\iron-law-check
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\laziness-detect
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\learning-update
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\pre-compact
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\run-hook.cmd
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\session-start
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\stop
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\hooks\workflow-track
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\collaboration-reviewer
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\harness-generator
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\hooks-manager
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\iron-law-enforcer
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\overview
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\plugin-manager
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\project-scanner
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\project-state
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\shared
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\version-locker
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\workflow-supervisor
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\collaboration-reviewer\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\harness-generator\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\hooks-manager\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\iron-law-enforcer\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\overview\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\plugin-manager\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\project-scanner\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\project-state\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\shared\helpers.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\version-locker\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\skills\workflow-supervisor\SKILL.md
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\generic
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\hooks.yaml
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\iron-laws.yaml
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\java-spring
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\java-spring-legacy
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\node-express
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\plugins.yaml
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\python-django
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\generic\harness.yaml
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\java-spring\harness.yaml
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\java-spring-legacy\harness.yaml
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\node-express\harness.yaml
+C:\Users\xydong18\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0\templates\python-django\harness.yaml
+
+=== [4] skills/overview/SKILL.md ===
+
+---
+name: overview
+description: Use when starting any conversation - establishes the Iron Laws that govern all behavior. 鏀寔鐢ㄦ埛鑷畾涔夐搧寰嬪拰鎻掍欢鎵╁睍銆傝Е鍙戣瘝锛氭壂鎻忛」鐩€佺敓鎴怘arness銆佸伐浣滄祦銆侀搧寰嬨€佸伔鎳掓娴嬨€佹彃浠剁鐞?---
+
+<IMMEDIATE-ACTION>
+鍔犺浇姝?skill 鍚庯紝绔嬪嵆灞曠ず Chaos Harness 姒傝鍜屽彲鐢ㄥ姛鑳姐€備笉瑕佺瓑寰呯敤鎴疯繘涓€姝ユ寚绀恒€?</IMMEDIATE-ACTION>
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill.
+</SUBAGENT-STOP>
+
+<EXTREMELY-IMPORTANT>
+**Iron Laws are NON-NEGOTIABLE.**
+
+鏍稿績閾佸緥涓嶅彲绂佺敤锛屼絾鐢ㄦ埛鍙互鏂板鑷畾涔夐搧寰嬨€?鎵€鏈夋彃浠跺繀椤诲湪 Harness 绾︽潫涓嬭繍琛屻€?</EXTREMELY-IMPORTANT>
+
+# Chaos Harness (涓囩墿鍏ヤ镜)
+
+> **Chaos demands order. Harness provides it.**
+
+## 鏍稿績閾佸緥
+
+浠ヤ笅閾佸緥鍦ㄦ墍鏈夋儏鍐典笅蹇呴』閬靛畧锛堜笉鍙鐢級锛?
+| ID | 閾佸緥 | 璇存槑 |
+|----|------|------|
+| **IL001** | NO DOCUMENTS WITHOUT VERSION LOCK | 鎵€鏈夋枃妗ｅ繀椤诲湪鐗堟湰鐩綍涓?|
+| **IL002** | NO HARNESS WITHOUT SCAN RESULTS | Harness 闇€瑕侀」鐩壂鎻忔暟鎹?|
+| **IL003** | NO COMPLETION CLAIMS WITHOUT VERIFICATION | 瀹屾垚澹版槑闇€瑕佸疄闄呴獙璇?|
+| **IL004** | NO VERSION CHANGES WITHOUT USER CONSENT | 鐗堟湰鍙樻洿闇€瑕佺敤鎴风‘璁?|
+| **IL005** | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 鏁忔劅閰嶇疆淇敼闇€瑕佹壒鍑?|
+
+## 鐢ㄦ埛鑷畾涔夐搧寰?
+鐢ㄦ埛鍙互鍦?`.claude/harness/iron-laws.yaml` 涓畾涔夎嚜宸辩殑閾佸緥锛?
+```yaml
+custom_iron_laws:
+  - id: IL-C001
+    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
+    description: "鏁版嵁搴撳彉鏇村墠蹇呴』鍒涘缓澶囦唤"
+    severity: critical
+    triggers:
+      - pattern: "ALTER TABLE|DROP TABLE"
+        action: block
+```
+
+**娣诲姞閾佸緥锛?*
+```
+浣? 娣诲姞閾佸緥锛氬懆浜旂姝㈤儴缃?Claude: [鍒涘缓 IL-C002] 宸叉坊鍔犺嚜瀹氫箟閾佸緥
+```
+
+## 瀛?Skills
+
+| Skill | 婵€娲绘潯浠?| 鍔熻兘 |
+|-------|---------|------|
+| `project-scanner` | 鎵弿椤圭洰銆佸垎鏋愰」鐩粨鏋?| 妫€娴嬮」鐩被鍨嬨€佺幆澧冦€佷緷璧?|
+| `version-locker` | 鍒涘缓鐗堟湰銆侀攣瀹氱増鏈?| 鐗堟湰绠＄悊鍜岄攣瀹?|
+| `harness-generator` | 鐢熸垚 Harness銆佸垱寤虹害鏉?| 鐢熸垚閾佸緥鍜岄槻缁曡繃瑙勫垯 |
+| `workflow-supervisor` | 宸ヤ綔娴併€侀樁娈电鐞?| 12闃舵宸ヤ綔娴佺鐞?|
+| `iron-law-enforcer` | **濮嬬粓婵€娲?* | 閾佸緥鎵ц銆佹敮鎸佺敤鎴疯嚜瀹氫箟 |
+| `plugin-manager` | 鎻掍欢绠＄悊銆侀厤缃?| 绠＄悊澶栭儴鎻掍欢鍜岄搧寰嬫墿灞?|
+| `collaboration-reviewer` | 璇勫銆佸鏌ャ€佸崗浣?| 澶欰gent鍗忎綔璇勫銆佹彃浠跺崗鍔┿€佺敤鎴风‘璁?|
+
+## 鎻掍欢绯荤粺
+
+Chaos Harness 鏀寔寮曞叆澶栭儴鎻掍欢锛屼絾鎵€鏈夋彃浠跺繀椤伙細
+
+1. **鎺ュ彈閾佸緥绾︽潫** 鈥?鏃犳硶缁曡繃 Harness 閾佸緥
+2. **鍦ㄧ増鏈洰褰曚笅宸ヤ綔** 鈥?閬靛惊 IL001
+3. **鎻愪緵楠岃瘉璇佹嵁** 鈥?閬靛惊 IL003
+
+### 鎻掍欢闆嗘垚绀轰緥
+
+```yaml
+# 澶栭儴鎻掍欢绀轰緥閰嶇疆
+superpowers:
+  enabled: true
+  source: github:obra/superpowers
+  stages:
+    - W01  # brainstorming
+    - W03  # writing-plans
+    - W08  # tdd
+    - W09  # code-review
+```
+
+### 鎻掍欢绠＄悊
+
+```
+浣? 瀹夎 superpowers 鎻掍欢
+浣? 绂佺敤 openspec 鐨?W06 闃舵
+浣? 鏌ョ湅鎻掍欢鍒楄〃
+浣? 娣诲姞鑷畾涔夋彃浠?local:~/.claude/plugins/my-plugin
+```
+
+## 鏋舵瀯鍥?
+```
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?                    Chaos Harness                           鈹?鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?鈹? 鈹?                   Iron Laws (閾佸緥)                    鈹?鈹?鈹? 鈹?        鏍稿績閾佸緥 + 鐢ㄦ埛鑷畾涔夐搧寰?                      鈹?鈹?鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?鈹?                         鈹?                                 鈹?鈹?                         鈻?                                 鈹?鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?鈹? 鈹?                 Plugin Manager                        鈹?鈹?鈹? 鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹?鈹?鈹? 鈹? 鈹俿uper-   鈹? 鈹俹pen-    鈹? 鈹俢ustom-  鈹? 鈹? ...    鈹? 鈹?鈹?鈹? 鈹? 鈹俻owers   鈹? 鈹俿pec     鈹? 鈹俻lugins  鈹? 鈹?        鈹? 鈹?鈹?鈹? 鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹?鈹?鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?```
+
+## 閰嶇疆鏂囦欢浣嶇疆
+
+```
+~/.claude/harness/
+鈹溾攢鈹€ plugins.yaml           # 鎻掍欢閰嶇疆
+鈹溾攢鈹€ iron-laws.yaml         # 鑷畾涔夐搧寰?鈹溾攢鈹€ plugin-log.json        # 鎻掍欢鎵ц鏃ュ織
+鈹斺攢鈹€ iron-law-log.json      # 閾佸緥瑙﹀彂鏃ュ織
+```
+
+## 闃茬粫杩囪鍒?
+鑷姩妫€娴嬪苟鍙嶉┏甯歌鍊熷彛锛?
+| 鍊熷彛 | 鍙嶉┏ |
+|------|------|
+| "杩欐槸绠€鍗曚慨澶? | 绠€鍗曚篃闇€瑕侀獙璇併€侷L003銆?|
+| "璺宠繃娴嬭瘯" | 娴嬭瘯鏄熀鏈獙璇併€侷L003銆?|
+| "灏辫繖涓€娆? | 姣忔渚嬪閮芥槸鍏堜緥銆侷L001銆?|
+| "鑰侀」鐩? | 鑰侀」鐩洿闇€瑕佺害鏉熴€侷L003銆?|
+
+## 鍋锋噿妯″紡妫€娴?
+| ID | 妯″紡 | 涓ラ噸绋嬪害 |
+|----|------|----------|
+| LP001 | 澹扮О瀹屾垚浣嗘棤楠岃瘉璇佹嵁 | Critical |
+| LP002 | 璺宠繃鏍瑰洜鍒嗘瀽鐩存帴淇 | Critical |
+| LP003 | 闀挎椂闂存棤浜у嚭 | Warning |
+| LP004 | 璇曞浘璺宠繃娴嬭瘯 | Critical |
+| LP005 | 鎿呰嚜鏇存敼鐗堟湰鍙?| Critical |
+| LP006 | 鑷姩澶勭悊楂橀闄╅厤缃?| Critical |
+
+## 浣跨敤绀轰緥
+
+**鎵弿椤圭洰锛?*
+```
+鐢ㄦ埛: 甯垜鎵弿褰撳墠椤圭洰
+鈫?婵€娲?project-scanner
+鈫?鎵ц椤圭洰绫诲瀷妫€娴?鈫?鐢熸垚鎵弿鎶ュ憡
+```
+
+**鐢熸垚 Harness锛?*
+```
+鐢ㄦ埛: 鐢熸垚杩欎釜椤圭洰鐨?Harness
+鈫?妫€鏌ョ増鏈槸鍚﹂攣瀹?(IL001)
+鈫?妫€鏌ユ壂鎻忕粨鏋滄槸鍚﹀瓨鍦?(IL002)
+鈫?婵€娲?harness-generator
+鈫?鐢熸垚閾佸緥鍜岄槻缁曡繃瑙勫垯
+```
+
+**妫€娴嬪伔鎳掞細**
+```
+鐢ㄦ埛: 鎴戝畬鎴愪簡
+鈫?婵€娲?iron-law-enforcer
+鈫?妫€鏌ユ槸鍚︽湁楠岃瘉璇佹嵁 (IL003)
+鈫?鏃犺瘉鎹?鈫?瑕佹眰楠岃瘉
+```
+
+## 瀹夎
+
+```bash
+# 浠?GitHub 鍏嬮殕
+git clone https://github.com/jeesoul/chaos-harness.git
+cd chaos-harness
+
+# 瀹夎
+chmod +x install.sh
+./install.sh  # macOS/Linux
+install.bat    # Windows
+
+# 閲嶅惎 Claude Code
+```
+
+## 椤圭洰缁撴瀯
+
+```
+chaos-harness/
+鈹溾攢鈹€ .claude-plugin/
+鈹?  鈹溾攢鈹€ plugin.json
+鈹?  鈹斺攢鈹€ marketplace.json
+鈹溾攢鈹€ skills/
+鈹?  鈹溾攢鈹€ project-scanner/
+鈹?  鈹溾攢鈹€ version-locker/
+鈹?  鈹溾攢鈹€ harness-generator/
+鈹?  鈹溾攢鈹€ workflow-supervisor/
+鈹?  鈹斺攢鈹€ iron-law-enforcer/
+鈹溾攢鈹€ templates/           # Harness 妯℃澘
+鈹溾攢鈹€ CLAUDE.md           # 椤圭洰璁板繂
+鈹斺攢鈹€ README.md
+```
+
+---
+
+*Chaos demands order. Harness provides it.*
+========================================================
+  Export Complete
+========================================================
+
+请按任意键继续. . .
