@@ -4,185 +4,197 @@
   <img src="https://img.shields.io/badge/version-1.0.0-blue.svg">
   <img src="https://img.shields.io/badge/tests-623-passing-brightgreen.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg">
 </p>
 
-<p align="center">
-  <strong>确定性 AI Agent 约束框架</strong><br>
-  <em>Chaos demands order. Harness provides it.</em>
-</p>
+<p align="center"><strong>确定性 AI Agent 约束框架</strong></p>
+<p align="center"><em>Chaos demands order. Harness provides it.</em></p>
 
 ---
 
-## 项目定位
+## 核心定位
 
-**Chaos Harness 是首个面向 Claude Code 的企业级 Agent 治理框架**，通过声明式铁律（Iron Laws）解决 AI Agent 在软件开发中的**确定性行为缺失**问题。
+**首个具备自学习、自适应能力的 Claude Code Agent 治理框架。**
 
-**核心价值主张：**
-- 🛡️ **强制验证** - 消除"声称完成但无证据"的交付风险
-- 🔒 **约束硬化** - 建议性规则升级为零解释空间的铁律
-- 🕵️ **行为审计** - 实时检测绕过尝试与偷懒模式
-- 🔄 **自纠正闭环** - Hook 机制实现自动干预与学习记录
+通过**铁律引擎**强制执行确定性行为，通过**自适应系统**动态构建项目专属约束生态，实现从"被动约束"到"主动治理"的跃迁。
+
+---
+
+## 差异化特性
+
+### 🧠 自学习生态闭环
+
+```
+项目行为 → 学习记录 → 规则优化 → 能力沉淀 → 专属Harness
+    ↑                                              ↓
+    └──────────────── 自动迭代 ←───────────────────┘
+```
+
+- **行为学习**：Hook 自动记录 Agent 决策路径与结果
+- **规则进化**：根据历史模式自动补充约束规则
+- **能力沉淀**：项目专属 Harness 持续增强
+
+### 🔄 自适应 Harness 构建
+
+| 输入 | 分析 | 输出 |
+|------|------|------|
+| 项目类型 | Java/Node/Python 自动识别 | 技术栈专属模板 |
+| 代码规模 | Small/Medium/Large 分级 | 自适应工作流 |
+| 团队行为 | 偷懒模式、绕过尝试统计 | 针对性铁律强化 |
+| 历史缺陷 | 模式匹配、根因聚类 | 预防性约束注入 |
+
+### ⚡ 动态约束注入
+
+不依赖静态配置，根据上下文实时调整：
+
+```yaml
+# 检测到私服配置 → 自动注入
+iron_laws:
+  - id: IL-AUTO-001
+    rule: "NO DEPLOY WITHOUT PRIVATE REPO CHECK"
+    auto_generated: true
+    source: "detected_nexus_config"
+
+# 检测到 JDK 8 → 自动降级兼容
+workflow:
+  stage: "build"
+  compatibility_mode: "jdk8-legacy"
+```
 
 ---
 
 ## 核心能力
 
-### 铁律引擎 (Iron Law Engine)
+### 铁律引擎
 
-声明式规则定义，自动拦截违规行为：
+声明式规则 + 自动执行：
 
-```yaml
-# 预置铁律（不可禁用）
-IL001: NO DOCUMENTS WITHOUT VERSION LOCK
-IL002: NO HARNESS WITHOUT SCAN RESULTS  
-IL003: NO COMPLETION CLAIMS WITHOUT VERIFICATION
-IL004: NO VERSION CHANGES WITHOUT USER CONSENT
-IL005: NO HIGH-RISK CONFIG WITHOUT APPROVAL
+| 铁律 | 约束行为 |
+|------|---------|
+| IL001 | 文档必须在版本目录生成 |
+| IL002 | Harness 生成依赖扫描数据 |
+| IL003 | 完成声明必须附带验证证据 |
+| IL004 | 版本变更需要用户确认 |
+| IL005 | 敏感配置修改需要审批 |
 
-# 自定义铁律
-custom_iron_laws:
-  - id: IL-C001
-    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
-    severity: critical
-    triggers:
-      - pattern: "ALTER TABLE|DROP TABLE"
-        action: block
-```
+**扩展机制**：支持自定义铁律、严重程度分级、触发模式配置。
 
 ### 行为检测系统
 
-| 检测类型 | 触发条件 | 处置动作 |
-|---------|---------|---------|
-| LP001 | 完成声明无验证证据 | 阻断 + 要求举证 |
+**偷懒模式检测：**
+| 模式 | 检测条件 | 自动处置 |
+|------|---------|---------|
+| LP001 | 完成声明无验证 | 阻断 + 要求举证 |
 | LP002 | 跳过根因分析 | 阻断 + 强制分析 |
 | LP003 | 长时间无产出 | 施压 + 进度同步 |
 | LP004 | 尝试跳过测试 | 阻断 + 强制执行 |
-| BP-* | 绕过关键词检测 | 自动驳回 + 铁律引用 |
 
-### 钩子生态 (Hook System)
+**绕过检测：** 自动识别 "简单修复"、"跳过测试"、"就这一次" 等 10+ 种绕过话术并驳回。
 
-全生命周期监控与干预：
+### 钩子生态
+
+全生命周期监控与自动干预：
 
 ```
-SessionStart → 注入铁律上下文
-    ↓
-PreToolUse → 铁律预检 (IL001/IL005)
-    ↓
-PostToolUse → 偷懒检测 + 学习记录
-    ↓
-Stop → 完成声明验证 (IL003)
-    ↓
-PreCompact → 上下文持久化
+SessionStart → 注入铁律 + 恢复上下文
+PreToolUse  → 铁律预检 + 权限验证
+PostToolUse → 行为学习 + 模式识别
+Stop        → 完成验证 + 结果审计
+PreCompact  → 状态持久化 + 能力沉淀
 ```
 
-### 工作流编排
+### 自适应工作流
 
-12 阶段自适应工作流，根据项目规模自动调整阶段通过条件：
+12 阶段工作流自动适配项目规模：
 
-| 规模 | 文件数 | 代码行数 | 必经阶段 |
-|------|--------|---------|---------|
-| Small | ≤5 | ≤100 | 5 阶段 |
-| Medium | 5-20 | 100-500 | 8 阶段 |
-| Large | ≥20 | ≥500 | 全部 12 阶段 |
+| 规模 | 必经阶段 | 可跳过阶段 |
+|------|---------|-----------|
+| Small (≤100行) | 5 阶段 | 7 阶段 |
+| Medium (100-500行) | 8 阶段 | 4 阶段 |
+| Large (≥500行) | 全部 12 阶段 | 无 |
+
+---
+
+## 安装
+
+```bash
+git clone https://github.com/jeesoul/chaos-harness.git
+claude plugins marketplace add "路径"
+claude plugins install chaos-harness@chaos-harness
+# 重启 Claude Code
+/chaos-harness:overview
+```
+
+---
+
+## 命令
+
+| 命令 | 功能 |
+|------|------|
+| `/chaos-harness:overview` | 系统概览、铁律状态、学习进度 |
+| `/chaos-harness:project-scanner` | 项目分析、类型检测、自适应建议 |
+| `/chaos-harness:version-locker` | 版本管理、变更追踪、锁定机制 |
+| `/chaos-harness:harness-generator` | 约束生成、动态规则、专属模板 |
+| `/chaos-harness:workflow-supervisor` | 工作流编排、阶段控制、进度同步 |
+| `/chaos-harness:iron-law-enforcer` | 铁律执行、绕过拦截、自定义扩展 |
+| `/chaos-harness:collaboration-reviewer` | 多 Agent 协作、冲突检测、评审流程 |
+| `/chaos-harness:hooks-manager` | 钩子配置、学习日志、行为审计 |
+| `/chaos-harness:plugin-manager` | 插件管理、约束注入、生态扩展 |
+| `/chaos-harness:project-state` | 状态持久化、会话恢复、进度追踪 |
 
 ---
 
 ## 技术架构
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                  Chaos Harness                       │
-├─────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
-│  │ Iron Laws   │  │  Bypass     │  │  Laziness   │  │
-│  │   Engine    │  │  Detection  │  │  Detection  │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  │
-│         │                │                │         │
-│         └────────────────┼────────────────┘         │
-│                          ▼                          │
-│              ┌─────────────────────┐                │
-│              │   Hook Orchestrator │                │
-│              └─────────────────────┘                │
-│                          │                          │
-│         ┌────────────────┼────────────────┐         │
-│         ▼                ▼                ▼         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
-│  │  Workflow   │  │  Project    │  │   Plugin    │  │
-│  │   Engine    │  │   Scanner   │  │   Manager   │  │
-│  └─────────────┘  └─────────────┘  └─────────────┘  │
-└─────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────┐
+│                Chaos Harness Core                   │
+├────────────────────────────────────────────────────┤
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐       │
+│  │ Iron Law │   │ Adaptive │   │ Learning │       │
+│  │  Engine  │   │  Builder │   │  System  │       │
+│  └────┬─────┘   └────┬─────┘   └────┬─────┘       │
+│       │              │              │              │
+│       └──────────────┼──────────────┘              │
+│                      ▼                             │
+│           ┌──────────────────┐                     │
+│           │ Hook Orchestrator│                     │
+│           └────────┬─────────┘                     │
+│       ┌────────────┼────────────┐                  │
+│       ▼            ▼            ▼                  │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐              │
+│  │Workflow │ │ Scanner │ │ Plugins │              │
+│  │ Engine  │ │   +     │ │ Manager │              │
+│  │         │ │Analyzer │ │         │              │
+│  └─────────┘ └─────────┘ └─────────┘              │
+└────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 快速开始
+## 模板生态
+
+| 模板 | 技术栈 | 特殊支持 |
+|------|--------|---------|
+| `java-spring` | Java 17/21 + Spring Boot 3.x | Spring 注解扫描 |
+| `java-spring-legacy` | JDK 8 + Spring Boot 2.x | 兼容模式、降级策略 |
+| `node-express` | Node.js Express | npm/yarn 智能识别 |
+| `python-django` | Python Django | 虚拟环境检测 |
+| `generic` | 通用项目 | 语言无关约束 |
+
+---
+
+## 开发
 
 ```bash
-# 安装
-git clone https://github.com/jeesoul/chaos-harness.git
-claude plugins marketplace add "路径"
-claude plugins install chaos-harness@chaos-harness
-
-# 验证
-/chaos-harness:overview
+npm install && npm run build && npm test
 ```
 
 ---
 
-## 命令参考
+## 许可证
 
-| 命令 | 功能描述 |
-|------|---------|
-| `overview` | 系统概览、铁律状态、插件列表 |
-| `project-scanner` | 项目类型检测、依赖分析、环境验证 |
-| `version-locker` | 版本目录管理、锁定机制、变更追踪 |
-| `harness-generator` | 约束规则生成、模板选择、动态补充 |
-| `workflow-supervisor` | 阶段管理、进度追踪、自适应调整 |
-| `iron-law-enforcer` | 铁律执行、绕过拦截、自定义扩展 |
-| `collaboration-reviewer` | 多 Agent 协作、评审流程、冲突检测 |
-| `hooks-manager` | 钩子配置、日志审计、性能监控 |
-| `plugin-manager` | 插件安装、约束注入、版本管理 |
-| `project-state` | 状态持久化、会话恢复、进度同步 |
+[MIT](LICENSE)
 
 ---
 
-## 企业级特性
-
-- ✅ **零配置启动** - 预置铁律开箱即用
-- ✅ **渐进式约束** - 从核心铁律到自定义规则
-- ✅ **审计追踪** - 完整的行为日志与决策记录
-- ✅ **模板生态** - Java/Node/Python/通用项目模板
-- ✅ **插件扩展** - 支持自定义铁律与工作流阶段
-
----
-
-## 技术栈
-
-| 组件 | 技术 |
-|------|------|
-| 运行时 | Node.js 18+ |
-| 语言 | TypeScript 5.x |
-| 测试 | Vitest (623 test cases) |
-| 包管理 | npm |
-
----
-
-## 适用场景
-
-- 🔹 **企业开发团队** - 强制代码审查与测试覆盖率
-- 🔹 **关键业务系统** - 敏感操作审批与审计
-- 🔹 **外包项目管理** - 交付质量与进度把控
-- 🔹 **个人开发者** - 规范化开发流程养成
-
----
-
-## 开源协议
-
-[MIT License](LICENSE)
-
----
-
-<p align="center">
-  <strong>Chaos demands order. Harness provides it.</strong>
-</p>
+<p align="center"><strong>Chaos demands order. Harness provides it.</strong></p>
