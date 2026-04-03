@@ -54,6 +54,9 @@ if exist "%MARKETPLACE_DIR%\commands" xcopy /s /e /i /q "%MARKETPLACE_DIR%\comma
 if exist "%MARKETPLACE_DIR%\CLAUDE.md" copy /y "%MARKETPLACE_DIR%\CLAUDE.md" "%CACHE_DIR%\" >nul
 if exist "%MARKETPLACE_DIR%\README.md" copy /y "%MARKETPLACE_DIR%\README.md" "%CACHE_DIR%\" >nul
 
+REM Remove orphaned marker if exists (Claude Code may create this during reinstall)
+if exist "%CACHE_DIR%\.orphaned_at" del /f /q "%CACHE_DIR%\.orphaned_at" 2>nul
+
 REM Register marketplace
 echo Registering marketplace...
 powershell -Command "$file='%USERPROFILE%\.claude\plugins\known_marketplaces.json'; $ts=Get-Date -Format 'yyyy-MM-ddTHH:mm:ss.000Z'; if(!(Test-Path $file)){ New-Item -ItemType Directory -Force -Path (Split-Path $file) | Out-Null; '{}' | Out-File -Encoding utf8 $file }; $json=Get-Content $file | ConvertFrom-Json; $json | Add-Member -NotePropertyName 'chaos-harness' -NotePropertyValue @{source=@{source='github';repo='jeesoul/chaos-harness'};installLocation='%MARKETPLACE_DIR%';lastUpdated=$ts} -Force; $json | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $file" 2>nul

@@ -88,6 +88,9 @@ install_plugin() {
     [ -f "$marketplace_dir/README.md" ] && cp "$marketplace_dir/README.md" "$cache_dir/"
     [ -d "$marketplace_dir/commands" ] && cp -r "$marketplace_dir/commands" "$cache_dir/"
 
+    # Remove orphaned marker if exists (Claude Code may create this during reinstall)
+    rm -f "$cache_dir/.orphaned_at" 2>/dev/null
+
     # Register in known_marketplaces.json
     register_marketplace
 
