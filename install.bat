@@ -1,12 +1,11 @@
 @echo off
-REM Chaos Harness Install - Using Node.js for JSON
+REM Chaos Harness Install
 
 echo ========================================================
 echo   Chaos Harness Install
 echo ========================================================
 echo.
 
-REM Check Node.js
 where node >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Node.js not found.
@@ -17,11 +16,10 @@ if errorlevel 1 (
 set "SCRIPT_DIR=%~dp0"
 set "CACHE_DIR=%USERPROFILE%\.claude\plugins\cache\chaos-harness\chaos-harness\1.0.0"
 
-echo [1] Creating directories and removing orphan markers...
+echo [1] Creating directories...
 if not exist "%CACHE_DIR%\skills" mkdir "%CACHE_DIR%\skills"
 if not exist "%CACHE_DIR%\commands" mkdir "%CACHE_DIR%\commands"
 if not exist "%CACHE_DIR%\.claude-plugin" mkdir "%CACHE_DIR%\.claude-plugin"
-REM Remove orphan marker if exists (Claude Code marks plugins as orphaned when path changes)
 if exist "%CACHE_DIR%\.orphaned_at" del /f /q "%CACHE_DIR%\.orphaned_at" 2>nul
 echo [OK] Done
 
@@ -35,55 +33,18 @@ echo [OK] Done
 
 echo.
 echo [3] Registering plugin...
+node -e "const fs=require('fs'),p=require('path');const h=process.env.USERPROFILE;const c=p.join(h,'.claude','plugins','cache','chaos-harness','chaos-harness','1.0.0');const f=p.join(h,'.claude','plugins','installed_plugins.json');const t=new Date().toISOString();let d={version:2,plugins:{}};if(fs.existsSync(f)){try{let s=fs.readFileSync(f,'utf8').replace(/^\uFEFF/,'');d=JSON.parse(s)}catch(e){console.log('Warning: Could not parse existing file')}}if(!d.plugins)d.plugins={};d.plugins['chaos-harness@chaos-harness']=[{scope:'user',installPath:c,version:'1.0.0',installedAt:t,lastUpdated:t}];fs.mkdirSync(p.dirname(f),{recursive:true});fs.writeFileSync(f,JSON.stringify(d,null,2));console.log('[OK] Registered');"
 
-REM Create temp JS file
-set "JS_FILE=%TEMP%\chaos-install.js"
-echo const fs = require('fs'); > "%JS_FILE%"
-echo const path = require('path'); >> "%JS_FILE%"
-echo const home = process.env.USERPROFILE; >> "%JS_FILE%"
-echo const cacheDir = path.join(home, '.claude', 'plugins', 'cache', 'chaos-harness', 'chaos-harness', '1.0.0'); >> "%JS_FILE%"
-echo const installedFile = path.join(home, '.claude', 'plugins', 'installed_plugins.json'); >> "%JS_FILE%"
-echo const settingsFile = path.join(home, '.claude', 'settings.json'); >> "%JS_FILE%"
-echo const ts = new Date().toISOString(); >> "%JS_FILE%"
-echo. >> "%JS_FILE%"
-echo // Read or create installed_plugins.json >> "%JS_FILE%"
-echo let installed = {version: 2, plugins: {}}; >> "%JS_FILE%"
-echo if (fs.existsSync(installedFile)) { >> "%JS_FILE%"
-echo   try { installed = JSON.parse(fs.readFileSync(installedFile, 'utf8')); } catch(e) {} >> "%JS_FILE%"
-echo } >> "%JS_FILE%"
-echo if (!installed.plugins) installed.plugins = {}; >> "%JS_FILE%"
-echo installed.plugins['chaos-harness@chaos-harness'] = [{ >> "%JS_FILE%"
-echo   scope: 'user', >> "%JS_FILE%"
-echo   installPath: cacheDir, >> "%JS_FILE%"
-echo   version: '1.0.0', >> "%JS_FILE%"
-echo   installedAt: ts, >> "%JS_FILE%"
-echo   lastUpdated: ts >> "%JS_FILE%"
-echo }]; >> "%JS_FILE%"
-echo fs.mkdirSync(path.dirname(installedFile), {recursive: true}); >> "%JS_FILE%"
-echo fs.writeFileSync(installedFile, JSON.stringify(installed, null, 2)); >> "%JS_FILE%"
-echo console.log('[OK] Registered in installed_plugins.json'); >> "%JS_FILE%"
-echo. >> "%JS_FILE%"
-echo // Read or create settings.json >> "%JS_FILE%"
-echo let settings = {}; >> "%JS_FILE%"
-echo if (fs.existsSync(settingsFile)) { >> "%JS_FILE%"
-echo   try { settings = JSON.parse(fs.readFileSync(settingsFile, 'utf8')); } catch(e) {} >> "%JS_FILE%"
-echo } >> "%JS_FILE%"
-echo if (!settings.enabledPlugins) settings.enabledPlugins = {}; >> "%JS_FILE%"
-echo settings.enabledPlugins['chaos-harness@chaos-harness'] = true; >> "%JS_FILE%"
-echo fs.mkdirSync(path.dirname(settingsFile), {recursive: true}); >> "%JS_FILE%"
-echo fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2)); >> "%JS_FILE%"
-echo console.log('[OK] Enabled in settings.json'); >> "%JS_FILE%"
-
-node "%JS_FILE%"
-del "%JS_FILE%" 2>nul
+echo.
+echo [4] Enabling plugin...
+node -e "const fs=require('fs'),p=require('path');const h=process.env.USERPROFILE;const f=p.join(h,'.claude','settings.json');let d={};if(fs.existsSync(f)){try{let s=fs.readFileSync(f,'utf8').replace(/^\uFEFF/,'');d=JSON.parse(s)}catch(e){console.log('Warning: Could not parse existing file')}}if(!d.enabledPlugins)d.enabledPlugins={};d.enabledPlugins['chaos-harness@chaos-harness']=true;fs.mkdirSync(p.dirname(f),{recursive:true});fs.writeFileSync(f,JSON.stringify(d,null,2));console.log('[OK] Enabled');"
 
 echo.
 echo ========================================================
 echo   Install Complete!
 echo ========================================================
 echo.
-echo Please restart Claude Code and test:
-echo   /chaos-harness:overview
+echo Restart Claude Code and test: /chaos-harness:overview
 echo.
 
 :end
