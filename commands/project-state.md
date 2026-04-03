@@ -1,3 +1,5 @@
-Invoke the project-state skill to manage project state persistence and recovery.
+---
+description: Project state persistence and recovery - resume progress, view status
+---
 
-/chaos-harness:project-state
+Invoke the chaos-harness:project-state skill and follow it exactly as presented to you.

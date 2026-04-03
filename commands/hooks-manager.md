@@ -1,3 +1,5 @@
-Invoke the hooks-manager skill to manage Chaos Harness hooks.
+---
+description: Manage Chaos Harness hooks, view logs, configure hook settings
+---
 
-/hooks-manager
+Invoke the chaos-harness:hooks-manager skill and follow it exactly as presented to you.
