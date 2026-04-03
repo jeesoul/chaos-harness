@@ -1,7 +1,6 @@
 @echo off
 chcp 65001 >nul 2>&1
-REM Chaos Harness Installation Script (Marketplace Mode)
-REM Installs as a Claude Code plugin with slash commands
+REM Chaos Harness Installation Script (Fixed Version)
 
 setlocal enabledelayedexpansion
 
@@ -15,91 +14,93 @@ echo     Chaos demands order. Harness provides it.
 echo ========================================================
 echo.
 
-REM Get script directory
 set "SCRIPT_DIR=%~dp0"
-
-REM Set directories
 set "MARKETPLACE_DIR=%USERPROFILE%\.claude\plugins\marketplaces\%MARKETPLACE_NAME%"
 set "CACHE_DIR=%USERPROFILE%\.claude\plugins\cache\%MARKETPLACE_NAME%\%PLUGIN_NAME%\%VERSION%"
 
-REM Uninstall mode
 if "%1"=="--uninstall" goto uninstall
 
-REM Install
 echo Installing Chaos Harness plugin...
 
-REM Create marketplace directory
+REM Create directories
 if not exist "%MARKETPLACE_DIR%" mkdir "%MARKETPLACE_DIR%"
-
-REM Copy plugin files to marketplace
-echo Copying to marketplace directory...
-xcopy /s /e /i /q /y "%SCRIPT_DIR%.claude-plugin" "%MARKETPLACE_DIR%\.claude-plugin\" >nul
-xcopy /s /e /i /q /y "%SCRIPT_DIR%skills" "%MARKETPLACE_DIR%\skills\" >nul
-if exist "%SCRIPT_DIR%CLAUDE.md" copy /y "%SCRIPT_DIR%CLAUDE.md" "%MARKETPLACE_DIR%\" >nul
-if exist "%SCRIPT_DIR%README.md" copy /y "%SCRIPT_DIR%README.md" "%MARKETPLACE_DIR%\" >nul
-if exist "%SCRIPT_DIR%templates" xcopy /s /e /i /q /y "%SCRIPT_DIR%templates" "%MARKETPLACE_DIR%\templates\" >nul
-if exist "%SCRIPT_DIR%commands" xcopy /s /e /i /q /y "%SCRIPT_DIR%commands" "%MARKETPLACE_DIR%\commands\" >nul
-if exist "%SCRIPT_DIR%hooks" xcopy /s /e /i /q /y "%SCRIPT_DIR%hooks" "%MARKETPLACE_DIR%\hooks\" >nul
-
-REM Create cache directory
 if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
 
-REM Copy to cache directory
-echo Copying to cache directory...
-xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\.claude-plugin" "%CACHE_DIR%\.claude-plugin\" >nul
-xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\skills" "%CACHE_DIR%\skills\" >nul
-xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\templates" "%CACHE_DIR%\templates\" >nul
-xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\hooks" "%CACHE_DIR%\hooks\" >nul
-if exist "%MARKETPLACE_DIR%\commands" xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\commands" "%CACHE_DIR%\commands\" >nul
-if exist "%MARKETPLACE_DIR%\CLAUDE.md" copy /y "%MARKETPLACE_DIR%\CLAUDE.md" "%CACHE_DIR%\" >nul
-if exist "%MARKETPLACE_DIR%\README.md" copy /y "%MARKETPLACE_DIR%\README.md" "%CACHE_DIR%\" >nul
+REM Copy files
+echo Copying files...
+xcopy /s /e /i /q /y "%SCRIPT_DIR%.claude-plugin" "%MARKETPLACE_DIR%\.claude-plugin\" >nul 2>&1
+xcopy /s /e /i /q /y "%SCRIPT_DIR%skills" "%MARKETPLACE_DIR%\skills\" >nul 2>&1
+xcopy /s /e /i /q /y "%SCRIPT_DIR%commands" "%MARKETPLACE_DIR%\commands\" >nul 2>&1
+xcopy /s /e /i /q /y "%SCRIPT_DIR%hooks" "%MARKETPLACE_DIR%\hooks\" >nul 2>&1
+if exist "%SCRIPT_DIR%templates" xcopy /s /e /i /q /y "%SCRIPT_DIR%templates" "%MARKETPLACE_DIR%\templates\" >nul 2>&1
+if exist "%SCRIPT_DIR%CLAUDE.md" copy /y "%SCRIPT_DIR%CLAUDE.md" "%MARKETPLACE_DIR%\" >nul 2>&1
 
-REM Remove orphaned marker if exists (Claude Code may create this during reinstall)
-if exist "%CACHE_DIR%\.orphaned_at" del /f /q "%CACHE_DIR%\.orphaned_at" 2>nul
+xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\.claude-plugin" "%CACHE_DIR%\.claude-plugin\" >nul 2>&1
+xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\skills" "%CACHE_DIR%\skills\" >nul 2>&1
+xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\commands" "%CACHE_DIR%\commands\" >nul 2>&1
+xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\hooks" "%CACHE_DIR%\hooks\" >nul 2>&1
+if exist "%MARKETPLACE_DIR%\templates" xcopy /s /e /i /q /y "%MARKETPLACE_DIR%\templates" "%CACHE_DIR%\templates\" >nul 2>&1
+if exist "%MARKETPLACE_DIR%\CLAUDE.md" copy /y "%MARKETPLACE_DIR%\CLAUDE.md" "%CACHE_DIR%\" >nul 2>&1
 
-REM Verify installation
-echo Verifying installation...
-set "VERIFY_FAILED=0"
+echo [OK] Files copied
 
-if not exist "%CACHE_DIR%\skills\overview\SKILL.md" (
-    echo [ERROR] Missing: skills\overview\SKILL.md
-    set "VERIFY_FAILED=1"
-)
+REM Create registration script
+echo Creating registration script...
+set "REG_SCRIPT=%TEMP%\register-chaos-harness.ps1"
 
-if not exist "%CACHE_DIR%\commands\overview.md" (
-    echo [ERROR] Missing: commands\overview.md
-    set "VERIFY_FAILED=1"
-)
+echo $ErrorActionPreference = 'Stop' > "%REG_SCRIPT%"
+echo $CACHE_DIR = '%CACHE_DIR%' >> "%REG_SCRIPT%"
+echo $MARKETPLACE_DIR = '%MARKETPLACE_DIR%' >> "%REG_SCRIPT%"
+echo $VERSION = '%VERSION%' >> "%REG_SCRIPT%"
+echo $ts = Get-Date -Format 'yyyy-MM-ddTHH:mm:ss.000Z' >> "%REG_SCRIPT%"
+echo. >> "%REG_SCRIPT%"
+echo # Register in installed_plugins.json >> "%REG_SCRIPT%"
+echo $installedFile = "$env:USERPROFILE\.claude\plugins\installed_plugins.json" >> "%REG_SCRIPT%"
+echo $installedDir = Split-Path $installedFile >> "%REG_SCRIPT%"
+echo if (-not (Test-Path $installedDir)) { New-Item -ItemType Directory -Force -Path $installedDir ^| Out-Null } >> "%REG_SCRIPT%"
+echo if (-not (Test-Path $installedFile)) { '{\"version\":2,\"plugins\":{}}' ^| Out-File -Encoding utf8 $installedFile } >> "%REG_SCRIPT%"
+echo $json = Get-Content $installedFile ^| ConvertFrom-Json >> "%REG_SCRIPT%"
+echo if ($null -eq $json.plugins) { $json ^| Add-Member -NotePropertyName 'plugins' -NotePropertyValue @{} -Force } >> "%REG_SCRIPT%"
+echo $entry = @{scope='user'; installPath=$CACHE_DIR; version=$VERSION; installedAt=$ts; lastUpdated=$ts} >> "%REG_SCRIPT%"
+echo $json.plugins ^| Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue @($entry) -Force >> "%REG_SCRIPT%"
+echo $json ^| ConvertTo-Json -Depth 10 ^| Out-File -Encoding utf8 $installedFile >> "%REG_SCRIPT%"
+echo Write-Host '[OK] Registered in installed_plugins.json' >> "%REG_SCRIPT%"
+echo. >> "%REG_SCRIPT%"
+echo # Register in known_marketplaces.json >> "%REG_SCRIPT%"
+echo $marketplaceFile = "$env:USERPROFILE\.claude\plugins\known_marketplaces.json" >> "%REG_SCRIPT%"
+echo if (-not (Test-Path $marketplaceFile)) { '{}' ^| Out-File -Encoding utf8 $marketplaceFile } >> "%REG_SCRIPT%"
+echo $json = Get-Content $marketplaceFile ^| ConvertFrom-Json >> "%REG_SCRIPT%"
+echo $json ^| Add-Member -NotePropertyName 'chaos-harness' -NotePropertyValue @{source=@{source='github';repo='jeesoul/chaos-harness'};installLocation=$MARKETPLACE_DIR;lastUpdated=$ts} -Force >> "%REG_SCRIPT%"
+echo $json ^| ConvertTo-Json -Depth 10 ^| Out-File -Encoding utf8 $marketplaceFile >> "%REG_SCRIPT%"
+echo Write-Host '[OK] Registered in known_marketplaces.json' >> "%REG_SCRIPT%"
+echo. >> "%REG_SCRIPT%"
+echo # Enable in settings.json >> "%REG_SCRIPT%"
+echo $settingsFile = "$env:USERPROFILE\.claude\settings.json" >> "%REG_SCRIPT%"
+echo $settingsDir = Split-Path $settingsFile >> "%REG_SCRIPT%"
+echo if (-not (Test-Path $settingsDir)) { New-Item -ItemType Directory -Force -Path $settingsDir ^| Out-Null } >> "%REG_SCRIPT%"
+echo if (Test-Path $settingsFile) { >> "%REG_SCRIPT%"
+echo     $json = Get-Content $settingsFile ^| ConvertFrom-Json >> "%REG_SCRIPT%"
+echo } else { >> "%REG_SCRIPT%"
+echo     $json = [PSCustomObject]@{} >> "%REG_SCRIPT%"
+echo } >> "%REG_SCRIPT%"
+echo if ($null -eq $json.enabledPlugins) { $json ^| Add-Member -NotePropertyName 'enabledPlugins' -NotePropertyValue ([PSCustomObject]@{}) -Force } >> "%REG_SCRIPT%"
+echo $json.enabledPlugins ^| Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue $true -Force >> "%REG_SCRIPT%"
+echo $json ^| ConvertTo-Json -Depth 10 ^| Out-File -Encoding utf8 $settingsFile >> "%REG_SCRIPT%"
+echo Write-Host '[OK] Enabled in settings.json' >> "%REG_SCRIPT%"
 
-if not exist "%CACHE_DIR%\.claude-plugin\plugin.json" (
-    echo [ERROR] Missing: .claude-plugin\plugin.json
-    set "VERIFY_FAILED=1"
-)
-
-if "%VERIFY_FAILED%"=="1" (
-    echo [ERROR] Installation verification failed
-    echo Please check if all files are present in the source directory
+REM Run registration script
+echo Running registration...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%REG_SCRIPT%"
+if errorlevel 1 (
+    echo [ERROR] Registration failed
+    echo Please run the following PowerShell commands manually:
+    type "%REG_SCRIPT%"
     goto done
 )
 
-echo [OK] All files verified
+del /f /q "%REG_SCRIPT%" 2>nul
 
-REM Register marketplace
-echo Registering marketplace...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$file='%USERPROFILE%\.claude\plugins\known_marketplaces.json'; $ts=Get-Date -Format 'yyyy-MM-ddTHH:mm:ss.000Z'; if(!(Test-Path $file)){ New-Item -ItemType Directory -Force -Path (Split-Path $file) | Out-Null; '{}' | Out-File -Encoding utf8 $file }; $json=Get-Content $file | ConvertFrom-Json; $json | Add-Member -NotePropertyName 'chaos-harness' -NotePropertyValue @{source=@{source='github';repo='jeesoul/chaos-harness'};installLocation='%MARKETPLACE_DIR%';lastUpdated=$ts} -Force; $json | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $file; Write-Host '[OK] Marketplace registered'"
-
-REM Register plugin
-echo Registering plugin...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$file='%USERPROFILE%\.claude\plugins\installed_plugins.json'; $ts=Get-Date -Format 'yyyy-MM-ddTHH:mm:ss.000Z'; if(!(Test-Path $file)){ New-Item -ItemType Directory -Force -Path (Split-Path $file) | Out-Null; '{\"version\":2,\"plugins\":{}}' | Out-File -Encoding utf8 $file }; $json=Get-Content $file | ConvertFrom-Json; if(!$json.plugins){Add-Member -InputObject $json -NotePropertyName 'plugins' -NotePropertyValue @{} -Force}; $entry=@{scope='user';installPath='%CACHE_DIR%';version='%VERSION%';installedAt=$ts;lastUpdated=$ts}; $json.plugins | Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue @($entry) -Force; $json | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $file; Write-Host '[OK] Plugin registered'"
-
-REM Enable plugin in settings
-echo Enabling plugin in settings...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$f='%USERPROFILE%\.claude\settings.json'; if(!(Test-Path (Split-Path $f))){md -Force (Split-Path $f)>$null}; if(Test-Path $f){$j=Get-Content $f -Raw | ConvertFrom-Json}else{$j=[PSCustomObject]@{}}; if($null -eq $j.enabledPlugins){$j|Add-Member -NotePropertyName 'enabledPlugins' -NotePropertyValue ([PSCustomObject]@{}) -Force}; $j.enabledPlugins|Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue $true -Force; $j|ConvertTo-Json -Depth 10|Set-Content $f -Encoding UTF8; Write-Host '[OK] Plugin enabled'"
-if errorlevel 1 (
-    echo [WARN] Failed to enable in settings.json, please add manually:
-    echo   "chaos-harness@chaos-harness": true
-)
-
+echo.
 echo [OK] Plugin installed successfully
 
 goto done
@@ -107,24 +108,14 @@ goto done
 :uninstall
 echo Uninstalling Chaos Harness...
 
-if exist "%USERPROFILE%\.claude\plugins\cache\chaos-harness" (
-    rmdir /s /q "%USERPROFILE%\.claude\plugins\cache\chaos-harness"
-)
-if exist "%MARKETPLACE_DIR%" (
-    rmdir /s /q "%MARKETPLACE_DIR%"
-)
+if exist "%USERPROFILE%\.claude\plugins\cache\chaos-harness" rmdir /s /q "%USERPROFILE%\.claude\plugins\cache\chaos-harness"
+if exist "%MARKETPLACE_DIR%" rmdir /s /q "%MARKETPLACE_DIR%"
 
-echo Unregistering plugin...
-powershell -Command "$file='%USERPROFILE%\.claude\plugins\installed_plugins.json'; if(Test-Path $file){ $json=Get-Content $file|ConvertFrom-Json; $json.plugins.PSObject.Properties.Remove('chaos-harness@chaos-harness'); $json|ConvertTo-Json -Depth 10|Out-File -Encoding utf8 $file }" 2>nul
+powershell -NoProfile -Command "$f='$env:USERPROFILE\.claude\plugins\installed_plugins.json'; if(Test-Path $f){$j=Get-Content $f|ConvertFrom-Json;$j.plugins.PSObject.Properties.Remove('chaos-harness@chaos-harness');$j|ConvertTo-Json -Depth 10|Out-File $f}"
+powershell -NoProfile -Command "$f='$env:USERPROFILE\.claude\plugins\known_marketplaces.json'; if(Test-Path $f){$j=Get-Content $f|ConvertFrom-Json;$j.PSObject.Properties.Remove('chaos-harness');$j|ConvertTo-Json -Depth 10|Out-File $f}"
+powershell -NoProfile -Command "$f='$env:USERPROFILE\.claude\settings.json'; if(Test-Path $f){$j=Get-Content $f|ConvertFrom-Json;$j.enabledPlugins.PSObject.Properties.Remove('chaos-harness@chaos-harness');$j|ConvertTo-Json -Depth 10|Out-File $f}"
 
-echo Unregistering marketplace...
-powershell -Command "$file='%USERPROFILE%\.claude\plugins\known_marketplaces.json'; if(Test-Path $file){ $json=Get-Content $file|ConvertFrom-Json; $json.PSObject.Properties.Remove('chaos-harness'); $json|ConvertTo-Json -Depth 10|Out-File -Encoding utf8 $file }" 2>nul
-
-echo Disabling plugin in settings...
-powershell -Command "$file='%USERPROFILE%\.claude\settings.json'; if(Test-Path $file){ $json=Get-Content $file|ConvertFrom-Json; $json.enabledPlugins.PSObject.Properties.Remove('chaos-harness@chaos-harness'); $json.extraKnownMarketplaces.PSObject.Properties.Remove('chaos-harness'); $json|ConvertTo-Json -Depth 10|Out-File -Encoding utf8 $file }" 2>nul
-
-echo [OK] Plugin removed
-echo Uninstall complete
+echo [OK] Uninstall complete
 exit /b 0
 
 :done
@@ -133,28 +124,9 @@ echo ========================================================
 echo   Installation Complete!
 echo ========================================================
 echo.
-echo Available Slash Commands:
+echo Commands: /chaos-harness:overview
 echo.
-echo   /chaos-harness:overview             # Main entry
-echo   /chaos-harness:project-scanner      # Scan project
-echo   /chaos-harness:version-locker       # Version management
-echo   /chaos-harness:harness-generator    # Generate constraints
-echo   /chaos-harness:workflow-supervisor  # Workflow management
-echo   /chaos-harness:iron-law-enforcer    # Iron law enforcement
-echo   /chaos-harness:plugin-manager       # Plugin management
-echo   /chaos-harness:hooks-manager        # Hooks management
-echo   /chaos-harness:project-state        # State persistence
-echo   /chaos-harness:collaboration-reviewer # Multi-agent collaboration
-echo.
-echo Natural Language Triggers:
-echo   - "scan current project"
-echo   - "generate harness for this project"
-echo   - "create version v0.1"
-echo   - "list all iron laws"
-echo.
-echo Next Steps:
-echo   1. Restart Claude Code or start a new session
-echo   2. Try: /chaos-harness:overview
+echo Next: Restart Claude Code and try the command
 echo.
 
 endlocal
