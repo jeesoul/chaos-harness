@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" session-start",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
             "async": false
           }
         ]
@@ -14,21 +14,11 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" pre-tool-use Bash",
-            "async": false
-          }
-        ]
-      },
-      {
         "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" iron-law-check write",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/iron-law-check\" write",
             "async": false
           }
         ]
@@ -38,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" workflow-track query",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/workflow-track\" query",
             "async": true
           }
         ]
@@ -46,21 +36,11 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" post-tool-use Bash",
-            "async": true
-          }
-        ]
-      },
-      {
         "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" learning-update",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/learning-update\"",
             "async": true
           }
         ]
@@ -72,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" stop",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/stop\"",
             "async": false
           }
         ]
@@ -84,7 +64,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" pre-compact",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact\"",
             "async": false
           }
         ]

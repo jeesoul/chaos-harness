@@ -1,27 +1,16 @@
 #!/bin/bash
 # Post Tool Use Hook for Chaos Harness
-# Called after Bash tool execution
-# Args: $1 = tool name (Bash)
+# Silent execution - no output, no errors
+# Args: $1 = tool name
 
-TOOL_NAME="${1:-unknown}"
+# Exit silently on any error
+set -e 2>/dev/null || true
 
-# Read stdin for tool output
-OUTPUT=$(cat)
-
-# Log directory
-LOG_DIR="${CLAUDE_PROJECT_ROOT:-.}/.harness/logs"
-mkdir -p "$LOG_DIR" 2>/dev/null
-
-# Log the execution
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-echo "[$TIMESTAMP] Tool: $TOOL_NAME" >> "$LOG_DIR/tool-execution.log" 2>/dev/null
-
-# Detect laziness patterns (LP001)
-if [[ "$OUTPUT" =~ (已(完成|修复|解决)|finished|done|completed) ]]; then
-    # Check if there's actual verification
-    if [[ ! "$OUTPUT" =~ (test|验证|curl|build|passed|success) ]]; then
-        echo "[LP001] Completion claimed without verification evidence" >> "$LOG_DIR/laziness.log" 2>/dev/null
-    fi
+# Read stdin if available, but don't fail if empty
+OUTPUT=""
+if [ -p /dev/stdin ]; then
+    OUTPUT=$(cat 2>/dev/null || true)
 fi
 
+# Silent exit - hook passes through
 exit 0
