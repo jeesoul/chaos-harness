@@ -69,19 +69,19 @@ IL005: NO HIGH-RISK CONFIG WITHOUT APPROVAL     # 敏感配置需审批
 在 Claude Code 中执行：
 
 ```
-/plugins add github:jeesoul/chaos-harness
+! claude plugins marketplace add github:jeesoul/chaos-harness
+! claude plugins install chaos-harness
 ```
 
 ### 方式 2: 从本地安装
 
-克隆仓库后在 Claude Code 中执行：
-
-```
+```bash
+# 1. 克隆仓库
 git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness
 
-# 在 Claude Code 中执行：
-/plugins add local:.
+# 2. 在 Claude Code 中执行：
+! claude plugins marketplace add /path/to/chaos-harness
+! claude plugins install chaos-harness
 ```
 
 ### 验证安装
@@ -93,7 +93,7 @@ cd chaos-harness
 ### 卸载
 
 ```
-/plugins remove chaos-harness
+! claude plugins uninstall chaos-harness
 ```
 
 ---
