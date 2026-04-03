@@ -11,6 +11,61 @@ description: 当用户请求生成Harness、创建约束规则、配置铁律时
 NO HARNESS WITHOUT SCAN RESULTS
 ```
 
+## 执行规则
+
+**加载此 skill 后，你必须按顺序执行以下步骤：**
+
+### Step 1: 检查前置条件
+
+**必须检查：**
+1. 版本是否已锁定？使用 Read 检查 `output/{version}/VERSION-LOCK`
+2. 扫描结果是否存在？使用 Read 检查 `output/{version}/scan-result.json`
+
+如果缺少：
+- 版本未锁定 → 使用 Skill tool 执行 `chaos-harness:version-locker`
+- 扫描结果不存在 → 使用 Skill tool 执行 `chaos-harness:project-scanner`
+
+### Step 2: 读取扫描结果
+
+使用 Read 工具读取扫描结果，获取项目类型。
+
+### Step 3: 选择 Harness 模板
+
+根据项目类型选择：
+
+| 项目类型 | 模板 |
+|---------|------|
+| java-spring | java-spring 模板 |
+| java-spring-legacy | java-spring-legacy 模板 |
+| node-express | node-express 模板 |
+| python-django | python-django 模板 |
+| 其他 | generic 模板 |
+
+### Step 4: 生成 Harness 文件
+
+使用 Write 工具创建 `output/{version}/Harness/harness.yaml`
+
+### Step 5: 生成防绕过规则
+
+使用 Write 工具创建 `output/{version}/Harness/anti-bypass.yaml`
+
+### Step 6: 确认生成
+
+输出确认信息：
+
+```
+✅ Harness 已生成
+
+位置: output/{version}/Harness/
+
+核心铁律:
+- IL001: NO DOCUMENTS WITHOUT VERSION LOCK
+- IL002: NO HARNESS WITHOUT SCAN RESULTS
+- IL003: NO COMPLETION CLAIMS WITHOUT VERIFICATION
+- IL004: NO VERSION CHANGES WITHOUT USER CONSENT
+- IL005: NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL
+```
+
 ## 何时使用
 
 **必须激活的条件：**

@@ -15,6 +15,59 @@ If you were dispatched as a subagent to execute a specific task, skip this skill
 
 # 铁律执行器 (Iron Law Enforcer)
 
+## 执行规则
+
+**此 skill 在以下情况自动激活：**
+- 检测到完成声明
+- 检测到可能的绕过尝试
+- 用户请求查看铁律
+- 需要验证操作合规性
+
+### Step 1: 列出所有铁律
+
+输出核心铁律表格：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Iron Laws (铁律) - 不可协商                                 │
+├─────────────────────────────────────────────────────────────┤
+│  ID     │ 铁律                                    │ 严重程度 │
+├─────────────────────────────────────────────────────────────┤
+│  IL001  │ NO DOCUMENTS WITHOUT VERSION LOCK      │ critical │
+│  IL002  │ NO HARNESS WITHOUT SCAN RESULTS        │ critical │
+│  IL003  │ NO COMPLETION CLAIMS WITHOUT VERIFICATION │ critical │
+│  IL004  │ NO VERSION CHANGES WITHOUT USER CONSENT   │ critical │
+│  IL005  │ NO HIGH-RISK CONFIG MODS WITHOUT APPROVAL │ critical │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Step 2: 检查用户自定义铁律
+
+使用 Read 工具检查 `.claude/harness/iron-laws.yaml` 是否存在。
+
+### Step 3: 执行铁律检查
+
+根据当前操作检查相关铁律：
+
+**完成声明检查 (IL003)：**
+```
+IF 用户声称"完成了" OR "搞定了" THEN
+    ASK: 请提供验证证据（测试结果、命令输出等）
+END IF
+```
+
+**绕过检测：**
+```
+IF 检测到 "简单修复" OR "跳过测试" OR "就这一次" THEN
+    WARN: 检测到绕过尝试
+    OUTPUT: 对应的反驳信息
+END IF
+```
+
+### Step 4: 记录铁律触发
+
+使用 Edit 或 Write 工具更新 `.claude/harness/iron-law-log.json`
+
 ## 核心铁律（不可禁用）
 
 以下铁律是 Harness 的核心，不可禁用：
