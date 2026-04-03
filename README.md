@@ -511,18 +511,4 @@ npm run test:coverage
 
 ---
 
-## 联系与交流
-
-欢迎交流学习、反馈问题、探讨技术方案：
-
-| 联系方式 | 信息 |
-|----------|------|
-| 📧 邮箱 | [3248838607@qq.com](mailto:3248838607@qq.com) |
-| 🌐 个人网站 | [jeesoul.com](http://jeesoul.com) |
-| 💬 微信 | <img src="img/ac94b60bb9cf37419b30277c7836f2f0.jpg" width="200" alt="微信二维码"> |
-
-**欢迎 Star ⭐ 本项目，关注更新动态！**
-
----
-
 <p align="center"><strong>Chaos demands order. Harness provides it.</strong></p>
