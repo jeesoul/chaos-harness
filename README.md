@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="#名称来源">名称来源</a> •
   <a href="#为什么需要-chaos-harness">为什么需要</a> •
   <a href="#核心特性">核心特性</a> •
   <a href="#架构">架构</a> •
@@ -21,6 +22,38 @@
   <img src="https://img.shields.io/badge/Tests-623-brightgreen.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Node.js-18+-green.svg" alt="Node.js">
 </p>
+
+---
+
+## 名称来源
+
+**Chaos (混沌) + Harness (驾驭) = 驾驭混沌**
+
+这个名字源自一个核心理念：
+
+> **AI 的创造力是混沌的源泉，但工程需要秩序。我们不是要消灭混沌，而是要驾驭它。**
+
+在 AI Agent 辅助开发的场景中，Agent 的创造力带来无限可能，但也带来不确定性——它可能"合理化"绕过规则、声称完成却无验证、跳过必要的分析步骤。
+
+传统方法制定更多规则，但规则越多，解释空间越大，Agent 越能找到"合理"的规避路径：
+
+```
+传统规则: "建议运行测试"     → Agent: "这个改动很简单，不用测"
+传统规则: "请进行代码审查"   → Agent: "时间紧，这次先上线"
+传统规则: "需要分析根因"     → Agent: "问题很明显，直接修吧"
+```
+
+Chaos Harness 采用相反的思路：**用铁律替代建议**。
+
+铁律不是用来解释的，是用来执行的。它消除灰色空间，让 Agent 无法"聪明地"规避质量要求：
+
+```
+铁律 IL003: NO COMPLETION WITHOUT VERIFICATION
+→ Agent: "任务完成了"
+→ Harness: [BLOCKED] 提供验证证据后才能标记完成
+```
+
+**一句话总结：混沌需要秩序，Harness 提供秩序。**
 
 ---
 
