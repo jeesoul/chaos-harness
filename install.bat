@@ -6,7 +6,7 @@ REM Installs as a Claude Code plugin with slash commands
 setlocal enabledelayedexpansion
 
 set "PLUGIN_NAME=chaos-harness"
-set "MARKETPLACE_NAME=chaos-harness-marketplace"
+set "MARKETPLACE_NAME=chaos-harness"
 set "VERSION=1.0.0"
 
 echo ========================================================

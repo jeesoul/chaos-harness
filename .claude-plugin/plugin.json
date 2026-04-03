@@ -22,17 +22,5 @@
     "hooks",
     "self-correction",
     "self-learning"
-  ],
-  "hooks": {
-    "config": "hooks/hooks.json",
-    "scripts": [
-      "hooks/session-start",
-      "hooks/iron-law-check",
-      "hooks/laziness-detect",
-      "hooks/learning-update",
-      "hooks/workflow-track",
-      "hooks/stop",
-      "hooks/pre-compact"
-    ]
-  }
+  ]
 }
