@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0-blue.svg">
-  <img src="https://img.shields.io/badge/tests-623-passing-brightgreen.svg">
+  <img src="https://img.shields.io/badge/tests-623-brightgreen.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
 </p>
 
