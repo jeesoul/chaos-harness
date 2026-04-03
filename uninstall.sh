@@ -42,6 +42,22 @@ else
     echo -e "  ${YELLOW}[SKIP]${NC} Marketplace directory not found"
 fi
 
+# Remove skills from personal skills directory
+echo "Removing skills from personal skills directory..."
+personal_skills_dir="$HOME/.claude/skills"
+removed_skills=0
+for skill_dir in "$personal_skills_dir"/chaos-harness-*; do
+    if [ -d "$skill_dir" ]; then
+        rm -rf "$skill_dir"
+        removed_skills=$((removed_skills + 1))
+    fi
+done
+if [ $removed_skills -gt 0 ]; then
+    echo -e "  ${GREEN}[OK]${NC} Removed $removed_skills skill(s) from personal skills directory"
+else
+    echo -e "  ${YELLOW}[SKIP]${NC} No chaos-harness skills found in personal skills directory"
+fi
+
 # Unregister from installed_plugins.json
 echo "Unregistering from installed_plugins.json..."
 installed_file="$HOME/.claude/plugins/installed_plugins.json"

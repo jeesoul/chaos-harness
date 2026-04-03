@@ -138,6 +138,21 @@ install_plugin() {
 
     echo -e "${GREEN}[OK] All files verified${NC}"
 
+    # Copy skills to personal skills directory (required for Skill tool discovery)
+    echo -e "${YELLOW}Installing skills to personal skills directory...${NC}"
+    local personal_skills_dir="$HOME/.claude/skills"
+    mkdir -p "$personal_skills_dir"
+
+    for skill_dir in "$SCRIPT_DIR/skills"/*; do
+        if [ -d "$skill_dir" ]; then
+            skill_name=$(basename "$skill_dir")
+            target_dir="$personal_skills_dir/chaos-harness-$skill_name"
+            rm -rf "$target_dir"
+            cp -r "$skill_dir" "$target_dir"
+        fi
+    done
+    echo -e "${GREEN}[OK] Skills installed to personal skills directory${NC}"
+
     # Register in known_marketplaces.json
     register_marketplace
 
@@ -167,6 +182,16 @@ uninstall_plugin() {
         rm -rf "$marketplace_dir"
         echo "Removed marketplace directory"
     fi
+
+    # Remove skills from personal skills directory
+    echo -e "${YELLOW}Removing skills from personal skills directory...${NC}"
+    local personal_skills_dir="$HOME/.claude/skills"
+    for skill_dir in "$personal_skills_dir"/chaos-harness-*; do
+        if [ -d "$skill_dir" ]; then
+            rm -rf "$skill_dir"
+        fi
+    done
+    echo -e "${GREEN}[OK] Skills removed from personal skills directory${NC}"
 
     unregister_marketplace
     unregister_plugin

@@ -130,6 +130,21 @@ if exist "%SETTINGS_FILE%" (
 
 echo.
 
+echo [5] Checking personal skills directory (CRITICAL for Skill tool)...
+echo.
+
+set "PERSONAL_SKILLS_DIR=%USERPROFILE%\.claude\skills"
+if exist "%PERSONAL_SKILLS_DIR%\chaos-harness-overview" (
+    echo   [OK] chaos-harness-overview skill found
+) else (
+    echo   [ERROR] chaos-harness-overview skill NOT found in personal skills directory
+    echo   This is why /chaos-harness:overview doesn't work!
+    echo   Skills must be in personal skills directory for Skill tool to discover them.
+    set /a ERRORS+=1
+)
+
+echo.
+
 :end_check
 echo ========================================================
 echo Summary

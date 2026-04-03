@@ -44,6 +44,20 @@ if exist "%MARKETPLACE_DIR%\CLAUDE.md" copy /y "%MARKETPLACE_DIR%\CLAUDE.md" "%C
 
 echo [OK] Files copied
 
+REM Copy skills to personal skills directory (required for Skill tool discovery)
+echo Installing skills to personal skills directory...
+set "PERSONAL_SKILLS_DIR=%USERPROFILE%\.claude\skills"
+if not exist "%PERSONAL_SKILLS_DIR%" mkdir "%PERSONAL_SKILLS_DIR%"
+
+REM Copy each skill directory to personal skills with prefix
+for /d %%s in ("%SCRIPT_DIR%skills\*") do (
+    set "SKILL_NAME=%%~nxs"
+    set "TARGET_DIR=%PERSONAL_SKILLS_DIR%\chaos-harness-%%~nxs"
+    if exist "!TARGET_DIR!" rmdir /s /q "!TARGET_DIR!"
+    xcopy /s /e /i /q /y "%%s" "!TARGET_DIR!\" >nul 2>&1
+)
+echo [OK] Skills installed to personal skills directory
+
 REM Create registration script
 echo Creating registration script...
 set "REG_SCRIPT=%TEMP%\register-chaos-harness.ps1"
@@ -110,6 +124,13 @@ echo Uninstalling Chaos Harness...
 
 if exist "%USERPROFILE%\.claude\plugins\cache\chaos-harness" rmdir /s /q "%USERPROFILE%\.claude\plugins\cache\chaos-harness"
 if exist "%MARKETPLACE_DIR%" rmdir /s /q "%MARKETPLACE_DIR%"
+
+REM Remove skills from personal skills directory
+echo Removing skills from personal skills directory...
+for /d %%s in ("%USERPROFILE%\.claude\skills\chaos-harness-*") do (
+    rmdir /s /q "%%s" 2>nul
+)
+echo [OK] Skills removed from personal skills directory
 
 powershell -NoProfile -Command "$f='$env:USERPROFILE\.claude\plugins\installed_plugins.json'; if(Test-Path $f){$j=Get-Content $f|ConvertFrom-Json;$j.plugins.PSObject.Properties.Remove('chaos-harness@chaos-harness');$j|ConvertTo-Json -Depth 10|Out-File $f}"
 powershell -NoProfile -Command "$f='$env:USERPROFILE\.claude\plugins\known_marketplaces.json'; if(Test-Path $f){$j=Get-Content $f|ConvertFrom-Json;$j.PSObject.Properties.Remove('chaos-harness');$j|ConvertTo-Json -Depth 10|Out-File $f}"
