@@ -387,6 +387,91 @@ claude plugins marketplace remove chaos-harness
 | `/chaos-harness:hooks-manager` | 钩子配置：启用/禁用、日志查看、行为审计 |
 | `/chaos-harness:plugin-manager` | 插件管理：第三方接入、约束配置、阶段映射 |
 | `/chaos-harness:project-state` | 状态持久化：进度保存、会话恢复、断点续传 |
+| `/chaos-harness:auto-toolkit-installer` | 工具链检测：自动安装依赖工具、镜像加速 |
+
+---
+
+## 自动化工具链
+
+Chaos Harness 支持完整的自动化测试工具链，通过 `/chaos-harness:auto-toolkit-installer` 自动检测并安装。
+
+### 工具链清单
+
+| 工具 | 用途 | 插件ID |
+|------|------|--------|
+| **skill-creator** | 自动创建业务场景专属 skill | `skill-creator@claude-plugins-official` |
+| **superpowers-chrome** | Chrome DevTools MCP - 浏览器自动化、DOM操作、网络监控 | `superpowers-chrome@superpowers-marketplace` |
+| **ui-ux-pro-max** | UI/UX 设计评审 + Playwright 测试脚本生成 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
+| **webapp-testing** | Playwright 自动化测试 - 自己写脚本、启动浏览器、跑测试、截屏、自动调试 | `webapp-testing@anthropics/skills` |
+
+### 快速安装
+
+```bash
+# 检测当前环境
+/chaos-harness:auto-toolkit-installer check
+
+# 安装所有缺失工具
+/chaos-harness:auto-toolkit-installer install
+
+# 使用镜像安装 (国内推荐)
+/chaos-harness:auto-toolkit-installer install --mirror
+```
+
+### 镜像加速 (国内用户)
+
+针对国内网络环境，自动使用以下镜像源：
+
+| 类型 | 官方源 | 镜像源 |
+|------|--------|--------|
+| GitHub | `github.com` | `kgithub.com` / `ghproxy.com` / `gitclone.com` |
+| npm | `registry.npmjs.org` | `registry.npmmirror.com` (淘宝镜像) |
+| Playwright | `playwright.azureedge.net` | `npmmirror.com/mirrors/playwright` |
+
+### 工具链与工作流集成
+
+| 工作流阶段 | 可用工具 | 集成能力 |
+|------------|----------|----------|
+| W01 需求理解 | skill-creator | 自动生成需求分析 skill |
+| W03 架构设计 | ui-ux-pro-max | UI/UX 原型评审 |
+| W06 代码审查 | superpowers-chrome | DevTools 性能分析 |
+| W07 集成测试 | webapp-testing + superpowers-chrome | Playwright 自动化 + DevTools 监控 |
+
+### 手动安装
+
+如需手动安装工具链：
+
+```bash
+# skill-creator - 自动创建 skill
+claude plugins install skill-creator@claude-plugins-official
+
+# superpowers-chrome - Chrome DevTools MCP
+claude plugins install superpowers-chrome@superpowers-marketplace
+
+# ui-ux-pro-max - UI/UX 评审 + Playwright
+claude plugins install ui-ux-pro-max@ui-ux-pro-max-skill
+
+# webapp-testing - Playwright 自动化测试
+claude plugins install webapp-testing@anthropics/skills
+```
+
+**镜像安装 (国内用户)：**
+
+```bash
+# 克隆镜像仓库
+git clone https://kgithub.com/anthropics/claude-plugins-official.git
+git clone https://ghproxy.com/https://github.com/NicsterV2/ui-ux-pro-max-skill.git
+git clone https://kgithub.com/anthropics/skills.git
+
+# 注册 marketplace
+claude plugins marketplace add ./claude-plugins-official
+claude plugins marketplace add ./ui-ux-pro-max-skill
+claude plugins marketplace add ./skills
+
+# 安装
+claude plugins install skill-creator@claude-plugins-official
+claude plugins install ui-ux-pro-max@ui-ux-pro-max-skill
+claude plugins install webapp-testing@anthropics/skills
+```
 
 ---
 
