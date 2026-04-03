@@ -570,6 +570,30 @@ install.bat                            # Windows
 
 **零配置** — 安装后 Skills 和 Hooks 自动激活。
 
+## 卸载
+
+```bash
+./uninstall.sh   # macOS/Linux
+uninstall.bat    # Windows
+
+# 重启 Claude Code
+```
+
+## 诊断
+
+如果安装后命令无法使用，运行诊断脚本：
+
+```bash
+./diagnose.sh    # macOS/Linux
+diagnose.bat     # Windows
+```
+
+诊断脚本会检查：
+- 安装目录是否存在
+- 关键文件是否完整
+- 插件是否正确注册
+- settings.json 是否启用
+
 ---
 
 ## 使用

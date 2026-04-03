@@ -110,6 +110,34 @@ install_plugin() {
     # Remove orphaned marker if exists (Claude Code may create this during reinstall)
     rm -f "$cache_dir/.orphaned_at" 2>/dev/null
 
+    # Verify installation
+    echo -e "${YELLOW}Verifying installation...${NC}"
+
+    VERIFY_FAILED=0
+
+    if [[ ! -f "$cache_dir/skills/overview/SKILL.md" ]]; then
+        echo -e "${RED}[ERROR] Missing: skills/overview/SKILL.md${NC}"
+        VERIFY_FAILED=1
+    fi
+
+    if [[ ! -f "$cache_dir/commands/overview.md" ]]; then
+        echo -e "${RED}[ERROR] Missing: commands/overview.md${NC}"
+        VERIFY_FAILED=1
+    fi
+
+    if [[ ! -f "$cache_dir/.claude-plugin/plugin.json" ]]; then
+        echo -e "${RED}[ERROR] Missing: .claude-plugin/plugin.json${NC}"
+        VERIFY_FAILED=1
+    fi
+
+    if [[ $VERIFY_FAILED -eq 1 ]]; then
+        echo -e "${RED}[ERROR] Installation verification failed${NC}"
+        echo "Please check if all files are present in the source directory"
+        exit 1
+    fi
+
+    echo -e "${GREEN}[OK] All files verified${NC}"
+
     # Register in known_marketplaces.json
     register_marketplace
 
