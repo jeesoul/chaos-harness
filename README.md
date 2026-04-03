@@ -18,9 +18,24 @@
 通过**铁律引擎**强制执行确定性行为，通过**自适应系统**动态构建项目专属约束生态，实现从"被动约束"到"主动治理"的跃迁。
 
 **人人可用，灵活扩展：**
-- 个人开发者：规范开发习惯，提升代码质量
-- 团队协作：统一行为标准，降低沟通成本
-- 开源项目：定制专属约束，构建项目特色
+- **个人开发者**：规范开发习惯，提升代码质量，避免"声称完成但无验证"的常见陷阱
+- **团队协作**：统一行为标准，降低沟通成本，新人快速融入项目规范
+- **开源项目**：定制专属约束，构建项目特色，维护者轻松管理贡献者行为
+
+---
+
+## 解决什么问题？
+
+### AI Agent 常见行为问题
+
+| 问题 | 表现 | Chaos Harness 解决方案 |
+|------|------|----------------------|
+| 虚假完成声明 | "已修复" 但无实际验证 | IL003 铁律：强制要求验证证据 |
+| 跳过关键步骤 | "简单修复，跳过测试" | LP004 检测：自动阻断并强制执行 |
+| 绕过约束规则 | "就这一次，特殊情况" | 10+ 绕过话术识别 + 驳回机制 |
+| 版本混乱 | 文档散落各目录 | IL001 铁律：强制版本目录生成 |
+| 敏感配置误操作 | 直接修改数据库/密钥配置 | IL005 铁律：审批机制拦截 |
+| 缺乏根因分析 | 直接修复表面症状 | LP002 检测：强制根因分析流程 |
 
 ---
 
@@ -34,22 +49,45 @@
     └──────────────── 自动迭代 ←───────────────────┘
 ```
 
-- **行为学习**：Hook 自动记录 Agent 决策路径与结果
-- **规则进化**：根据历史模式自动补充约束规则
-- **能力沉淀**：项目专属 Harness 持续增强
+**行为学习机制：**
+- Hook 自动记录 Agent 每次决策路径与结果
+- 失败模式聚类分析，识别高频问题
+- 成功模式沉淀，形成最佳实践模板
+
+**规则进化过程：**
+- 根据历史违规模式自动补充针对性规则
+- 项目规模变化触发工作流自适应调整
+- 技术栈变更自动注入对应模板规则
+
+**能力沉淀结果：**
+- 项目专属 Harness 持续增强
+- 团队行为数据库累积
+- 跨项目经验迁移支持
 
 ### 🔄 自适应 Harness 构建
 
-| 输入 | 分析 | 输出 |
-|------|------|------|
-| 项目类型 | Java/Node/Python 自动识别 | 技术栈专属模板 |
-| 代码规模 | Small/Medium/Large 分级 | 自适应工作流 |
-| 团队行为 | 偷懒模式、绕过尝试统计 | 针对性铁律强化 |
-| 历史缺陷 | 模式匹配、根因聚类 | 预防性约束注入 |
+**智能分析维度：**
+
+| 输入维度 | 分析方法 | 输出结果 |
+|----------|----------|----------|
+| 项目类型 | 文件结构 + 配置文件特征识别 | Java/Node/Python/Go 等专属模板 |
+| 代码规模 | 文件数 × 代码行数加权计算 | Small/Medium/Large 分级工作流 |
+| 技术栈版本 | 实际执行版本命令验证 | JDK 8 Legacy 兼容 / 最新特性 |
+| 团队行为历史 | 偷懒模式 + 绕过尝试统计 | 针对性铁律强化 |
+| 历史缺陷模式 | 根因聚类 + 模式匹配 | 预防性约束自动注入 |
+| 私服/镜像配置 | 配置文件扫描 + 连通性检测 | 部署约束动态添加 |
+
+**自适应工作流示例：**
+
+```
+Small 项目 (≤100行) → 5阶段精简流程
+Medium 项目 (100-500行) → 8阶段标准流程  
+Large 项目 (≥500行) → 12阶段完整流程 + 多Agent协作
+```
 
 ### 🔌 开放插件生态
 
-**支持第三方插件接入 Harness 约束体系：**
+**第三方插件无缝接入 Harness 约束体系：**
 
 ```yaml
 # ~/.claude/harness/plugins.yaml
@@ -57,55 +95,193 @@ plugins:
   - name: superpowers
     enabled: true
     stages: [W01, W03, W08]  # 指定参与的工作流阶段
-    iron_laws: inherit       # 继承 Harness 铁律约束
+    iron_laws: inherit       # 继承 Harness 全部铁律约束
     
-  - name: custom-tool
+  - name: custom-analysis-tool
+    enabled: true
+    stages: [W02, W04]
+    iron_laws:
+      - IL-C001  # 使用自定义铁律
+      - IL-C002
+      
+  - name: deployment-agent
     enabled: true
     iron_laws:
-      - IL-C001  # 自定义铁律
+      - IL-AUTO-001  # Harness 动态生成的部署约束
 ```
 
-**插件接入后自动获得：**
-- 铁律约束：插件行为受 Harness 监督
-- 行为审计：操作日志自动记录
-- 工作流集成：按阶段协调执行
+**插件接入后自动获得的能力：**
+
+| 能力 | 说明 |
+|------|------|
+| 铁律约束 | 插件行为受 Harness 监督，违规自动阻断 |
+| 行为审计 | 所有操作日志自动记录，支持事后复盘 |
+| 工作流集成 | 按配置的阶段协调执行，避免冲突 |
+| 学习反馈 | 插件执行结果纳入自学习闭环 |
 
 ### ⚡ 动态约束注入
 
-根据上下文实时调整，无需静态配置：
+**根据项目上下文实时生成规则，无需静态配置：**
 
 ```yaml
-# 检测到私服配置 → 自动注入
+# 场景1: 检测到 Nexus/Maven 私服配置
 iron_laws:
   - id: IL-AUTO-001
-    rule: "NO DEPLOY WITHOUT PRIVATE REPO CHECK"
+    rule: "NO DEPLOY WITHOUT PRIVATE REPO CONNECTIVITY CHECK"
     auto_generated: true
-
-# 检测到 JDK 8 → 自动降级兼容
+    triggers:
+      - pattern: "nexus.*url|maven.*repository"
+        
+# 场景2: 检测到 JDK 8 环境
 workflow:
   compatibility_mode: "jdk8-legacy"
+  suggestions:
+    - "使用 javax.annotation 替代 jakarta.annotation"
+    - "Spring Boot 2.x 配置格式"
+
+# 场景3: 检测到测试覆盖率低于阈值
+iron_laws:
+  - id: IL-AUTO-002
+    rule: "NO MERGE WITHOUT TEST COVERAGE ≥ 80%"
+    auto_generated: true
 ```
 
 ---
 
-## 安装
+## 核心能力详解
+
+### 铁律引擎 (Iron Law Engine)
+
+**声明式规则 + 自动执行 + 不可绕过：**
+
+| 铁律ID | 规则内容 | 触发场景 |
+|--------|----------|----------|
+| IL001 | 文档必须在版本目录生成 | 任何文档输出操作 |
+| IL002 | Harness 生成依赖扫描数据 | 约束生成请求 |
+| IL003 | 完成声明必须附带验证证据 | Stop Hook / 任务汇报 |
+| IL004 | 版本变更需要用户确认 | 版本号修改操作 |
+| IL005 | 敏感配置修改需要审批 | 数据库/密钥/认证配置 |
+
+**扩展机制：**
+
+```yaml
+# ~/.claude/harness/iron-laws.yaml
+custom_iron_laws:
+  - id: IL-C001
+    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
+    severity: critical  # critical/warning/info/require
+    triggers:
+      - pattern: "ALTER TABLE|DROP TABLE|DELETE FROM"
+        action: block  # block/warn/log
+    rebuttal: "数据库变更必须先创建备份，请执行备份脚本后再操作"
+    
+  - id: IL-C002
+    rule: "NO DIRECT PRODUCTION ACCESS"
+    severity: critical
+    triggers:
+      - pattern: "prod|production|主库"
+        action: block
+```
+
+### 行为检测系统 (Laziness Pattern Detection)
+
+**6 种偷懒模式自动识别 + 分级处置：**
+
+| 模式ID | 检测条件 | 严重程度 | 自动处置 |
+|--------|----------|----------|----------|
+| LP001 | 声称完成但无验证证据 | critical | 阻断 + 要求举证 |
+| LP002 | 跳过根因分析直接修复 | critical | 阻断 + 强制分析流程 |
+| LP003 | 长时间无产出 (timeout) | warning | 施压消息 + 进度同步要求 |
+| LP004 | 尝试跳过测试 | critical | 阻断 + 强制测试执行 |
+| LP005 | 擅自更改版本号 | critical | 阻断 + 恢复原版本 |
+| LP006 | 自动处理高风险配置 | critical | 阻断 + 用户审批流程 |
+
+**绕过话术识别：**
+
+| 话术类型 | 示例 | 驳回策略 |
+|----------|------|----------|
+| 简化论 | "简单修复"、"小改动" | "简化≠简化验证，请完整测试" |
+| 例外论 | "就这一次"、"特殊情况" | "铁律无例外，按流程执行" |
+| 效率论 | "这样更快"、"节省时间" | "跳过步骤的时间会花在回滚上" |
+| 权威论 | "用户要求的"、"紧急" | "紧急也需要审批，请先走流程" |
+| 推卸论 | "建议用户手动"、"超出范围" | "这是你的职责范围，请继续" |
+
+### 钩子生态 (Hook System)
+
+**全生命周期行为监控与干预：**
+
+| Hook | 触发时机 | 核心功能 |
+|------|----------|----------|
+| SessionStart | 会话开始/恢复 | 注入铁律上下文 + 恢复项目状态 |
+| PreToolUse | 工具调用前 | IL001/IL005 铁律预检 |
+| PostToolUse | 工具调用后 | 偷懒模式检测 + 学习记录 |
+| Stop | 回合结束 | IL003 完成声明分析 |
+| PreCompact | 对话压缩前 | 保存关键上下文到存档 |
+
+**钩子配置自定义：**
+
+```yaml
+# ~/.claude/harness/hooks.yaml
+hooks:
+  session-start:
+    enabled: true
+    inject_iron_laws: true
+    restore_state: true
+    
+  iron-law-check:
+    enabled: true
+    check_laws: [IL001, IL005]
+    block_on_violation: true
+    
+  laziness-detect:
+    enabled: true
+    patterns: [LP001, LP002, LP004]
+    auto_intervene: true
+```
+
+### 自适应工作流 (Adaptive Workflow)
+
+**12 阶段完整流程，按项目规模自动裁剪：**
+
+| 阶段 | 名称 | 核心活动 | Small | Medium | Large |
+|------|------|----------|-------|--------|-------|
+| W01 | 需求理解 | 扫描、分析、澄清 | ✅ | ✅ | ✅ |
+| W02 | 技术调研 | 方案对比、选型 | ❌ | ✅ | ✅ |
+| W03 | 架构设计 | 模块划分、接口定义 | ✅ | ✅ | ✅ |
+| W04 | 详细设计 | 数据结构、算法 | ❌ | ✅ | ✅ |
+| W05 | 编码实现 | 开发、调试 | ✅ | ✅ | ✅ |
+| W06 | 代码审查 | Review、Refactor | ❌ | ❌ | ✅ |
+| W07 | 集成测试 | 端到端验证 | ❌ | ✅ | ✅ |
+| W08 | 文档生成 | 版本目录输出 | ✅ | ✅ | ✅ |
+| W09 | 发布准备 | 打包、部署检查 | ✅ | ✅ | ✅ |
+| W10 | 上线部署 | 执行、监控 | ✅ | ✅ | ✅ |
+| W11 | 回归验证 | 线上测试 | ✅ | ✅ | ✅ |
+| W12 | 复盘总结 | 经验沉淀 | ✅ | ✅ | ✅ |
+
+---
+
+## 安装指南
+
+### 快速安装
 
 ```bash
 # 1. 克隆项目
 git clone https://github.com/jeesoul/chaos-harness.git
 
-# 2. 注册本地 marketplace（三平台命令相同）
-claude plugins marketplace add "路径/chaos-harness"    # Windows
-claude plugins marketplace add ~/path/to/chaos-harness  # macOS/Linux
+# 2. 注册本地 marketplace
+claude plugins marketplace add "D:\path\to\chaos-harness"    # Windows
+claude plugins marketplace add ~/path/to/chaos-harness      # macOS/Linux
 
 # 3. 安装插件
 claude plugins install chaos-harness@chaos-harness
 
-# 4. 重启 Claude Code，验证安装
+# 4. 重启 Claude Code
+# 验证安装成功
 /chaos-harness:overview
 ```
 
-**卸载：**
+### 卸载
+
 ```bash
 claude plugins uninstall chaos-harness@chaos-harness
 claude plugins marketplace remove chaos-harness
@@ -113,144 +289,56 @@ claude plugins marketplace remove chaos-harness
 
 ---
 
-## 命令
+## 命令速查
 
-| 命令 | 功能 |
-|------|------|
-| `/chaos-harness:overview` | 系统概览、铁律状态、学习进度 |
-| `/chaos-harness:project-scanner` | 项目分析、类型检测、自适应建议 |
-| `/chaos-harness:version-locker` | 版本管理、变更追踪 |
-| `/chaos-harness:harness-generator` | 约束生成、动态规则 |
-| `/chaos-harness:workflow-supervisor` | 工作流编排、阶段控制 |
-| `/chaos-harness:iron-law-enforcer` | 铁律执行、自定义扩展 |
-| `/chaos-harness:collaboration-reviewer` | 多 Agent 协作、冲突检测 |
-| `/chaos-harness:hooks-manager` | 钩子配置、行为审计 |
-| `/chaos-harness:plugin-manager` | 插件管理、第三方接入 |
-| `/chaos-harness:project-state` | 状态持久化、会话恢复 |
-
----
-
-## 核心能力
-
-### 铁律引擎
-
-声明式规则 + 自动执行：
-
-| 铁律 | 约束行为 |
-|------|---------|
-| IL001 | 文档必须在版本目录生成 |
-| IL002 | Harness 生成依赖扫描数据 |
-| IL003 | 完成声明必须附带验证证据 |
-| IL004 | 版本变更需要用户确认 |
-| IL005 | 敏感配置修改需要审批 |
-
-**扩展机制：** 支持自定义铁律、严重程度分级、触发模式配置。
-
-### 行为检测系统
-
-| 模式 | 检测条件 | 自动处置 |
-|------|---------|---------|
-| LP001 | 完成声明无验证 | 阻断 + 要求举证 |
-| LP002 | 跳过根因分析 | 阻断 + 强制分析 |
-| LP003 | 长时间无产出 | 施压 + 进度同步 |
-| LP004 | 尝试跳过测试 | 阻断 + 强制执行 |
-
-**绕过检测：** 自动识别 "简单修复"、"跳过测试" 等 10+ 种绕过话术。
-
-### 钩子生态
-
-全生命周期监控：
-
-```
-SessionStart → 注入铁律 + 恢复上下文
-PreToolUse  → 铁律预检
-PostToolUse → 行为学习 + 模式识别
-Stop        → 完成验证
-PreCompact  → 状态持久化
-```
-
-### 自适应工作流
-
-12 阶段工作流自动适配项目规模：
-
-| 规模 | 定义 | 必经阶段 |
-|------|------|---------|
-| Small | ≤100行代码 | 5 阶段 |
-| Medium | 100-500行 | 8 阶段 |
-| Large | ≥500行 | 全部 12 阶段 |
+| 命令 | 功能描述 |
+|------|----------|
+| `/chaos-harness:overview` | 系统概览：铁律状态、学习进度、项目统计 |
+| `/chaos-harness:project-scanner` | 项目扫描：类型检测、技术栈分析、自适应建议 |
+| `/chaos-harness:version-locker` | 版本管理：锁定、创建、变更追踪 |
+| `/chaos-harness:harness-generator` | 约束生成：基于扫描数据生成专属 Harness |
+| `/chaos-harness:workflow-supervisor` | 工作流编排：阶段控制、进度监控、Agent协调 |
+| `/chaos-harness:iron-law-enforcer` | 铁律执行：自定义规则、绕过检测、驳回生成 |
+| `/chaus-harness:collaboration-reviewer` | 多Agent协作：角色分配、冲突检测、结果合并 |
+| `/chaos-harness:hooks-manager` | 钩子配置：启用/禁用、日志查看、行为审计 |
+| `/chaos-harness:plugin-manager` | 插件管理：第三方接入、约束配置、阶段映射 |
+| `/chaos-harness:project-state` | 状态持久化：进度保存、会话恢复、断点续传 |
 
 ---
 
-## 自定义扩展
+## 技术栈模板
 
-### 添加铁律
-
-```yaml
-# ~/.claude/harness/iron-laws.yaml
-custom_iron_laws:
-  - id: IL-C001
-    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
-    severity: critical
-    triggers:
-      - pattern: "ALTER TABLE|DROP TABLE"
-        action: block
-```
-
-### 接入第三方插件
-
-```yaml
-# ~/.claude/harness/plugins.yaml
-plugins:
-  - name: your-plugin
-    enabled: true
-    stages: [W01, W05, W08]
-    iron_laws: inherit
-```
+| 模板名称 | 适用技术栈 | 特殊配置 |
+|----------|------------|----------|
+| `java-spring` | Java 17/21 + Spring Boot 3.x | Jakarta EE、现代特性 |
+| `java-spring-legacy` | JDK 8 + Spring Boot 2.x | javax 兼容、私服检测 |
+| `node-express` | Node.js Express | npm/yarn 检测 |
+| `python-django` | Python Django | pip/venv 检测 |
+| `generic` | 通用项目 | 基础铁律集 |
 
 ---
 
-## 模板支持
-
-| 模板 | 技术栈 |
-|------|--------|
-| `java-spring` | Java 17/21 + Spring Boot 3.x |
-| `java-spring-legacy` | JDK 8 + Spring Boot 2.x |
-| `node-express` | Node.js Express |
-| `python-django` | Python Django |
-| `generic` | 通用项目 |
-
----
-
-## 更新日志
-
-### v1.0.0 (2026-04-03)
-
-**完整功能发布：**
-
-- ✅ M1: 项目扫描器 (88 tests)
-- ✅ M2: 版本管理系统 (189 tests)
-- ✅ M3: 环境检测与修复 (230 tests)
-- ✅ M4: Harness生成系统 (366 tests)
-- ✅ M5: 工作流引擎 (506 tests)
-- ✅ M6: MCP Server (541 tests)
-- ✅ M7: 集成测试 (623 tests)
-- ✅ M8: 开源发布 (623 tests)
-- ✅ M9: 插件系统 (623 tests)
-- ✅ M10: Hooks模块 (623 tests)
-
----
-
-## 开发
+## 开发与测试
 
 ```bash
-npm install && npm run build && npm test
+# 安装依赖
+npm install
+
+# 构建
+npm run build
+
+# 测试 (623 tests)
+npm test
+
+# 测试覆盖率
+npm run test:coverage
 ```
 
 ---
 
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](LICENSE) — 开源免费，人人可用
 
 ---
 
