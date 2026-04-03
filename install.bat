@@ -94,7 +94,18 @@ powershell -Command "$file='%USERPROFILE%\.claude\plugins\installed_plugins.json
 
 REM Enable plugin in settings
 echo Enabling plugin in settings...
-powershell -Command "$file='%USERPROFILE%\.claude\settings.json'; $dir=Split-Path $file; if(!(Test-Path $dir)){ New-Item -ItemType Directory -Force -Path $dir | Out-Null }; if(!(Test-Path $file)){ '{}' | Out-File -Encoding utf8 $file }; $json=Get-Content $file | ConvertFrom-Json; if(!$json.enabledPlugins){Add-Member -InputObject $json -NotePropertyName 'enabledPlugins' -NotePropertyValue @{} -Force}; $json.enabledPlugins | Add-Member -NotePropertyName 'chaos-harness@chaos-harness' -NotePropertyValue $true -Force; if(!$json.extraKnownMarketplaces){Add-Member -InputObject $json -NotePropertyName 'extraKnownMarketplaces' -NotePropertyValue @{} -Force}; $json.extraKnownMarketplaces | Add-Member -NotePropertyName 'chaos-harness' -NotePropertyValue @{source=@{repo='jeesoul/chaos-harness';source='github'}} -Force; $json | ConvertTo-Json -Depth 10 | Out-File -Encoding utf8 $file" 2>nul
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$f='%USERPROFILE%\.claude\settings.json';" ^
+  "if(!(Test-Path (Split-Path $f))){md -Force (Split-Path $f)>$null};" ^
+  "if(Test-Path $f){$j=Get-Content $f -Raw | ConvertFrom-Json}else{$j=@{}};" ^
+  "if($null -eq $j.enabledPlugins){$j|Add-Member -PassThru enabledPlugins @{}>$null};" ^
+  "$j.enabledPlugins['chaos-harness@chaos-harness']=$true;" ^
+  "$j|ConvertTo-Json -Depth 10|Set-Content $f -Encoding UTF8;" ^
+  "Write-Host '[OK] Plugin enabled in settings'"
+if errorlevel 1 (
+    echo [WARN] Failed to enable in settings.json, please add manually:
+    echo   "chaos-harness@chaos-harness": true
+)
 
 echo [OK] Plugin installed successfully
 
