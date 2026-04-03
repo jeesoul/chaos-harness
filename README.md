@@ -64,8 +64,6 @@ IL005: NO HIGH-RISK CONFIG WITHOUT APPROVAL     # 敏感配置需审批
 
 ## 安装
 
-> **不要使用 `install.bat` / `install.sh`**，它们存在 scope 注册 bug。按以下步骤安装。
-
 ### 第一步：下载项目
 
 ```bash
