@@ -4,39 +4,90 @@
 
 set -e
 
+# Global data directory (session-level)
 DATA_DIR="$HOME/.claude/harness"
-WORKFLOW_STATE="$DATA_DIR/workflow-state.yaml"
 WORKFLOW_LOG="$DATA_DIR/workflow-log.json"
 
-# Ensure data directory exists
+# Find project root and version directory
+find_version_dir() {
+    local current_dir="$(pwd)"
+    while [[ "$current_dir" != "/" ]]; do
+        if [[ -d "$current_dir/output" ]]; then
+            # Find version subdirectory
+            for dir in "$current_dir/output"/v[0-9]*.[0-9]*; do
+                if [[ -d "$dir" ]]; then
+                    echo "$dir"
+                    return 0
+                fi
+            done
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+    return 1
+}
+
+PROJECT_VERSION_DIR=$(find_version_dir 2>/dev/null || true)
+
+# Workflow state is in project version directory
+WORKFLOW_STATE=""
+if [[ -n "$PROJECT_VERSION_DIR" && -f "$PROJECT_VERSION_DIR/workflow-state.yaml" ]]; then
+    WORKFLOW_STATE="$PROJECT_VERSION_DIR/workflow-state.yaml"
+fi
+
+# Ensure data directories exist
 mkdir -p "$DATA_DIR"
-
-# Initialize workflow log if not exists
-if [[ ! -f "$WORKFLOW_LOG" ]]; then
-    echo '[]' > "$WORKFLOW_LOG"
+if [[ -n "$PROJECT_VERSION_DIR" ]]; then
+    mkdir -p "$PROJECT_VERSION_DIR"
 fi
 
-# Check workflow state exists
-if [[ ! -f "$WORKFLOW_STATE" ]]; then
-    # No active workflow, just track tool usage
-    track_tool_usage
-    exit 0
-fi
+# Initialize logs if not exist
+for log_dir in "$DATA_DIR" "$PROJECT_VERSION_DIR"; do
+    if [[ -n "$log_dir" && ! -f "$log_dir/workflow-log.json" ]]; then
+        echo '[]' > "$log_dir/workflow-log.json"
+    fi
+done
 
 # Track tool usage for iteration metrics
 track_tool_usage() {
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     TOOL_TYPE="$1"
 
-    echo "$(cat "$WORKFLOW_LOG")" | jq \
-        --arg ts "$TIMESTAMP" \
-        --arg tool "$TOOL_TYPE" \
-        '. += [{"event": "tool_use", "tool": $tool, "timestamp": $ts}]' > "$WORKFLOW_LOG"
+    local entry="{\"event\": \"tool_use\", \"tool\": \"$TOOL_TYPE\", \"timestamp\": \"$TIMESTAMP\"}"
+
+    # Log to global directory
+    if [[ -f "$WORKFLOW_LOG" ]]; then
+        echo "$(cat "$WORKFLOW_LOG")" | jq ". += [$entry]" > "$WORKFLOW_LOG"
+    fi
+
+    # Log to project version directory if found
+    if [[ -n "$PROJECT_VERSION_DIR" && -f "$PROJECT_VERSION_DIR/workflow-log.json" ]]; then
+        echo "$(cat "$PROJECT_VERSION_DIR/workflow-log.json")" | jq ". += [$entry]" > "$PROJECT_VERSION_DIR/workflow-log.json"
+    fi
+}
+
+# Log stage event
+log_stage_event() {
+    local stage="$1"
+    local event="$2"  # start, progress, complete, blocked
+    local details="${3:-}"
+
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    local entry="{\"event\": \"stage_$event\", \"stage\": \"$stage\", \"timestamp\": \"$TIMESTAMP\""
+    if [[ -n "$details" ]]; then
+        entry="$entry, \"details\": \"$details\""
+    fi
+    entry="$entry}"
+
+    # Log to project version directory if found
+    if [[ -n "$PROJECT_VERSION_DIR" && -f "$PROJECT_VERSION_DIR/workflow-log.json" ]]; then
+        echo "$(cat "$PROJECT_VERSION_DIR/workflow-log.json")" | jq ". += [$entry]" > "$PROJECT_VERSION_DIR/workflow-log.json"
+    fi
 }
 
 # Check for stage timeout (LP003 detection)
 check_timeout() {
-    if [[ ! -f "$WORKFLOW_STATE" ]]; then
+    if [[ -z "$WORKFLOW_STATE" || ! -f "$WORKFLOW_STATE" ]]; then
         return 0
     fi
 
@@ -87,15 +138,22 @@ log_timeout() {
 
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-    echo "$(cat "$WORKFLOW_LOG")" | jq \
-        --arg ts "$TIMESTAMP" \
-        --arg elapsed "$elapsed" \
-        --arg threshold "$threshold" \
-        '. += [{"event": "timeout_warning", "pattern": "LP003", "elapsed_seconds": $elapsed, "threshold_seconds": $threshold, "timestamp": $ts}]' > "$WORKFLOW_LOG"
+    local entry="{\"event\": \"timeout_warning\", \"pattern\": \"LP003\", \"elapsed_seconds\": $elapsed, \"threshold_seconds\": $threshold, \"timestamp\": \"$TIMESTAMP\"}"
+
+    # Log to project version directory if found
+    if [[ -n "$PROJECT_VERSION_DIR" && -f "$PROJECT_VERSION_DIR/workflow-log.json" ]]; then
+        echo "$(cat "$PROJECT_VERSION_DIR/workflow-log.json")" | jq ". += [$entry]" > "$PROJECT_VERSION_DIR/workflow-log.json"
+    fi
 }
 
 # Run tracking and checks
-track_tool_usage "query"
-check_timeout || true
+# Check if workflow state exists
+if [[ -n "$WORKFLOW_STATE" && -f "$WORKFLOW_STATE" ]]; then
+    track_tool_usage "query"
+    check_timeout || true
+else
+    # No active workflow, just track tool usage globally
+    track_tool_usage "query"
+fi
 
 exit 0

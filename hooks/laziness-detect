@@ -8,16 +8,42 @@ set -e
 TOOL_NAME="$1"
 TOOL_OUTPUT="$2"
 
+# Global data directory (session-level)
 DATA_DIR="$HOME/.claude/harness"
 LAZINESS_LOG="$DATA_DIR/laziness-log.json"
 
-# Ensure data directory exists
-mkdir -p "$DATA_DIR"
+# Find project root and version directory
+find_version_dir() {
+    local current_dir="$(pwd)"
+    while [[ "$current_dir" != "/" ]]; do
+        if [[ -d "$current_dir/output" ]]; then
+            # Find version subdirectory
+            for dir in "$current_dir/output"/v[0-9]*.[0-9]*; do
+                if [[ -d "$dir" ]]; then
+                    echo "$dir"
+                    return 0
+                fi
+            done
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+    return 1
+}
 
-# Initialize log if not exists
-if [[ ! -f "$LAZINESS_LOG" ]]; then
-    echo '[]' > "$LAZINESS_LOG"
+PROJECT_VERSION_DIR=$(find_version_dir 2>/dev/null || true)
+
+# Ensure data directories exist
+mkdir -p "$DATA_DIR"
+if [[ -n "$PROJECT_VERSION_DIR" ]]; then
+    mkdir -p "$PROJECT_VERSION_DIR"
 fi
+
+# Initialize logs if not exist
+for log_dir in "$DATA_DIR" "$PROJECT_VERSION_DIR"; do
+    if [[ -n "$log_dir" && ! -f "$log_dir/laziness-log.json" ]]; then
+        echo '[]' > "$log_dir/laziness-log.json"
+    fi
+done
 
 # LP001: Completion claims without verification
 # Pattern: "done", "completed", "finished" without test/verify commands
@@ -108,20 +134,40 @@ check_lp004() {
     return 0
 }
 
-# Log laziness pattern
+# Log laziness pattern to all log locations
 log_laziness() {
     local pattern_id="$1"
     local pattern_type="$2"
     local severity="$3"
+    local context="${4:-}"
 
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-    echo "$(cat "$LAZINESS_LOG")" | jq \
-        --arg ts "$TIMESTAMP" \
-        --arg pid "$pattern_id" \
-        --arg ptype "$pattern_type" \
-        --arg sev "$severity" \
-        '. += [{"timestamp": $ts, "pattern": $pid, "type": $ptype, "severity": $sev}]' > "$LAZINESS_LOG"
+    local entry="{\"timestamp\": \"$TIMESTAMP\", \"pattern\": \"$pattern_id\", \"type\": \"$pattern_type\", \"severity\": \"$severity\", \"context\": \"$context\"}"
+
+    # Log to global directory
+    if [[ -f "$LAZINESS_LOG" ]]; then
+        echo "$(cat "$LAZINESS_LOG")" | jq ". += [$entry]" > "$LAZINESS_LOG"
+    fi
+
+    # Log to project version directory if found
+    if [[ -n "$PROJECT_VERSION_DIR" && -f "$PROJECT_VERSION_DIR/laziness-log.json" ]]; then
+        echo "$(cat "$PROJECT_VERSION_DIR/laziness-log.json")" | jq ". += [$entry]" > "$PROJECT_VERSION_DIR/laziness-log.json"
+    fi
+}
+
+# Log successful check (no laziness detected)
+log_clean_check() {
+    local checks_performed="$1"
+
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    local entry="{\"timestamp\": \"$TIMESTAMP\", \"check\": \"clean\", \"patterns_checked\": \"$checks_performed\", \"result\": \"no_laziness\"}"
+
+    # Only log to project version directory if found (avoid noise in global log)
+    if [[ -n "$PROJECT_VERSION_DIR" && -f "$PROJECT_VERSION_DIR/laziness-log.json" ]]; then
+        echo "$(cat "$PROJECT_VERSION_DIR/laziness-log.json")" | jq ". += [$entry]" > "$PROJECT_VERSION_DIR/laziness-log.json"
+    fi
 }
 
 # Run detection (non-blocking - just log and potentially warn)

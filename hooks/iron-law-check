@@ -8,11 +8,42 @@ set -e
 TOOL_NAME="$1"
 TOOL_INPUT="$2"
 
+# Global data directory (session-level)
 DATA_DIR="$HOME/.claude/harness"
 IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
 
-# Ensure data directory exists
+# Find project root and version directory
+find_version_dir() {
+    local current_dir="$(pwd)"
+    while [[ "$current_dir" != "/" ]]; do
+        if [[ -d "$current_dir/output" ]]; then
+            # Find version subdirectory
+            for dir in "$current_dir/output"/v[0-9]*.[0-9]*; do
+                if [[ -d "$dir" ]]; then
+                    echo "$dir"
+                    return 0
+                fi
+            done
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+    return 1
+}
+
+PROJECT_VERSION_DIR=$(find_version_dir 2>/dev/null || true)
+
+# Ensure data directories exist
 mkdir -p "$DATA_DIR"
+if [[ -n "$PROJECT_VERSION_DIR" ]]; then
+    mkdir -p "$PROJECT_VERSION_DIR"
+fi
+
+# Initialize logs if not exist
+for log_dir in "$DATA_DIR" "$PROJECT_VERSION_DIR"; do
+    if [[ -n "$log_dir" && ! -f "$log_dir/iron-law-log.json" ]]; then
+        echo '[]' > "$log_dir/iron-law-log.json"
+    fi
+done
 
 # Parse file path from tool input (simplified - works with Claude Code's JSON format)
 FILE_PATH=$(echo "$TOOL_INPUT" | jq -r '.file_path // .path // empty')
@@ -30,6 +61,7 @@ check_il001() {
 
     # Check if path contains version directory pattern (v followed by digits and dot)
     if [[ "$path" =~ v[0-9]+\.[0-9]+ ]]; then
+        log_check "IL001" "version_check" "pass" "path contains version: $path"
         return 0  # Valid - contains version
     fi
 
@@ -48,6 +80,7 @@ check_il001() {
     fi
 
     # Allow operations outside output/ directory (e.g., src/, tests/)
+    log_check "IL001" "outside_output" "pass" "not a document output path"
     return 0
 }
 
@@ -87,7 +120,7 @@ check_il005() {
     return 0
 }
 
-# Log iron law violation
+# Log iron law violation to all log locations
 log_violation() {
     local law_id="$1"
     local trigger="$2"
@@ -96,14 +129,37 @@ log_violation() {
 
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+    local entry="{\"timestamp\": \"$TIMESTAMP\", \"iron_law\": \"$law_id\", \"trigger\": \"$trigger\", \"path\": \"$path\", \"action\": \"$action\"}"
+
+    # Log to global directory
     if [[ -f "$IRON_LAW_LOG" ]]; then
-        echo "$(cat "$IRON_LAW_LOG")" | jq \
-            --arg ts "$TIMESTAMP" \
-            --arg law "$law_id" \
-            --arg trig "$trigger" \
-            --arg path "$path" \
-            --arg act "$action" \
-            '. += [{"timestamp": $ts, "iron_law": $law, "trigger": $trig, "path": $path, "action": $act}]' > "$IRON_LAW_LOG"
+        echo "$(cat "$IRON_LAW_LOG")" | jq ". += [$entry]" > "$IRON_LAW_LOG"
+    fi
+
+    # Log to project version directory if found
+    if [[ -n "$PROJECT_VERSION_DIR" && -f "$PROJECT_VERSION_DIR/iron-law-log.json" ]]; then
+        echo "$(cat "$PROJECT_VERSION_DIR/iron-law-log.json")" | jq ". += [$entry]" > "$PROJECT_VERSION_DIR/iron-law-log.json"
+    fi
+}
+
+# Log successful check (for tracking)
+log_check() {
+    local law_id="$1"
+    local operation="$2"
+    local result="$3"
+    local evidence="${4:-}"
+
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    local entry="{\"timestamp\": \"$TIMESTAMP\", \"iron_law\": \"$law_id\", \"operation\": \"$operation\", \"check\": \"pass\", \"result\": \"$result\""
+    if [[ -n "$evidence" ]]; then
+        entry="$entry, \"evidence\": \"$evidence\""
+    fi
+    entry="$entry}"
+
+    # Log to project version directory if found
+    if [[ -n "$PROJECT_VERSION_DIR" && -f "$PROJECT_VERSION_DIR/iron-law-log.json" ]]; then
+        echo "$(cat "$PROJECT_VERSION_DIR/iron-law-log.json")" | jq ". += [$entry]" > "$PROJECT_VERSION_DIR/iron-law-log.json"
     fi
 }
 
