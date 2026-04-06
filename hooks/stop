@@ -1,222 +1,29 @@
-#!/bin/bash
+#!/bin/sh
 # stop - Stop hook script
-# Analyzes turn for completion claims and laziness patterns
 # Saves project state for next session recovery
 
-set -e
-
 DATA_DIR="$HOME/.claude/harness"
-LAZINESS_LOG="$DATA_DIR/laziness-log.json"
-IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
-
-# Detect project root
-detect_project_root() {
-    local dir="$PWD"
-    while [[ "$dir" != "/" ]]; do
-        if [[ -f "$dir/.chaos-harness/state.json" ]] || \
-           [[ -f "$dir/pom.xml" ]] || \
-           [[ -f "$dir/package.json" ]] || \
-           [[ -d "$dir/.git" ]]; then
-            echo "$dir"
-            return 0
-        fi
-        dir="$(dirname "$dir")"
-    done
-    echo "$PWD"
-}
-
-PROJECT_ROOT=$(detect_project_root)
-PROJECT_STATE_DIR="$PROJECT_ROOT/.chaos-harness"
-PROJECT_STATE_FILE="$PROJECT_STATE_DIR/state.json"
-
-# Ensure data directory exists
 mkdir -p "$DATA_DIR"
 
-# Initialize logs if not exist
-if [[ ! -f "$LAZINESS_LOG" ]]; then
-    echo '[]' > "$LAZINESS_LOG"
+# Detect project root
+PROJECT_ROOT="$PWD"
+_dir="$PWD"
+while [ "$_dir" != "/" ]; do
+    if [ -f "$_dir/.git" ] || [ -f "$_dir/pom.xml" ] || [ -f "$_dir/package.json" ]; then
+        PROJECT_ROOT="$_dir"
+        break
+    fi
+    _dir="$(dirname "$_dir")"
+done
+
+# Save state if exists
+STATE_FILE="$PROJECT_ROOT/.chaos-harness/state.json"
+if [ -f "$STATE_FILE" ] && command -v jq >/dev/null 2>&1; then
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    _tmp="/tmp/state_$$.json"
+    jq --arg ts "$TIMESTAMP" '.last_session = $ts' "$STATE_FILE" > "$_tmp" 2>/dev/null && \
+        cat "$_tmp" > "$STATE_FILE" 2>/dev/null
+    rm -f "$_tmp" 2>/dev/null
 fi
-
-# Save project state before turn ends
-save_project_state() {
-    if [[ ! -f "$PROJECT_STATE_FILE" ]]; then
-        return  # No state file yet
-    fi
-
-    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-    # Update last_session timestamp
-    if command -v jq &> /dev/null; then
-        local tmp_file="/tmp/state_$$.json"
-        jq --arg ts "$TIMESTAMP" '.last_session = $ts' "$PROJECT_STATE_FILE" > "$tmp_file" && \
-        cat "$tmp_file" > "$PROJECT_STATE_FILE" && rm -f "$tmp_file"
-
-        # Increment session count
-        jq '.statistics.total_sessions = (.statistics.total_sessions // 0) + 1' "$PROJECT_STATE_FILE" > "$tmp_file" && \
-        cat "$tmp_file" > "$PROJECT_STATE_FILE" && rm -f "$tmp_file"
-    fi
-}
-
-# Check for bypass keywords
-check_bypass_keywords() {
-    local input="$1"
-
-    # Bypass detection patterns
-    local bypass_patterns=(
-        "简单修复"
-        "simple fix"
-        "跳过测试"
-        "skip test"
-        "就这一次"
-        "just this once"
-        "快速处理"
-        "quick fix"
-        "暂时这样"
-        "temporary fix"
-        "先不管"
-        "ignore for now"
-    )
-
-    for pattern in "${bypass_patterns[@]}"; do
-        if [[ "$input" =~ $pattern ]]; then
-            echo "BYPASS DETECTED: '$pattern'"
-            echo ""
-            echo "Rebuttal:"
-            case "$pattern" in
-                *"简单"*|*"simple"*|*"快速"*|*"quick"*)
-                    echo "看似简单的问题往往隐藏复杂性。建议："
-                    echo "1. 先分析问题根因"
-                    echo "2. 评估影响范围"
-                    echo "3. 编写测试验证"
-                    ;;
-                *"跳过"*|*"skip"*|*"不用测试"*)
-                    echo "测试是质量保障的关键环节。建议："
-                    echo "1. 至少编写一个基本测试"
-                    echo "2. 验证修复效果"
-                    echo "3. 确保不影响其他功能"
-                    ;;
-                *"就这一次"*|*"just once"*)
-                    echo "'就这一次'往往是问题的开始。建议："
-                    echo "1. 遵循既定流程"
-                    echo "2. 记录例外原因"
-                    echo "3. 后续补充完善"
-                    ;;
-                *"暂时"*|*"ignore"*)
-                    echo "暂时的方案会变成永久的债务。建议："
-                    echo "1. 创建TODO追踪"
-                    echo "2. 设定解决时间"
-                    echo "3. 评估长期影响"
-                    ;;
-            esac
-
-            # Log bypass attempt
-            log_bypass "$pattern"
-
-            return 1
-        fi
-    done
-
-    return 0
-}
-
-# Check completion claims without verification (IL003)
-check_il003() {
-    local input="$1"
-
-    # Completion indicators
-    local completion_indicators=(
-        "完成"
-        "搞完了"
-        "做好了"
-        "finished"
-        "completed"
-        "done"
-    )
-
-    # Verification indicators
-    local verify_indicators=(
-        "测试"
-        "验证"
-        "检查"
-        "确认"
-        "test"
-        "verify"
-        "check"
-        "confirm"
-    )
-
-    local has_completion=false
-    local has_verify=false
-
-    for indicator in "${completion_indicators[@]}"; do
-        if [[ "$input" =~ $indicator ]]; then
-            has_completion=true
-            break
-        fi
-    done
-
-    for indicator in "${verify_indicators[@]}"; do
-        if [[ "$input" =~ $indicator ]]; then
-            has_verify=true
-            break
-        fi
-    done
-
-    if [[ "$has_completion" == true && "$has_verify" == false ]]; then
-        echo "IL003 VIOLATION: NO COMPLETION CLAIMS WITHOUT VERIFICATION"
-        echo ""
-        echo "Detected completion claim without verification evidence."
-        echo ""
-        echo "Required actions:"
-        echo "1. Run tests: npm test / pytest / mvn test"
-        echo "2. Verify build: npm run build / mvn compile"
-        echo "3. Check functionality: manual verification"
-        echo "4. Provide evidence: command output, test results"
-
-        log_il003_violation
-
-        return 1
-    fi
-
-    return 0
-}
-
-# Log bypass attempt
-log_bypass() {
-    local pattern="$1"
-
-    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-    echo "$(cat "$LAZINESS_LOG")" | jq \
-        --arg ts "$TIMESTAMP" \
-        --arg pattern "$pattern" \
-        '. += [{"timestamp": $ts, "pattern": "BYPASS_ATTEMPT", "keyword": $pattern, "severity": "warning"}]' > "$LAZINESS_LOG"
-}
-
-# Log IL003 violation
-log_il003_violation() {
-    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-    if [[ -f "$IRON_LAW_LOG" ]]; then
-        echo "$(cat "$IRON_LAW_LOG")" | jq \
-            --arg ts "$TIMESTAMP" \
-            --arg law "IL003" \
-            --arg trigger "completion_without_verification" \
-            '. += [{"timestamp": $ts, "iron_law": $law, "trigger": $trigger, "action": "blocked"}]' > "$IRON_LAW_LOG"
-    fi
-}
-
-# Run checks (read from stdin if available)
-INPUT=""
-if [[ -p /dev/stdin ]]; then
-    INPUT=$(cat)
-fi
-
-# Analyze input
-check_bypass_keywords "$INPUT" || true
-check_il003 "$INPUT" || true
-
-# Save project state for next session
-save_project_state
 
 exit 0

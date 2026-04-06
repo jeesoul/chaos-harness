@@ -1,8 +1,6 @@
-#!/bin/bash
-# context-aware-trigger - 智能场景感知与自动推荐
+#!/bin/sh
+# context-aware-trigger - 智能场景感知
 # PostToolUse hook for intelligent skill recommendation
-
-set -e
 
 TOOL_NAME="$1"
 TOOL_INPUT="$2"
@@ -10,180 +8,43 @@ TOOL_OUTPUT="$3"
 
 DATA_DIR="$HOME/.claude/harness"
 TRIGGER_LOG="$DATA_DIR/trigger-log.json"
-PROJECT_ROOT=""
 
-# Ensure directories
 mkdir -p "$DATA_DIR"
-[[ ! -f "$TRIGGER_LOG" ]] && echo '[]' > "$TRIGGER_LOG"
+[ ! -f "$TRIGGER_LOG" ] && printf '[]\n' > "$TRIGGER_LOG"
 
-# Detect project root
-detect_project_root() {
-    local dir="$PWD"
-    while [[ "$dir" != "/" ]]; do
-        [[ -f "$dir/.git" ]] && { echo "$dir"; return; }
-        [[ -f "$dir/pom.xml" ]] && { echo "$dir"; return; }
-        [[ -f "$dir/package.json" ]] && { echo "$dir"; return; }
-        dir="$(dirname "$dir")"
-    done
-    echo "$PWD"
-}
-PROJECT_ROOT=$(detect_project_root)
+# Parse file path from input
+FILE_PATH=""
+if [ -n "$TOOL_INPUT" ]; then
+    FILE_PATH=$(printf '%s\n' "$TOOL_INPUT" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+fi
 
-# Parse file path
-FILE_PATH=$(echo "$TOOL_INPUT" | jq -r '.file_path // .path // empty')
-
-# === 场景感知规则 ===
-
-# 场景1: 检测到 PRD/需求文档
-check_prd_context() {
-    local path="$1"
-    if [[ "$path" =~ PRD|需求|requirement|product-requirement ]]; then
-        recommend_skill "product-lifecycle" "检测到 PRD 文档，建议使用 product-lifecycle 管理研发流程"
-        return 0
-    fi
+# Output recommendation
+recommend() {
+    printf '\n<HARNESS_RECOMMEND>\n'
+    printf '📌 **自动推荐:** %s\n' "$1"
+    printf '</HARNESS_RECOMMEND>\n'
 }
 
-# 场景2: 检测到前端框架文件
-check_frontend_context() {
-    local path="$1"
-
-    # Vue 检测
-    if [[ "$path" =~ \.vue$ ]]; then
-        # 检查是 Vue2 还是 Vue3
-        local pkg="$PROJECT_ROOT/package.json"
-        if [[ -f "$pkg" ]]; then
-            local vue_version=$(cat "$pkg" | jq -r '.dependencies.vue // "0"' 2>/dev/null)
-            if [[ "$vue_version" =~ ^\"?\^?2\. ]]; then
-                recommend_skill "vue2-template" "检测到 Vue 2 项目，已加载 Vue2 模板铁律"
-                recommend_iron_law "IL-VUE001" "Props 是只读的"
-            elif [[ "$vue_version" =~ ^\"?\^?3\. ]]; then
-                recommend_skill "vue3-template" "检测到 Vue 3 项目，已加载 Vue3 模板铁律"
-                recommend_iron_law "IL-VUE001" "Ref 需要 .value 赋值"
-            fi
-        fi
-        return 0
-    fi
-
-    # React/JSX 检测
-    if [[ "$path" =~ \.(jsx|tsx)$ ]]; then
-        recommend_skill "react-template" "检测到 React 项目，已加载 React 模板铁律"
-        recommend_iron_law "IL-REACT001" "禁止直接修改 state"
-        recommend_iron_law "IL-REACT003" "列表渲染必须有 key"
-        return 0
-    fi
-}
-
-# 场景3: 检测到 API 文档
-check_api_context() {
-    local path="$1"
-    if [[ "$path" =~ api|API|swagger|openapi ]]; then
-        recommend_iron_law "IL-TECH002" "API 变更需要版本管理"
-        return 0
-    fi
-}
-
-# 场景4: 检测到数据库相关
-check_database_context() {
-    local path="$1"
-    if [[ "$path" =~ migration|schema|\.sql$|entity|repository ]]; then
-        recommend_iron_law "IL-TECH003" "数据库变更需要迁移脚本"
-        recommend_iron_law "IL-BE002" "数据库操作必须有事务"
-        return 0
-    fi
-}
-
-# 场景5: 检测到测试文件
-check_test_context() {
-    local path="$1"
-    if [[ "$path" =~ test|spec|\.test\.|\.spec\. ]]; then
-        # 检查测试覆盖率（如果有报告）
-        local coverage_file="$PROJECT_ROOT/coverage/coverage-summary.json"
-        if [[ -f "$coverage_file" ]]; then
-            local coverage=$(cat "$coverage_file" | jq -r '.total.lines.pct // 0' 2>/dev/null)
-            if (( $(echo "$coverage < 80" | bc -l 2>/dev/null || echo "0") )); then
-                echo ""
-                echo "<HARNESS_WARNING>"
-                echo "⚠️ 测试覆盖率低于 80%: 当前 ${coverage}%"
-                echo "**建议:** 增加测试用例以提高覆盖率"
-                echo "</HARNESS_WARNING>"
-            fi
-        fi
-        return 0
-    fi
-}
-
-# 场景6: 检测到配置文件修改
-check_config_context() {
-    local path="$1"
-    if [[ "$path" =~ config|\.env|settings|\.yaml$|\.json$ ]]; then
-        if [[ "$path" =~ \.env|secret|credential|password ]]; then
-            recommend_iron_law "IL005" "敏感配置修改需要批准"
-        fi
-        return 0
-    fi
-}
-
-# 场景7: 检测到版本目录不存在
-check_version_context() {
-    local path="$1"
-
-    # 如果在 output/ 目录下但没有版本目录
-    if [[ "$path" =~ output/ ]] && [[ ! "$path" =~ v[0-9]+\.[0-9]+ ]]; then
-        recommend_skill "version-locker" "检测到文档输出但无版本锁定，建议先创建版本"
-        return 0
-    fi
-}
-
-# === 推荐输出 ===
-
-recommend_skill() {
-    local skill="$1"
-    local message="$2"
-
-    echo ""
-    echo "<HARNESS_RECOMMEND>"
-    echo "📌 **自动推荐:** $message"
-    echo ""
-    echo "**触发命令:** \`/chaos-harness:$skill\`"
-    echo "</HARNESS_RECOMMEND>"
-
-    log_trigger "skill_recommend" "$skill" "$message"
-}
-
-recommend_iron_law() {
-    local law_id="$1"
-    local law_desc="$2"
-
-    echo ""
-    echo "<HARNESS_IRON_LAW>"
-    echo "⚡ **铁律激活:** $law_id"
-    echo "> $law_desc"
-    echo "</HARNESS_IRON_LAW>"
-
-    log_trigger "iron_law" "$law_id" "$law_desc"
-}
-
-log_trigger() {
-    local type="$1"
-    local target="$2"
-    local message="$3"
-
-    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local entry="{\"timestamp\": \"$TIMESTAMP\", \"type\": \"$type\", \"target\": \"$target\", \"message\": \"$message\", \"file\": \"$FILE_PATH\"}"
-
-    echo "$(cat "$TRIGGER_LOG")" | jq ". += [$entry]" > "$TRIGGER_LOG"
-}
-
-# === 执行检查 ===
-
-if [[ -n "$FILE_PATH" ]]; then
-    check_prd_context "$FILE_PATH"
-    check_frontend_context "$FILE_PATH"
-    check_api_context "$FILE_PATH"
-    check_database_context "$FILE_PATH"
-    check_test_context "$FILE_PATH"
-    check_config_context "$FILE_PATH"
-    check_version_context "$FILE_PATH"
+# Check file type
+if [ -n "$FILE_PATH" ]; then
+    # Vue detection
+    case "$FILE_PATH" in
+        *.vue)
+            recommend "检测到 Vue 组件，已加载 Vue 模板铁律"
+            ;;
+        *.jsx|*.tsx)
+            recommend "检测到 React 组件，已加载 React 模板铁律"
+            ;;
+        *PRD*|*需求*|*requirement*)
+            recommend "检测到 PRD 文档，建议使用 product-lifecycle"
+            ;;
+        *.sql|*migration*|*schema*)
+            printf '\n<HARNESS_IRON_LAW>⚡ IL-TECH003: 数据库变更需要迁移脚本</HARNESS_IRON_LAW>\n'
+            ;;
+        *.env|*secret*|*credential*)
+            printf '\n<HARNESS_IRON_LAW>⚡ IL005: 敏感配置修改需要批准</HARNESS_IRON_LAW>\n'
+            ;;
+    esac
 fi
 
 exit 0

@@ -8,11 +8,6 @@
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
             "async": false
-          },
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/smart-trigger\"",
-            "async": false
           }
         ]
       }
@@ -29,23 +24,6 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/learning-update\"",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/context-aware-trigger\"",
-            "async": true
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "matcher": "end_turn",
@@ -53,18 +31,6 @@
           {
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/stop\"",
-            "async": false
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact\"",
             "async": false
           }
         ]
