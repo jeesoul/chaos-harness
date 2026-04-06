@@ -65,6 +65,7 @@ Claude: [创建 IL-C002] 已添加自定义铁律
 | `workflow-supervisor` | 工作流、阶段管理 | 12阶段工作流管理 |
 | `iron-law-enforcer` | **始终激活** | 铁律执行、支持用户自定义 |
 | `learning-analyzer` | 学习记录≥5条、自学习分析 | 发现失败模式、优化铁律 |
+| `product-lifecycle` | PRD、需求、原型、发布流程 | 产品全生命周期管理（10阶段） |
 | `plugin-manager` | 插件管理、配置 | 管理外部插件和铁律扩展 |
 | `hooks-manager` | 钩子管理、日志查看 | 管理自学习钩子系统 |
 | `project-state` | 状态恢复、继续上次 | 会话持久化与恢复 |

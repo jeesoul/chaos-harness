@@ -389,6 +389,7 @@ claude plugins marketplace remove chaos-harness
 | `/chaos-harness:project-state` | 状态持久化：进度保存、会话恢复、断点续传 |
 | `/chaos-harness:auto-toolkit-installer` | 工具链检测：自动安装依赖工具、镜像加速 |
 | `/chaos-harness:learning-analyzer` | 自学习分析：失败模式识别、铁律优化建议、闭环迭代 |
+| `/chaos-harness:product-lifecycle` | 产品全生命周期：需求→原型→开发→测试→发布→迭代 |
 
 ---
 
