@@ -1,0 +1,208 @@
+identity:
+  name: react-harness
+  version: "1.0.0"
+  createdAt: "2026-04-06"
+  createdBy: chaos-harness
+  suitableFor:
+    - react
+    - react-hooks
+    - create-react-app
+    - vite-react
+    - next-js
+    - typescript-react
+  confidenceThreshold: 0.85
+
+selfCheck:
+  activationConditions:
+    - field: "package.json.dependencies.react"
+      operator: "exists"
+      description: "React dependency detected"
+    - field: "package.json.dependencies.react-dom"
+      operator: "exists"
+      description: "ReactDOM dependency detected"
+    - field: "files"
+      operator: "contains"
+      value: "*.jsx"
+      description: "JSX files found"
+    - field: "files"
+      operator: "contains"
+      value: "*.tsx"
+      description: "TSX files found (React + TypeScript)"
+  warningConditions:
+    - field: "nodeVersion"
+      operator: "matches"
+      value: "^14\\."
+      description: "Node 14 may have issues with modern React tooling"
+    - field: "package.json.devDependencies.typescript"
+      operator: "notExists"
+      description: "No TypeScript - recommended for React projects"
+    - field: "package.json.dependencies.next"
+      operator: "exists"
+      description: "Next.js detected - use Next.js specific rules"
+    - field: "tsconfig.json"
+      operator: "notExists"
+      description: "No tsconfig - TypeScript recommended"
+  changeMonitor:
+    watchedFiles:
+      - "package.json"
+      - "tsconfig.json"
+      - "vite.config.*"
+      - "next.config.*"
+      - "webpack.config.*"
+      - "src/**/*.jsx"
+      - "src/**/*.tsx"
+      - "src/**/*.css"
+      - "src/**/*.scss"
+      - "src/hooks/*.ts"
+      - "src/components/**/*"
+    threshold: 5
+  redFlags:
+    - thought: "I'll mutate state directly"
+      reality: "State mutations cause render bugs. Use setState or dispatch."
+      ironLawRef: "IL-REACT001"
+      persuasionPrinciple: "authority"
+    - thought: "Props drilling is fine for small apps"
+      reality: "Props drilling scales poorly. Consider Context or state library."
+      persuasionPrinciple: "socialProof"
+    - thought: "I'll skip useEffect cleanup"
+      reality: "Missing cleanup = memory leaks and stale callbacks. Add cleanup."
+      ironLawRef: "IL-REACT002"
+      persuasionPrinciple: "commitment"
+    - thought: "React StrictMode is annoying"
+      reality: "StrictMode catches bugs early. Keep it enabled in dev."
+      persuasionPrinciple: "authority"
+
+ironLaws:
+  - id: "IL001"
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    enforcement: block
+    violationAction: "Require version directory before output"
+  - id: "IL002"
+    rule: "NO HARNESS WITHOUT SCAN RESULTS"
+    enforcement: block
+    violationAction: "Scan project first"
+  - id: "IL003"
+    rule: "NO COMPLETION CLAIMS WITHOUT VERIFICATION"
+    enforcement: block
+    violationAction: "Run dev server/build to verify"
+  - id: "IL004"
+    rule: "NO VERSION CHANGES WITHOUT USER CONSENT"
+    enforcement: block
+    violationAction: "Ask before changing React/dependency versions"
+  - id: "IL005"
+    rule: "NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL"
+    enforcement: block
+    violationAction: "Webpack/Vite/Next config changes need review"
+  - id: "IL-REACT001"
+    rule: "NO DIRECT STATE MUTATION"
+    enforcement: block
+    violationAction: "State is immutable. Use setState, dispatch, or useState setter."
+  - id: "IL-REACT002"
+    rule: "EFFECT CLEANUP REQUIRED"
+    enforcement: warn
+    violationAction: "Effects with subscriptions/timers need cleanup functions"
+  - id: "IL-REACT003"
+    rule: "KEY PROP MANDATORY IN LISTS"
+    enforcement: block
+    violationAction: "Array renders need stable keys. Use id, not index."
+  - id: "IL-REACT004"
+    rule: "HOOKS DEPENDENCY ARRAY ACCURACY"
+    enforcement: warn
+    violationAction: "Missing dependencies cause stale closures. Include all deps."
+  - id: "IL-REACT005"
+    rule: "COMPONENT MODIFICATIONS NEED RENDER CHECK"
+    enforcement: block
+    violationAction: "Run dev server after component changes"
+
+loopholeClosure:
+  - pattern: "just a small JSX change"
+    rebuttal: "JSX changes affect render tree. Check parent components."
+  - pattern: "I'll use index as key"
+    rebuttal: "Index keys cause reorder bugs. Use stable IDs."
+  - pattern: "TypeScript is optional in React"
+    rebuttal: "Optional ≠ safer. React + TS catches prop errors at compile time."
+  - pattern: "I'll skip the dependency array"
+    rebuttal: "Empty deps = runs once. Stale deps = stale closure. Be explicit."
+  - pattern: "Context is complex, I'll use props"
+    rebuttal: "Props drilling at scale = unmaintainable. Learn Context API."
+  - pattern: "Redux is overkill for small apps"
+    rebuttal: "Small apps grow. Zustand/Jotai are lightweight alternatives."
+  - pattern: "I'll put logic in render"
+    rebuttal: "Logic in render runs every frame. Use hooks or useMemo."
+
+recommendations:
+  - id: "R-REACT001"
+    rule: "Run dev server after component changes"
+    skipCondition: "User explicitly skips"
+  - id: "R-REACT002"
+    rule: "Check component props interface after modifications"
+    skipCondition: "No TypeScript configured"
+  - id: "R-REACT003"
+    rule: "Verify useEffect cleanup for subscriptions"
+    skipCondition: "Effect has no subscriptions"
+  - id: "R-REACT004"
+    rule: "Run React DevTools Profiler for performance"
+    skipCondition: "Headless environment"
+  - id: "R-REACT005"
+    rule: "Check for React warnings in console"
+    skipCondition: "Production build only"
+  - id: "R-REACT006"
+    rule: "Validate key props in list renders"
+    skipCondition: "Using stable IDs already"
+
+dynamicRules:
+  privateRepositories: []
+  buildCommands:
+    standard: "npm run dev"
+    production: "npm run build"
+    lint: "npm run lint"
+    typeCheck: "tsc --noEmit"
+  testFramework:
+    primary: "Jest / Vitest"
+    e2e: "Playwright / Cypress"
+    component: "React Testing Library"
+  inferredCodeStyle:
+    namingConvention:
+      componentFile: "PascalCase.tsx"
+      hookFile: "use*.ts"
+      contextFile: "*Context.tsx"
+      utilFile: "camelCase.ts"
+    importStyle: "named"  # React named imports preferred
+  componentPatterns:
+    stateManagement: ["useState", "useReducer", "Context", "Redux", "Zustand"]
+    styling: ["CSS Modules", "Styled Components", "Tailwind", "Sass"]
+    routing: ["React Router", "Next.js Router"]
+    hooksPattern: "custom hooks for reusable logic"
+
+antiBypass:
+  - id: "AB-REACT001"
+    excuse: "This is a simple state update"
+    rebuttal: "State updates trigger re-renders. Check dependent components."
+    ironLawRef: "IL-REACT001"
+    persuasionPrinciple: "authority"
+  - id: "AB-REACT002"
+    excuse: "I'll omit the key, React will figure it out"
+    rebuttal: "React warns about missing keys. Fix it now, not later."
+    ironLawRef: "IL-REACT003"
+    persuasionPrinciple: "socialProof"
+  - id: "AB-REACT003"
+    excuse: "useEffect cleanup is optional"
+    rebuttal: "Missing cleanup = memory leaks. Add cleanup for subscriptions."
+    ironLawRef: "IL-REACT002"
+    persuasionPrinciple: "commitment"
+  - id: "AB-REACT004"
+    excuse: "I'll use useEffect for all async"
+    rebuttal: "useEffect is for sync. Use Suspense or data libraries for async."
+    persuasionPrinciple: "authority"
+  - id: "AB-REACT005"
+    excuse: "TypeScript prop types are verbose"
+    rebuttal: "Verbose types = safer code. Define interfaces once, reuse."
+    ironLawRef: "IL005"
+    persuasionPrinciple: "socialProof"
+  - id: "AB-REACT006"
+    excuse: "I'll update React version without asking"
+    rebuttal: "React updates can break hooks/APIs. Check React 18/19 changes."
+    ironLawRef: "IL004"
+    persuasionPrinciple: "authority"
+
+effectivenessLog: "output/{version}/effectiveness-log.md"

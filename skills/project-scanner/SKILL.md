@@ -45,17 +45,27 @@ python --version # 检测 Python
 
 ## 项目类型判断规则
 
-| 检测到的文件 | 项目类型 | 置信度 |
-|-------------|---------|--------|
+| 检测到的文件/依赖 | 项目类型 | 置信度 |
+|------------------|---------|--------|
 | pom.xml | java-maven | 95% |
 | pom.xml + Spring Boot parent | java-spring | 98% |
 | build.gradle | java-gradle | 95% |
 | package.json | node | 95% |
+| package.json + vue (^2.) | vue2 | 98% |
+| package.json + vue (^3.) | vue3 | 98% |
+| package.json + react | react | 98% |
+| package.json + next | next-js | 98% |
 | requirements.txt | python | 90% |
 
 **Legacy 标记：**
 - JDK 8 + Spring Boot 2.x → `java-spring-legacy`
 - JDK 17+ + Spring Boot 3.x → `java-spring`
+
+**前端框架检测：**
+- Vue 2.x + Vue CLI → `vue2`
+- Vue 3.x + Vite → `vue3`
+- React + Vite/CRA → `react`
+- React + Next.js → `next-js`
 
 ## 铁律
 

@@ -1,0 +1,158 @@
+identity:
+  name: vue2-harness
+  version: "1.0.0"
+  createdAt: "2026-04-06"
+  createdBy: chaos-harness
+  suitableFor:
+    - vue2
+    - vue-cli
+    - vue-webpack
+    - options-api
+  confidenceThreshold: 0.85
+
+selfCheck:
+  activationConditions:
+    - field: "package.json.dependencies.vue"
+      operator: "versionMatches"
+      value: "^2\\."
+      description: "Vue 2.x dependency detected"
+    - field: "files"
+      operator: "contains"
+      value: "*.vue"
+      description: ".vue component files found"
+    - field: "package.json.dependencies.vue-router"
+      operator: "exists"
+      description: "Vue Router detected"
+  warningConditions:
+    - field: "nodeVersion"
+      operator: "matches"
+      value: "^10\\."
+      description: "Node 10 may have compatibility issues with Vue 2 build tools"
+    - field: "webpack.config.js"
+      operator: "notExists"
+      description: "No webpack config - check build setup"
+    - field: "package.json.devDependencies.@vue/cli-service"
+      operator: "notExists"
+      description: "No Vue CLI - manual webpack config required"
+  changeMonitor:
+    watchedFiles:
+      - "package.json"
+      - "package-lock.json"
+      - "vue.config.js"
+      - "webpack.config.js"
+      - "src/**/*.vue"
+      - "src/**/*.js"
+      - "src/router/*.js"
+      - "src/store/*.js"
+    threshold: 5
+  redFlags:
+    - thought: "I'll modify props directly"
+      reality: "Props are one-way data flow. Use events or Vuex for state changes."
+      ironLawRef: "IL-VUE001"
+      persuasionPrinciple: "authority"
+    - thought: "Vue 2 is deprecated, no need to test"
+      reality: "Vue 2 still runs in production. Test existing code before changes."
+      ironLawRef: "IL003"
+      persuasionPrinciple: "socialProof"
+    - thought: "I'll skip Vuex mutations validation"
+      reality: "Mutations must be tracked. Use strict mode for debugging."
+      persuasionPrinciple: "commitment"
+
+ironLaws:
+  - id: "IL001"
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    enforcement: block
+    violationAction: "Require version directory before output"
+  - id: "IL002"
+    rule: "NO HARNESS WITHOUT SCAN RESULTS"
+    enforcement: block
+    violationAction: "Scan project first"
+  - id: "IL003"
+    rule: "NO COMPLETION CLAIMS WITHOUT VERIFICATION"
+    enforcement: block
+    violationAction: "Run npm run serve/build to verify"
+  - id: "IL004"
+    rule: "NO VERSION CHANGES WITHOUT USER CONSENT"
+    enforcement: block
+    violationAction: "Ask before changing Vue/dependency versions"
+  - id: "IL-VUE001"
+    rule: "NO DIRECT PROPS MUTATION"
+    enforcement: block
+    violationAction: "Props are read-only. Emit events or use Vuex."
+  - id: "IL-VUE002"
+    rule: "NO UNTRACKED STATE CHANGES"
+    enforcement: warn
+    violationAction: "Vuex state changes must go through mutations"
+  - id: "IL-VUE003"
+    rule: "TEMPLATE MODIFICATIONS NEED RENDER CHECK"
+    enforcement: block
+    violationAction: "Run dev server after template changes"
+
+loopholeClosure:
+  - pattern: "just a small Vue component change"
+    rebuttal: "Small changes can break props chain. Check parent components."
+  - pattern: "CSS changes don't need testing"
+    rebuttal: "CSS can break responsive layouts. Check on different viewports."
+  - pattern: "Vue 2 is legacy, fast fixes OK"
+    rebuttal: "Legacy code is production code. Test before deploying."
+  - pattern: "Vuex is complex, I'll use local state"
+    rebuttal: "Local state = scattered state. Consider global state management."
+
+recommendations:
+  - id: "R-VUE001"
+    rule: "Run npm run serve after component changes"
+    skipCondition: "User explicitly skips"
+  - id: "R-VUE002"
+    rule: "Check parent components when modifying props"
+    skipCondition: "Prop is only used locally"
+  - id: "R-VUE003"
+    rule: "Use Vue DevTools for state inspection"
+    skipCondition: "Headless environment"
+  - id: "R-VUE004"
+    rule: "Run eslint with Vue plugin"
+    skipCondition: "No eslint configured"
+
+dynamicRules:
+  privateRepositories: []
+  buildCommands:
+    standard: "npm run serve"
+    production: "npm run build"
+    lint: "npm run lint"
+  testFramework:
+    primary: "Jest"
+    e2e: "Cypress"
+    component: "@vue/test-utils"
+  inferredCodeStyle:
+    namingConvention:
+      componentFile: "PascalCase.vue"
+      mixinFile: "camelCase.js"
+      storeModule: "camelCase.js"
+    templateStyle: "template-string"  # or JSX with vue-jsx
+  componentPatterns:
+    lifecycleHooks: ["created", "mounted", "beforeDestroy"]
+    stateManagement: "Vuex"
+    router: "Vue Router"
+
+antiBypass:
+  - id: "AB-VUE001"
+    excuse: "This component is isolated"
+    rebuttal: "Components are never isolated. Check events, props, slots."
+    ironLawRef: "IL-VUE001"
+    persuasionPrinciple: "authority"
+  - id: "AB-VUE002"
+    excuse: "Vue 2 dev tools will catch errors"
+    rebuttal: "DevTools don't catch production errors. Test thoroughly."
+    ironLawRef: "IL003"
+    persuasionPrinciple: "socialProof"
+  - id: "AB-VUE003"
+    excuse: "I'll update Vue version to 2.7 for Composition API"
+    rebuttal: "Vue 2.7 Composition API is bridge syntax. Consider Vue 3 migration plan."
+    ironLawRef: "IL004"
+    persuasionPrinciple: "scarcity"
+  - id: "AB-VUE004"
+    excuse: "No tests exist, so I can't run them"
+    rebuttal: "No tests = more risk. Create tests for critical paths."
+    ironLawRef: "IL003"
+    persuasionPrinciple: "commitment"
+
+effectivenessLog: "output/{version}/effectiveness-log.md"

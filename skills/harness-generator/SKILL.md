@@ -37,6 +37,10 @@ NO HARNESS WITHOUT SCAN RESULTS
 |---------|------|
 | java-spring | java-spring 模板 |
 | java-spring-legacy | java-spring-legacy 模板 |
+| vue2 | vue2 模板 |
+| vue3 | vue3 模板 |
+| react | react 模板 |
+| next-js | react 模板 (Next.js 兼容) |
 | node-express | node-express 模板 |
 | python-django | python-django 模板 |
 | 其他 | generic 模板 |
@@ -215,6 +219,10 @@ persuasion:
 |---------|------|------|
 | `java-spring` | java-spring | Java 17/21, Spring Boot 3.x |
 | `java-spring-legacy` | java-spring-legacy | JDK 8, Spring Boot 2.x |
+| `vue2` | vue2 | Vue 2.x, Options API, Vuex, Vue CLI |
+| `vue3` | vue3 | Vue 3.x, Composition API, Pinia, Vite |
+| `react` | react | React 18+, Hooks, TypeScript, Vite/CRA |
+| `next-js` | react | Next.js (React 模板兼容) |
 | `node-express` | node-express | Node.js Express |
 | `python-django` | python-django | Python Django |
 | 其他 | generic | 通用模板 |

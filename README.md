@@ -528,6 +528,9 @@ Chaos Harness 提供 MCP (Model Context Protocol) Server，支持外部系统调
 |----------|------------|----------|
 | `java-spring` | Java 17/21 + Spring Boot 3.x | Jakarta EE、现代特性 |
 | `java-spring-legacy` | JDK 8 + Spring Boot 2.x | javax 兼容、私服检测 |
+| `vue2` | Vue 2.x + Vue CLI/Webpack | Options API、Vuex、Vue Router |
+| `vue3` | Vue 3.x + Vite | Composition API、Pinia、TypeScript |
+| `react` | React 18+ + Vite/CRA | Hooks、TypeScript、React Router |
 | `node-express` | Node.js Express | npm/yarn 检测 |
 | `python-django` | Python Django | pip/venv 检测 |
 | `generic` | 通用项目 | 基础铁律集 |
