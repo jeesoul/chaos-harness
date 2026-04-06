@@ -128,20 +128,20 @@ Harness 结果：插件接入后自动继承铁律，操作受监督，日志自
 ### 🧠 自学习生态闭环
 
 ```
-项目行为 → 学习记录 → 规则优化 → 能力沉淀 → 专属Harness
-    ↑                                              ↓
-    └──────────────── 自动迭代 ←───────────────────┘
+项目行为 → learning-log.json → learning-analyzer 分析 → 铁律优化建议
+    ↑                                                        ↓
+    └────────────────── 用户确认后自动应用 ←─────────────────────┘
 ```
 
 **行为学习机制：**
 - Hook 自动记录 Agent 每次决策路径与结果
-- 失败模式聚类分析，识别高频问题
-- 成功模式沉淀，形成最佳实践模板
+- `learning-analyzer` 分析失败模式，发现重复违规
+- 失败模式聚类分析，识别系统性问题
 
 **规则进化过程：**
-- 根据历史违规模式自动补充针对性规则
+- 根据历史违规模式自动生成针对性规则
+- 用户确认后自动应用到项目 Harness
 - 项目规模变化触发工作流自适应调整
-- 技术栈变更自动注入对应模板规则
 
 **能力沉淀结果：**
 - 项目专属 Harness 持续增强
@@ -383,11 +383,12 @@ claude plugins marketplace remove chaos-harness
 | `/chaos-harness:harness-generator` | 约束生成：基于扫描数据生成专属 Harness |
 | `/chaos-harness:workflow-supervisor` | 工作流编排：阶段控制、进度监控、Agent协调 |
 | `/chaos-harness:iron-law-enforcer` | 铁律执行：自定义规则、绕过检测、驳回生成 |
-| `/chaus-harness:collaboration-reviewer` | 多Agent协作：角色分配、冲突检测、结果合并 |
+| `/chaos-harness:collaboration-reviewer` | 多Agent协作：角色分配、冲突检测、结果合并 |
 | `/chaos-harness:hooks-manager` | 钩子配置：启用/禁用、日志查看、行为审计 |
 | `/chaos-harness:plugin-manager` | 插件管理：第三方接入、约束配置、阶段映射 |
 | `/chaos-harness:project-state` | 状态持久化：进度保存、会话恢复、断点续传 |
 | `/chaos-harness:auto-toolkit-installer` | 工具链检测：自动安装依赖工具、镜像加速 |
+| `/chaos-harness:learning-analyzer` | 自学习分析：失败模式识别、铁律优化建议、闭环迭代 |
 
 ---
 
@@ -471,6 +472,52 @@ claude plugins marketplace add ./skills
 claude plugins install skill-creator@claude-plugins-official
 claude plugins install ui-ux-pro-max@ui-ux-pro-max-skill
 claude plugins install webapp-testing@anthropics/skills
+```
+
+---
+
+## MCP Server 支持
+
+Chaos Harness 提供 MCP (Model Context Protocol) Server，支持外部系统调用核心能力。
+
+### MCP 工具清单
+
+| 工具分类 | 工具数量 | 功能描述 |
+|----------|----------|----------|
+| Scanner | 4 | 项目扫描、类型检测、环境分析 |
+| Version | 5 | 版本锁定、目录创建、变更追踪 |
+| Harness | 6 | 约束生成、模板加载、效果追踪 |
+| Workflow | 8 | 工作流编排、阶段控制、Agent 协调 |
+| **总计** | **23** | 完整 Harness 能力 API |
+
+### 使用场景
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Claude Code 内部                                            │
+│  └── Skills (SKILL.md) → 直接调用，无需 MCP                  │
+├─────────────────────────────────────────────────────────────┤
+│  外部系统集成                                                 │
+│  ├── IDE 插件 (VS Code, JetBrains)                           │
+│  ├── 其他 AI 工具 (Cursor, Copilot)                          │
+│  ├── CI/CD 平台 (GitHub Actions, Jenkins)                    │
+│  └── 自定义 Agent 系统                                        │
+│  └── 通过 MCP Server 调用 Harness 能力                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### MCP 配置示例
+
+```json
+{
+  "mcpServers": {
+    "chaos-harness": {
+      "command": "node",
+      "args": ["path/to/chaos-harness/dist/mcp-server.js"],
+      "env": {}
+    }
+  }
+}
 ```
 
 ---
