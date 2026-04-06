@@ -1,0 +1,246 @@
+# Java SpringBoot Harness 配置
+
+## 适用场景
+
+- 技术方案选择 SpringBoot 时自动激活
+- 全新项目默认使用 MyBatis-Plus（用户未指定时）
+- 强制执行 Java 代码风格规范
+
+---
+
+## Java 代码铁律（强制执行）
+
+### IL-JAVA001: 代码风格规范
+**NO CODE WITHOUT CHECKSTYLE**
+
+所有 Java 代码必须严格遵循 checkstyle 规范：
+
+#### 基础格式
+- UTF-8 字符集
+- 每行最大 125 字符
+- 4 个空格缩进，禁止 Tab
+- 注解独占一行，不允许与代码同行
+- 必须使用大括号，即使是单行语句
+
+#### 命名规范
+- 包名：全小写 `^[a-z]+(\.[a-z][a-z0-9]*)*$`
+- 类名/接口名/枚举名：大驼峰 (PascalCase)
+- 变量名：小驼峰 (camelCase)
+- 常量名：全大写下划线分隔 (UPPER_SNAKE_CASE)
+- 集合变量名：复数形式 (users, userList)
+- 泛型类型参数：单个大写字母 (T, E, K, V, R)
+
+#### 注释规范（强制）
+```java
+/**
+ * 类描述
+ *
+ * @author 作者名
+ * @date YYYY-MM-DD
+ */
+public class ClassName { }
+
+/**
+ * 方法描述（有意义的内容，禁止泛泛描述）
+ *
+ * @param paramName 参数说明
+ * @return 返回值说明
+ * @throws ExceptionType 异常说明
+ */
+public ReturnType methodName(ParamType paramName) { }
+
+/**
+ * 成员变量说明（禁止行尾注释）
+ */
+private FieldType fieldName;
+```
+
+**⚠️ 强制检查：所有 public 方法（包括 main）必须有完整 Javadoc！**
+
+#### 导入规范
+- **禁止通配符导入** `import xxx.*`
+- 导入顺序：java.* → javax.* → 第三方库 → 本项目包
+
+#### 日志规范
+- 使用 `@Slf4j`
+- **必须使用占位符**：`log.info("处理用户，userId: {}", userId)`
+- **禁止字符串拼接**：`log.info("处理用户：" + userId)` ❌
+
+---
+
+### IL-JAVA002: Controller 接口规范
+**NO CONTROLLER WITHOUT VO**
+
+#### 请求参数
+- 参数超过 3 个必须封装成实体
+- 简单查询（1-2 参数）可用基本类型
+
+#### 返回结果（强制）
+- **必须使用统一响应体**：`R<返回体>`
+- **返回体必须是固定实体类**：禁止 `Map`、`JSONObject`、`Object`
+
+#### C端接口（app/H5/toC）
+| 类型 | 要求 |
+|------|------|
+| Request | **必须使用独立 VO** `{业务名}RequestVO` |
+| Response | **必须使用独立 VO** `{业务名}ResponseVO` |
+
+#### B端接口（web/admin/toB）
+| 类型 | 要求 |
+|------|------|
+| Request | 尽量使用独立 VO |
+| Response | **必须使用独立 VO** |
+
+#### 路径前缀
+- C端：`/app/` 或 `/h5/`
+- B端：`/web/` 或 `/admin/`
+
+---
+
+### IL-JAVA003: MyBatis-Plus 强制规范
+**NO SQL IN JAVA CODE**
+
+#### 默认技术栈
+- 全新项目用户未指定 → **默认使用 MyBatis-Plus**
+- **禁止在代码中写 SQL**（包括 @Select、@Update 等注解）
+
+#### Mapper XML 强制规范
+所有数据库操作必须写在 `mapper.xml` 文件中：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xxx.mapper.XxxMapper">
+
+    <!-- resultMap 定义 -->
+    <resultMap type="com.xxx.entity.XxxEntity" id="xxxMap">
+        <result property="id" column="id"/>
+        <result property="fieldName" column="field_name"/>
+        <!-- 所有字段必须列出 -->
+    </resultMap>
+
+    <!-- 基础列定义（复用） -->
+    <sql id="baseColumns">
+        id, field_name, create_time, update_time
+    </sql>
+
+    <!-- 分页查询：必须使用 mapper.xml -->
+    <select id="pageByEntity" resultType="com.xxx.entity.XxxEntity">
+        SELECT <include refid="baseColumns"/>
+        FROM table_name
+        <where>
+            <if test="entity.field != null and entity.field != ''">
+                AND field = #{entity.field}
+            </if>
+        </where>
+    </select>
+
+    <!-- 列表查询 -->
+    <select id="listByEntity" resultType="com.xxx.entity.XxxEntity">
+        SELECT <include refid="baseColumns"/>
+        FROM table_name
+        <where>
+            <if test="entity.id != null">
+                AND id = #{entity.id}
+            </if>
+        </where>
+    </select>
+
+</mapper>
+```
+
+#### 分页查询铁律
+**NO PAGINATION WITHOUT XML**
+
+分页查询必须写在 mapper.xml 中，使用 `<include>` 复用列定义：
+
+```java
+// Mapper 接口
+public interface XxxMapper extends BaseMapper<XxxEntity> {
+    /**
+     * 分页查询
+     *
+     * @param page 分页参数
+     * @param entity 查询条件
+     * @return 分页结果
+     */
+    IPage<XxxEntity> pageByEntity(
+        @Param("page") IPage<XxxEntity> page,
+        @Param("entity") XxxEntity entity
+    );
+}
+```
+
+#### 禁止行为
+| 禁止项 | 原因 |
+|--------|------|
+| `@Select("SELECT ...")` | SQL 必须在 XML 中 |
+| `@Update("UPDATE ...")` | SQL 必须在 XML 中 |
+| `@Insert("INSERT ...")` | SQL 必须在 XML 中 |
+| 代码拼接 SQL 字符串 | 安全隐患、不可维护 |
+
+---
+
+### IL-JAVA004: 代码质量规范
+**NO BAD PRACTICES**
+
+#### 禁止项
+- `System.exit()` ❌
+- `e.printStackTrace()` ❌（使用 log.error）
+- 字符串字面量比较 ❌（使用 `equals()`）
+- 返回 null 集合 ❌（返回空集合）
+
+#### 方法规范
+- 参数数量 ≤ 10
+- 方法长度 ≤ 120 行
+- 嵌套深度 ≤ 2 层
+
+---
+
+## 生成后强制检查清单
+
+生成或修改 Java 代码后，必须逐项检查：
+
+### 检查清单（全部必须通过）
+
+- [ ] 类有 Javadoc（@author + @date）
+- [ ] **所有 public 方法有完整 Javadoc**（包括 main）
+- [ ] 方法注释包含有意义描述
+- [ ] @param/@return/@throws 标签完整
+- [ ] 成员变量有 Javadoc（禁止行尾注释）
+- [ ] 无通配符导入
+- [ ] 注解独占一行
+- [ ] 所有语句块使用大括号
+- [ ] 4 空格缩进，无 Tab
+- [ ] 日志使用占位符（禁止拼接）
+- [ ] 无 e.printStackTrace()
+- [ ] Controller 返回 R<固定VO>
+- [ ] 返回体禁止 Map/JSONObject
+- [ ] C端 Request/Response 用独立 VO
+- [ ] SQL 全部在 mapper.xml 中
+- [ ] 分页查询在 mapper.xml 中
+
+---
+
+## 自动触发条件
+
+| 触发信号 | 激活动作 |
+|----------|----------|
+| 文件扩展名 `.java` | 执行 checkstyle 检查 |
+| 新建 SpringBoot 项目 | 默认 MyBatis-Plus + mapper.xml |
+| 技术方案选 SpringBoot | 强制 Java 铁律 |
+| 发现 SQL 注解 @Select | 报错并提示迁移到 XML |
+| Controller 返回 Map | 报错并提示创建 VO |
+
+---
+
+## 绕过检测规则
+
+| 绕过模式 | 检测逻辑 |
+|----------|----------|
+| "简单查询不用 VO" | 检测返回类型，强制 VO |
+| "SQL 写注解更方便" | 检测 @Select/@Update，拒绝执行 |
+| "临时方案先这样" | 临时方案也必须合规 |
+| "分页用代码实现" | 检测分页方法，必须有 XML |

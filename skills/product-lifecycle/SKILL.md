@@ -478,8 +478,21 @@ bundle_size: {size}
    - 示例请求
    - 错误码说明
 
+### 技术栈默认规范（强制）
+
+**技术方案为 SpringBoot 时，必须执行以下默认规范：**
+
+| 场景 | 默认技术 | 说明 |
+|------|----------|------|
+| 全新项目用户未指定 | **MyBatis-Plus** | 必须使用，无例外 |
+| SQL 实现 | **mapper.xml** | 禁止代码写 SQL |
+| 分页查询 | **mapper.xml** | 必须在 XML 中实现 |
+
+**⚠️ 执行 P07 前必须加载 `java-checkstyle` skill！**
+
 ### 输出
 - `src/` - 源代码目录
+- `src/main/resources/mapper/` - Mapper XML 目录（强制）
 - `output/{version}/dev/backend-log.md` - 开发日志
 - `output/{version}/test/backend-coverage.md` - 测试覆盖率
 - `output/{version}/docs/api-docs.md` - API 文档
@@ -490,6 +503,10 @@ bundle_size: {size}
 - [ ] 是否有事务管理？
 - [ ] 单元测试覆盖率 ≥ 80%？
 - [ ] 是否有性能测试？
+- [ ] **所有 public 方法有 Javadoc？**
+- [ ] **SQL 全在 mapper.xml？**
+- [ ] **分页查询在 mapper.xml？**
+- [ ] **Controller 返回固定 VO（禁止 Map）？**
 
 ### 铁律检查
 | 铁律 | 检查项 |
@@ -498,12 +515,19 @@ bundle_size: {size}
 | IL-BE002 | 数据库操作必须有事务 |
 | IL-BE003 | 敏感数据必须加密 |
 | IL-BE004 | 所有 API 必须有鉴权 |
+| **IL-JAVA001** | **代码风格规范（checkstyle）** |
+| **IL-JAVA002** | **Controller 返回固定 VO** |
+| **IL-JAVA003** | **SQL 必须在 mapper.xml** |
+| **IL-JAVA004** | **禁止 e.printStackTrace() 等** |
 
 ### 自动化验证
 ```bash
 # 运行后端检查
 ./mvnw test
 ./mvnw verify
+
+# 检查 mapper.xml 是否存在（分页必须有）
+ls src/main/resources/mapper/*.xml
 ```
 
 ### 记忆写入

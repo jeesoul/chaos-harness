@@ -778,17 +778,88 @@ P08 集成测试
 自动检测技术栈
 ├── Vue 2/3 项目 → 自动加载 vue 模板铁律
 ├── React 项目 → 自动加载 react 模板铁律
-├── Spring Boot → 自动加载 java-spring 模板
+├── Spring Boot → 自动加载 java-springboot 模板
 └── Django/Flask → 自动加载 python 模板
 
 铁律自动激活
 ├── IL-VUE001: Props 只读
 ├── IL-REACT001: 禁止直接修改 state
+├── IL-JAVA001: 代码风格规范 (checkstyle)
+├── IL-JAVA002: Controller 返回固定 VO
+├── IL-JAVA003: SQL 必须在 mapper.xml
+├── IL-JAVA004: 禁止 bad practices
 └── IL-BE001: API 必须有版本控制
 
 自学习闭环
 └── 每次修复 → 自动记录 → learning-analyzer 分析
 ```
+
+### Java 后端开发规范（强制）
+
+**SpringBoot 项目默认规范：**
+
+| 场景 | 默认值 | 说明 |
+|------|--------|------|
+| 全新项目用户未指定 | **MyBatis-Plus** | 自动使用，无例外 |
+| SQL 实现 | **mapper.xml** | 禁止 @Select/@Update 注解 |
+| 分页查询 | **mapper.xml** | 必须在 XML 中实现 |
+
+**Java 代码铁律 (IL-JAVA001-004)：**
+
+```yaml
+# 强制执行
+IL-JAVA001: NO CODE WITHOUT CHECKSTYLE
+  ├── UTF-8 字符集，每行 ≤ 125 字符
+  ├── 4 空格缩进，禁止 Tab
+  ├── 所有 public 方法必须有完整 Javadoc（包括 main！）
+  ├── 禁止 import xxx.*
+  └── 日志占位符方式：log.info("userId: {}", userId)
+
+IL-JAVA002: NO CONTROLLER WITHOUT VO
+  ├── 返回必须 R<固定VO>
+  ├── 禁止 Map/JSONObject/Object 作为返回体
+  ├── C端 Request/Response 必须独立 VO
+  └── 参数 > 3 个必须封装实体
+
+IL-JAVA003: NO SQL IN JAVA CODE
+  ├── 禁止 @Select/@Update/@Insert 注解
+  ├── SQL 全部写在 mapper.xml
+  ├── 分页查询必须在 mapper.xml
+  └── 使用 <include> 复用列定义
+
+IL-JAVA004: NO BAD PRACTICES
+  ├── 禁止 System.exit()
+  ├── 禁止 e.printStackTrace()
+  ├── 禁止字符串字面量比较
+  └── 方法参数 ≤ 10，长度 ≤ 120 行
+```
+
+**Mapper XML 标准格式：**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xxx.mapper.XxxMapper">
+    <sql id="baseColumns">id, field_name, create_time</sql>
+
+    <!-- 分页查询：必须在 XML -->
+    <select id="pageByEntity" resultType="com.xxx.entity.XxxEntity">
+        SELECT <include refid="baseColumns"/>
+        FROM table_name
+        <where>
+            <if test="entity.field != null and entity.field != ''">
+                AND field = #{entity.field}
+            </if>
+        </where>
+    </select>
+</mapper>
+```
+
+详细规范见：
+- `skills/java-checkstyle/SKILL.md` - Java 代码风格规范
+- `templates/java-springboot/harness.yaml` - SpringBoot Harness 配置
 
 ### 角色灵活配置
 
