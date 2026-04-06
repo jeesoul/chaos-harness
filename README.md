@@ -298,9 +298,37 @@ custom_iron_laws:
 |------|----------|----------|
 | SessionStart | 会话开始/恢复 | 注入铁律上下文 + 恢复项目状态 |
 | PreToolUse | 工具调用前 | IL001/IL005 铁律预检 |
-| PostToolUse | 工具调用后 | 偷懒模式检测 + 学习记录 |
+| PostToolUse | 工具调用后 | 偷懒模式检测 + 学习记录 + **智能场景感知** |
 | Stop | 回合结束 | IL003 完成声明分析 |
 | PreCompact | 对话压缩前 | 保存关键上下文到存档 |
+
+### 智能场景感知 (Auto Context)
+
+**自动检测当前操作并推荐相关 Skills/铁律：**
+
+| 操作场景 | 自动推荐 | 关联铁律 |
+|---------|---------|---------|
+| 写 Vue/React 组件 | vue2/vue3/react 模板 | IL-VUE001, IL-REACT001 |
+| 写 PRD/需求文档 | product-lifecycle | IL-PRD001 |
+| 写 API 文档 | api-design | IL-TECH002 |
+| 写数据库脚本 | database-design | IL-TECH003, IL-BE002 |
+| 写测试文件 | 测试覆盖率检查 | IL-TEST001 |
+| 写敏感配置 | 安全提醒 | IL005 |
+| 文档输出无版本 | version-locker | IL001 |
+
+**自动触发示例：**
+
+```
+用户操作: 创建 src/components/Button.vue
+系统响应:
+<HARNESS_RECOMMEND>
+📌 检测到 Vue 3 项目，已加载 Vue3 模板铁律
+</HARNESS_RECOMMEND>
+
+<HARNESS_IRON_LAW>
+⚡ IL-VUE001: Ref 需要 .value 赋值
+</HARNESS_IRON_LAW>
+```
 
 **钩子配置自定义：**
 
