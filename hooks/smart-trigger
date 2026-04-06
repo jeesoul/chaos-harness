@@ -1,0 +1,216 @@
+#!/bin/bash
+# smart-trigger - 智能触发引擎
+# 自动检测用户意图并推荐/激活对应 Skill
+
+set -e
+
+DATA_DIR="$HOME/.claude/harness"
+TRIGGER_LOG="$DATA_DIR/trigger-log.json"
+PROJECT_ROOT=""
+
+mkdir -p "$DATA_DIR"
+[[ ! -f "$TRIGGER_LOG" ]] && echo '[]' > "$TRIGGER_LOG"
+
+# 检测项目根目录
+detect_project_root() {
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        [[ -f "$dir/.git" ]] && { echo "$dir"; return; }
+        [[ -f "$dir/pom.xml" ]] && { echo "$dir"; return; }
+        [[ -f "$dir/package.json" ]] && { echo "$dir"; return; }
+        [[ -f "$dir/requirements.txt" ]] && { echo "$dir"; return; }
+        dir="$(dirname "$dir")"
+    done
+    echo "$PWD"
+}
+PROJECT_ROOT=$(detect_project_root)
+
+# === 触发词库 ===
+# 格式: "关键词|关键词2" → "推荐的skill"
+
+declare -A TRIGGER_WORDS=(
+    # 产品相关
+    "需求|PRD|prd|产品需求|需求文档"="product-lifecycle"
+    "原型|prototype|设计稿|UI设计"="product-lifecycle"
+    "用户故事|user story|功能需求"="product-lifecycle"
+    "迭代|版本规划|roadmap"="product-lifecycle"
+
+    # 项目管理
+    "扫描项目|分析项目|项目结构|项目类型"="project-scanner"
+    "版本|version|v0.1|版本号|创建版本"="version-locker"
+    "锁定版本|版本管理"="version-locker"
+
+    # Harness 相关
+    "生成Harness|创建约束|铁律配置|harness"="harness-generator"
+    "约束规则|防绕过|防偷懒"="harness-generator"
+
+    # 工作流
+    "工作流|流程|阶段|进度|下一步"="workflow-supervisor"
+    "流程管理|项目管理|Agent分配"="workflow-supervisor"
+
+    # 铁律
+    "铁律|iron law|约束|违规检测"="iron-law-enforcer"
+    "绕过检测|偷懒检测|驳回"="iron-law-enforcer"
+
+    # 自学习
+    "学习记录|自学习|优化铁律|模式发现"="learning-analyzer"
+    "复盘|经验总结|改进建议"="learning-analyzer"
+
+    # 插件
+    "插件|plugin|扩展|第三方"="plugin-manager"
+    "安装插件|配置插件"="plugin-manager"
+
+    # 钩子
+    "钩子|hook|自动检查|自动化"="hooks-manager"
+
+    # 状态
+    "状态|恢复|继续|上次进度"="project-state"
+    "保存状态|断点续传"="project-state"
+
+    # 协作
+    "评审|review|审查|协作"="collaboration-reviewer"
+    "代码审查|设计评审"="collaboration-reviewer"
+
+    # 工具
+    "工具链|安装工具|playwright|chrome"="auto-toolkit-installer"
+    "环境检测|依赖安装"="auto-toolkit-installer"
+
+    # 技术栈特定
+    "vue|Vue组件|vue开发"="vue-template"
+    "react|React组件|react开发"="react-template"
+    "java|spring|springboot"="java-spring-template"
+    "python|django|flask"="python-template"
+    "node|express|nodejs"="node-template"
+)
+
+# === 项目状态检测 ===
+
+check_project_state() {
+    local state_file="$PROJECT_ROOT/.chaos-harness/state.json"
+
+    if [[ -f "$state_file" ]]; then
+        # 有状态文件，显示快速恢复提示
+        local version=$(cat "$state_file" | jq -r '.current_version // "未设置"' 2>/dev/null)
+        local stage=$(cat "$state_file" | jq -r '.workflow.current_stage // "未开始"' 2>/dev/null)
+
+        echo ""
+        echo "<HARNESS_STATE_DETECTED>"
+        echo "📂 **检测到项目状态**"
+        echo "- 版本: $version"
+        echo "- 阶段: $stage"
+        echo "- 路径: $PROJECT_ROOT"
+        echo ""
+        echo "💡 **建议:** 说 '继续' 或使用 \`/chaos-harness:project-state\` 恢复"
+        echo "</HARNESS_STATE_DETECTED>"
+        return 0
+    fi
+
+    # 无状态，检测是否是新项目
+    check_new_project
+}
+
+check_new_project() {
+    local has_code=0
+    local has_version=0
+
+    [[ -f "$PROJECT_ROOT/pom.xml" ]] && has_code=1
+    [[ -f "$PROJECT_ROOT/package.json" ]] && has_code=1
+    [[ -f "$PROJECT_ROOT/requirements.txt" ]] && has_code=1
+    [[ -d "$PROJECT_ROOT/output" ]] && has_version=1
+
+    if [[ $has_code -eq 1 ]] && [[ $has_version -eq 0 ]]; then
+        echo ""
+        echo "<HARNESS_NEW_PROJECT>"
+        echo "🆕 **检测到新项目**"
+        echo ""
+        echo "**建议初始化步骤:**"
+        echo "1. \`/chaos-harness:project-scanner\` - 扫描项目"
+        echo "2. \`/chaos-harness:version-locker\` - 创建版本"
+        echo "3. \`/chaos-harness:harness-generator\` - 生成约束"
+        echo ""
+        echo "或直接说 '初始化项目' 一键完成"
+        echo "</HARNESS_NEW_PROJECT>"
+    fi
+}
+
+# === 技术栈检测 ===
+
+detect_tech_stack() {
+    local pkg="$PROJECT_ROOT/package.json"
+    local pom="$PROJECT_ROOT/pom.xml"
+    local req="$PROJECT_ROOT/requirements.txt"
+
+    # 前端检测
+    if [[ -f "$pkg" ]]; then
+        local deps=$(cat "$pkg")
+
+        if echo "$deps" | grep -q '"vue":.*"^2\.'; then
+            echo "<HARNESS_TECH_STACK>🎨 **Vue 2** 项目检测 → 自动加载 vue2 模板铁律</HARNESS_TECH_STACK>"
+        elif echo "$deps" | grep -q '"vue":.*"^3\.'; then
+            echo "<HARNESS_TECH_STACK>🎨 **Vue 3** 项目检测 → 自动加载 vue3 模板铁律</HARNESS_TECH_STACK>"
+        elif echo "$deps" | grep -q '"react"'; then
+            echo "<HARNESS_TECH_STACK>⚛️ **React** 项目检测 → 自动加载 react 模板铁律</HARNESS_TECH_STACK>"
+        elif echo "$deps" | grep -q '"next"'; then
+            echo "<HARNESS_TECH_STACK>▲ **Next.js** 项目检测 → 自动加载 react 模板铁律</HARNESS_TECH_STACK>"
+        elif echo "$deps" | grep -q '"express"'; then
+            echo "<HARNESS_TECH_STACK>🚀 **Express** 项目检测 → 自动加载 node-express 模板</HARNESS_TECH_STACK>"
+        fi
+    fi
+
+    # 后端检测
+    if [[ -f "$pom" ]]; then
+        if grep -q "spring-boot-starter-parent" "$pom"; then
+            local sb_version=$(grep -A1 "spring-boot-starter-parent" "$pom" | grep version | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+            if [[ "$sb_version" =~ ^2\. ]]; then
+                echo "<HARNESS_TECH_STACK>☕ **Spring Boot 2.x (Legacy)** 项目检测 → 自动加载 java-spring-legacy 模板</HARNESS_TECH_STACK>"
+            else
+                echo "<HARNESS_TECH_STACK>☕ **Spring Boot 3.x** 项目检测 → 自动加载 java-spring 模板</HARNESS_TECH_STACK>"
+            fi
+        fi
+    fi
+
+    if [[ -f "$req" ]]; then
+        if grep -q "django" "$req"; then
+            echo "<HARNESS_TECH_STACK>🐍 **Django** 项目检测 → 自动加载 python-django 模板</HARNESS_TECH_STACK>"
+        elif grep -q "flask" "$req"; then
+            echo "<HARNESS_TECH_STACK>🐍 **Flask** 项目检测 → 自动加载 python 模板</HARNESS_TECH_STACK>"
+        fi
+    fi
+}
+
+# === 用户意图检测 ===
+
+detect_user_intent() {
+    local user_input="$1"
+
+    for pattern in "${!TRIGGER_WORDS[@]}"; do
+        if echo "$user_input" | grep -qiE "$pattern"; then
+            local skill="${TRIGGER_WORDS[$pattern]}"
+            echo ""
+            echo "<HARNESS_AUTO_TRIGGER>"
+            echo "🎯 **检测到意图:** 匹配关键词 \`$pattern\`"
+            echo "📌 **自动推荐:** \`/chaos-harness:$skill\`"
+            echo ""
+            echo "💡 说 '执行' 或输入命令直接激活"
+            echo "</HARNESS_AUTO_TRIGGER>"
+            return 0
+        fi
+    done
+}
+
+# === 主执行 ===
+
+# 从环境变量或参数获取用户输入
+USER_INPUT="${USER_MESSAGE:-$1}"
+
+if [[ -n "$USER_INPUT" ]]; then
+    detect_user_intent "$USER_INPUT"
+fi
+
+# 项目状态检测
+check_project_state
+
+# 技术栈检测
+detect_tech_stack
+
+exit 0

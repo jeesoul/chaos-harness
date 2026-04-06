@@ -8,6 +8,11 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
             "async": false
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/smart-trigger\"",
+            "async": false
           }
         ]
       }

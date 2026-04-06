@@ -421,6 +421,122 @@ claude plugins marketplace remove chaos-harness
 
 ---
 
+## 智能触发（无需记住命令）
+
+**Chaos Harness 会根据你的操作自动识别意图并推荐对应功能：**
+
+### 触发词自动识别
+
+| 你说... | 系统自动推荐 |
+|--------|------------|
+| "需求"、"PRD"、"原型"、"迭代" | `product-lifecycle` |
+| "扫描项目"、"分析项目结构" | `project-scanner` |
+| "版本"、"v0.1"、"创建版本" | `version-locker` |
+| "工作流"、"流程"、"阶段" | `workflow-supervisor` |
+| "铁律"、"约束"、"违规" | `iron-law-enforcer` |
+| "学习记录"、"自学习"、"优化" | `learning-analyzer` |
+| "插件"、"扩展" | `plugin-manager` |
+| "继续"、"恢复"、"上次进度" | `project-state` |
+| "评审"、"审查" | `collaboration-reviewer` |
+
+### 文件操作自动感知
+
+| 你操作... | 系统自动响应 |
+|----------|------------|
+| 创建 `*.vue` 文件 | 检测 Vue 版本 → 加载对应模板铁律 |
+| 创建 `*.jsx/*.tsx` 文件 | 加载 React 铁律 (IL-REACT001-004) |
+| 写 `*PRD*.md` 文档 | 推荐 `product-lifecycle` |
+| 写 `*.sql` 文件 | 激活 IL-TECH003, IL-BE002 |
+| 写 `.env` 配置 | IL005 安全警告 |
+| 测试覆盖率 < 80% | 警告 + 推荐测试工具 |
+
+### 项目状态自动检测
+
+```
+启动会话时自动检测：
+├── 检测到项目状态文件 → 提示恢复进度
+├── 检测到新项目 → 提示初始化步骤
+├── 检测到 Vue/React → 自动加载模板铁律
+└── 检测到 Spring Boot → 自动加载 Java 模板
+```
+
+---
+
+## 用户自定义配置
+
+### 自定义铁律
+
+```yaml
+# ~/.claude/harness/iron-laws.yaml
+
+custom_iron_laws:
+  - id: IL-C001
+    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
+    description: "数据库变更前必须创建备份"
+    severity: critical
+    triggers:
+      - pattern: "ALTER TABLE|DROP TABLE"
+        action: block
+    rebuttal: |
+      数据库变更存在风险，请先创建备份
+```
+
+### 自定义模板
+
+```bash
+# 创建自定义模板
+mkdir -p ~/.claude/harness/templates/my-template
+
+# Harness 生成时自动发现
+/chaos-harness:harness-generator
+# 会列出: java-spring, vue3, react, my-template, ...
+```
+
+### 自定义触发规则
+
+```yaml
+# ~/.claude/harness/triggers.yaml
+
+custom_triggers:
+  file_patterns:
+    - pattern: "*.graphql"
+      recommend: "api-design"
+      message: "检测到 GraphQL，建议遵循 API 规范"
+
+  keywords:
+    - words: ["性能优化", "慢查询"]
+      recommend: "performance-analysis"
+```
+
+### 命令别名
+
+```yaml
+# ~/.claude/harness/custom-commands.yaml
+
+aliases:
+  "scan": "project-scanner"
+  "init":
+    steps:
+      - "project-scanner"
+      - "version-locker"
+      - "harness-generator"
+    message: "项目初始化完成"
+```
+
+### 铁律优先级
+
+```
+用户自定义铁律 (IL-C001-IL-C099)
+        ↓
+模板铁律 (IL-VUE001, IL-REACT001, ...)
+        ↓
+系统核心铁律 (IL001-IL005) ← 最高优先级，不可覆盖
+```
+
+详细配置参考：[用户自定义配置指南](templates/user-custom-config.md)
+
+---
+
 ## 自动化工具链
 
 Chaos Harness 支持完整的自动化测试工具链，通过 `/chaos-harness:auto-toolkit-installer` 自动检测并安装。
