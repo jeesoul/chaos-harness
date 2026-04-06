@@ -1,6 +1,6 @@
 ---
 name: workflow-supervisor
-description: 当用户请求创建工作流、管理工作流阶段、查询工作流状态时使用此skill。触发词：工作流、阶段、流程管理、项目规模
+description: 工作流监督器。**当用户提到流程、阶段、进度时自动激活**。触发词：工作流、阶段、流程管理、项目规模、进度、下一步
 ---
 
 # 工作流监督器 (Workflow Supervisor)
@@ -326,3 +326,24 @@ function detectWorkflowLaziness(state, context) {
 | IL001 | 大型项目不允许跳过任何阶段 |
 | IL003 | 阶段完成需要验证证据 |
 | IL004 | 更改工作流配置需要用户同意 |
+
+## 效果追踪
+
+**阶段完成后更新效果日志：**
+
+使用 `shared/helpers.md#Update-Effectiveness-Log` 写入：
+```
+output/{version}/effectiveness-log.md
+```
+
+统计内容：
+- 铁律触发次数
+- 防绕过触发次数
+- 偷懒模式检测次数
+- 阶段效果评分
+
+**自学习闭环：**
+1. 阶段完成 → Update-Effectiveness-Log
+2. 效果数据 → learning-analyzer 分析
+3. 发现问题 → 优化工作流
+4. 下次运行 → 更高效

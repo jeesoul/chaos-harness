@@ -1,6 +1,6 @@
 ---
 name: harness-generator
-description: 当用户请求生成Harness、创建约束规则、配置铁律时使用此skill。触发词：生成Harness、创建约束、铁律配置、防绕过规则
+description: Harness 生成器。**当检测到新项目或首次运行时自动建议生成约束**。触发词：生成Harness、创建约束、铁律配置、防绕过规则、项目约束
 ---
 
 # Harness 生成器 (Harness Generator)

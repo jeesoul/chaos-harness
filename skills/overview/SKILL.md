@@ -64,8 +64,12 @@ Claude: [创建 IL-C002] 已添加自定义铁律
 | `harness-generator` | 生成 Harness、创建约束 | 生成铁律和防绕过规则 |
 | `workflow-supervisor` | 工作流、阶段管理 | 12阶段工作流管理 |
 | `iron-law-enforcer` | **始终激活** | 铁律执行、支持用户自定义 |
+| `learning-analyzer` | 学习记录≥5条、自学习分析 | 发现失败模式、优化铁律 |
 | `plugin-manager` | 插件管理、配置 | 管理外部插件和铁律扩展 |
-| `collaboration-reviewer` | 评审、审查、协作 | 多Agent协作评审、插件协助、用户确认 |
+| `hooks-manager` | 钩子管理、日志查看 | 管理自学习钩子系统 |
+| `project-state` | 状态恢复、继续上次 | 会话持久化与恢复 |
+| `collaboration-reviewer` | 评审、审查、协作 | 多Agent协作评审 |
+| `auto-toolkit-installer` | 工具链检测、安装 | 自动安装依赖工具 |
 
 ## 插件系统
 

@@ -18,15 +18,31 @@ description: 自动检测并安装 Chaos Harness 依赖的自动化工具链 (we
 
 ## 使用方法
 
+### 快速检测
+
 ```bash
-# 检测当前环境
-/chaos-harness:auto-toolkit-installer check
+# 使用检测脚本
+./scripts/detect-toolkit.sh          # macOS/Linux
+scripts\detect-toolkit.bat           # Windows
+```
 
-# 安装缺失工具 (自动使用镜像)
-/chaos-harness:auto-toolkit-installer install
+### 安装工具
 
-# 仅安装特定工具
-/chaos-harness:auto-toolkit-installer install skill-creator
+```bash
+# 安装所有缺失工具
+./scripts/install-toolkit.sh install          # macOS/Linux (官方源)
+./scripts/install-toolkit.sh install --mirror # macOS/Linux (镜像加速)
+
+scripts\install-toolkit.bat install           # Windows
+scripts\install-toolkit.bat install --mirror  # Windows (显示镜像方法)
+```
+
+### Claude Code 内调用
+
+```
+你: 检测工具链状态
+你: 安装缺失的工具
+你: 使用镜像安装工具链
 ```
 
 ## 镜像加速配置

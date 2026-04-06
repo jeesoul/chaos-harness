@@ -381,3 +381,24 @@ accepts_constraints:
 ```
 
 如果插件拒绝接受核心铁律，将被拒绝加载。
+
+## 学习记录
+
+**每次铁律检查后记录学习内容：**
+
+使用 `shared/helpers.md#Log-Learning-Entry` 写入：
+```
+output/{version}/learning-log.json
+```
+
+记录内容：
+- 铁律触发类型 (iron_law_violation)
+- 违规上下文
+- 教训总结
+- 预防措施
+
+**自学习闭环：**
+1. 铁律检查 → Log-Learning-Entry
+2. 定期分析 → learning-analyzer skill
+3. 发现模式 → 优化铁律
+4. 应用改进 → 效果追踪
