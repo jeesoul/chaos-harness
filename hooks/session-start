@@ -1,8 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 # session-start - SessionStart hook script
 # Injects iron laws and restores project state at session start
-
-set -e
 
 # Data directories
 GLOBAL_DATA_DIR="$HOME/.claude/harness"
@@ -14,29 +12,29 @@ PLUGIN_LOG="$GLOBAL_DATA_DIR/plugin-log.json"
 mkdir -p "$GLOBAL_DATA_DIR"
 
 # Initialize log files if they don't exist
-if [[ ! -f "$IRON_LAW_LOG" ]]; then
-    echo '[]' > "$IRON_LAW_LOG"
+if [ ! -f "$IRON_LAW_LOG" ]; then
+    printf '[]\n' > "$IRON_LAW_LOG"
 fi
 
-if [[ ! -f "$PLUGIN_LOG" ]]; then
-    echo '[]' > "$PLUGIN_LOG"
+if [ ! -f "$PLUGIN_LOG" ]; then
+    printf '[]\n' > "$PLUGIN_LOG"
 fi
 
 # Detect project root (look for common project markers)
 detect_project_root() {
-    local dir="$PWD"
-    while [[ "$dir" != "/" ]]; do
-        if [[ -f "$dir/.chaos-harness/state.json" ]] || \
-           [[ -f "$dir/pom.xml" ]] || \
-           [[ -f "$dir/package.json" ]] || \
-           [[ -f "$dir/requirements.txt" ]] || \
-           [[ -d "$dir/.git" ]]; then
-            echo "$dir"
+    dir="$PWD"
+    while [ "$dir" != "/" ]; do
+        if [ -f "$dir/.chaos-harness/state.json" ] || \
+           [ -f "$dir/pom.xml" ] || \
+           [ -f "$dir/package.json" ] || \
+           [ -f "$dir/requirements.txt" ] || \
+           [ -d "$dir/.git" ]; then
+            printf '%s\n' "$dir"
             return 0
         fi
         dir="$(dirname "$dir")"
     done
-    echo "$PWD"
+    printf '%s\n' "$PWD"
 }
 
 PROJECT_ROOT=$(detect_project_root)
@@ -45,7 +43,7 @@ PROJECT_STATE_FILE="$PROJECT_STATE_DIR/state.json"
 
 # Check if project state exists
 check_project_state() {
-    if [[ -f "$PROJECT_STATE_FILE" ]]; then
+    if [ -f "$PROJECT_STATE_FILE" ]; then
         return 0  # State exists
     fi
     return 1  # No state
@@ -87,49 +85,51 @@ IRON_LAWS_CONTEXT
 
 # Project state recovery
 if check_project_state; then
-    echo ""
-    echo "<CHAOS_HARNESS_STATE_RECOVERY>"
-    echo "项目状态文件已检测到: $PROJECT_STATE_FILE"
-    echo ""
-    echo "**建议操作:**"
-    echo "使用 /chaos-harness:project-state 或说 '继续上次进度' 恢复会话。"
-    echo ""
+    printf '\n'
+    printf '<CHAOS_HARNESS_STATE_RECOVERY>\n'
+    printf '项目状态文件已检测到: %s\n' "$PROJECT_STATE_FILE"
+    printf '\n'
+    printf '**建议操作:**\n'
+    printf '使用 /chaos-harness:project-state 或说 '\''继续上次进度'\'' 恢复会话。\n'
+    printf '\n'
 
-    # Extract key info for quick display
-    if command -v jq &> /dev/null; then
+    # Extract key info for quick display (if jq available)
+    if command -v jq >/dev/null 2>&1; then
         CURRENT_VERSION=$(cat "$PROJECT_STATE_FILE" | jq -r '.current_version // "未设置"')
         CURRENT_STAGE=$(cat "$PROJECT_STATE_FILE" | jq -r '.workflow.current_stage // "未开始"')
         LAST_SESSION=$(cat "$PROJECT_STATE_FILE" | jq -r '.last_session // "N/A"')
         PROJECT_NAME=$(cat "$PROJECT_STATE_FILE" | jq -r '.project_name // "Unknown"')
 
-        echo "**快速状态:**"
-        echo "- 项目: $PROJECT_NAME"
-        echo "- 版本: $CURRENT_VERSION"
-        echo "- 阶段: $CURRENT_STAGE"
-        echo "- 上次会话: $LAST_SESSION"
+        printf '**快速状态:**\n'
+        printf '- 项目: %s\n' "$PROJECT_NAME"
+        printf '- 版本: %s\n' "$CURRENT_VERSION"
+        printf '- 阶段: %s\n' "$CURRENT_STAGE"
+        printf '- 上次会话: %s\n' "$LAST_SESSION"
     fi
 
-    echo "</CHAOS_HARNESS_STATE_RECOVERY>"
+    printf '</CHAOS_HARNESS_STATE_RECOVERY>\n'
 else
-    echo ""
-    echo "<CHAOS_HARNESS_NEW_PROJECT>"
-    echo "未检测到项目状态文件。"
-    echo ""
-    echo "这是一个新项目或首次使用 Chaos Harness。"
-    echo ""
-    echo "**建议操作:**"
-    echo "1. 使用 /chaos-harness:project-scanner 扫描项目"
-    echo "2. 使用 /chaos-harness:version-locker 创建版本"
-    echo "3. 使用 /chaos-harness:harness-generator 生成约束"
-    echo ""
-    echo "或说 '开始使用 chaos-harness' 进行初始化。"
-    echo "</CHAOS_HARNESS_NEW_PROJECT>"
+    printf '\n'
+    printf '<CHAOS_HARNESS_NEW_PROJECT>\n'
+    printf '未检测到项目状态文件。\n'
+    printf '\n'
+    printf '这是一个新项目或首次使用 Chaos Harness。\n'
+    printf '\n'
+    printf '**建议操作:**\n'
+    printf '1. 使用 /chaos-harness:project-scanner 扫描项目\n'
+    printf '2. 使用 /chaos-harness:version-locker 创建版本\n'
+    printf '3. 使用 /chaos-harness:harness-generator 生成约束\n'
+    printf '\n'
+    printf '或说 '\''开始使用 chaos-harness'\'' 进行初始化。\n'
+    printf '</CHAOS_HARNESS_NEW_PROJECT>\n'
 fi
 
 # Log session start
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 SESSION_ID=$(date +%s)
 
-echo "$(cat "$PLUGIN_LOG")" | jq --arg ts "$TIMESTAMP" --arg sid "$SESSION_ID" --arg root "$PROJECT_ROOT" '. += [{"event": "session_start", "timestamp": $ts, "session_id": $sid, "project_root": $root}]' > "$PLUGIN_LOG"
+if command -v jq >/dev/null 2>&1; then
+    printf '%s\n' "$(cat "$PLUGIN_LOG")" | jq --arg ts "$TIMESTAMP" --arg sid "$SESSION_ID" --arg root "$PROJECT_ROOT" '. += [{"event": "session_start", "timestamp": $ts, "session_id": $sid, "project_root": $root}]' > "$PLUGIN_LOG"
+fi
 
 exit 0

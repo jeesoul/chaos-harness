@@ -6,12 +6,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
             "async": false
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/smart-trigger\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/smart-trigger\"",
             "async": false
           }
         ]
@@ -23,18 +23,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/iron-law-check\" write",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/iron-law-check\" write",
             "async": false
-          }
-        ]
-      },
-      {
-        "matcher": "Glob|Grep|Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/workflow-track\" query",
-            "async": true
           }
         ]
       }
@@ -45,12 +35,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/learning-update\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/learning-update\"",
             "async": true
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/context-aware-trigger\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/context-aware-trigger\"",
             "async": true
           }
         ]
@@ -62,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/stop\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/stop\"",
             "async": false
           }
         ]
@@ -74,7 +64,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact\"",
             "async": false
           }
         ]
