@@ -654,6 +654,193 @@ claude plugins install webapp-testing@anthropics/skills
 
 ---
 
+## 用户角色指南
+
+Chaos Harness 支持**多角色协作**，每个角色可选择性使用相关阶段和功能。
+
+### 角色与阶段映射
+
+**Chaos Harness 支持软件行业全角色覆盖：**
+
+| 角色 | 主导阶段 | 核心关注点 | 推荐命令 |
+|------|---------|-----------|---------|
+| **产品经理** | P01, P02, P03, P10 | 需求、PRD、原型、迭代 | `product-lifecycle` |
+| **售前工程师** | P01, P02, P03 | 售前方案、技术白皮书、POC | `product-lifecycle` |
+| **解决方案架构师** | P04, P05 | 技术方案、方案设计 | `harness-generator` |
+| **UI/UX 设计师** | P03 | 原型设计、交互流程 | `product-lifecycle P03` |
+| **系统架构师** | P04, P05 | 架构设计、技术选型 | `harness-generator` |
+| **前端开发** | P06 | 组件开发、页面实现 | `vue3/react` 模板 |
+| **后端开发** | P07 | API 开发、业务逻辑 | `java-spring/node` 模板 |
+| **全栈开发** | P06, P07 | 前后端开发 | 多模板 |
+| **测试工程师** | P08 | E2E 测试、性能测试、安全测试 | `auto-toolkit-installer` |
+| **运维工程师** | P09 | 发布部署、监控告警 | `workflow-supervisor` |
+| **项目经理** | P05, P08, P09 | 进度管理、风险控制 | `workflow-supervisor` |
+| **技术文档工程师** | P11 | 技术文档、API 文档、用户手册 | `product-lifecycle` |
+
+### 售前工程师使用指南
+
+```
+场景：售前方案准备
+────────────────────────────────────────
+P01 需求收集
+├── 输入：客户需求、行业标准、竞品分析
+├── 输出：需求清单、痛点分析
+└── 支持：需求池模板
+
+P02 方案设计
+├── 输出：技术白皮书、解决方案
+├── 模板：解决方案模板
+└── 自动生成：技术优势对比表
+
+P03 原型演示
+├── 输出：POC 原型、演示流程
+├── 工具：ui-ux-pro-max
+└── 支持：演示脚本生成
+
+售前文档铁律
+├── IL-PRESALE001: 方案必须有竞品对比
+├── IL-PRESALE002: 技术白皮书必须包含案例
+└── IL-PRESALE003: 报价单需要审批
+```
+
+### 技术文档工程师使用指南
+
+```
+场景：技术文档编写
+────────────────────────────────────────
+文档类型支持
+├── API 文档：OpenAPI/Swagger 自动生成
+├── 用户手册：功能说明 + 操作指南
+├── 运维手册：部署 + 配置 + 故障排查
+├── 架构文档：系统架构 + 设计决策
+└── 变更日志：版本历史 + 升级指南
+
+铁律保护
+├── IL-DOC001: API 文档必须同步代码
+├── IL-DOC002: 用户手册必须有截图
+└── IL-DOC003: 变更日志必须记录 Breaking Changes
+
+自动化工具
+└── /chaos-harness:auto-toolkit-installer
+```
+
+### 产品经理使用指南
+
+```
+场景：新功能规划
+────────────────────────────────────────
+P01 需求收集
+├── 输入：用户访谈、竞品分析、业务目标
+├── 输出：需求池
+└── 命令：/chaos-harness:product-lifecycle
+
+P02 需求分析
+├── 输入：需求池
+├── 输出：PRD 文档、MVP 范围
+└── 模板：templates/product-lifecycle/prd-template.md
+
+P03 原型设计
+├── 输入：PRD
+├── 输出：原型、交互流程
+└── 工具：ui-ux-pro-max（自动推荐）
+
+P10 迭代优化
+├── 输入：发布数据、用户反馈
+├── 输出：迭代规划
+└── 命令：/chaos-harness:learning-analyzer
+```
+
+### 测试工程师使用指南
+
+```
+场景：质量保障
+────────────────────────────────────────
+P08 集成测试
+├── E2E 测试：webapp-testing + Playwright
+├── API 测试：接口验证、边界测试
+├── 性能测试：负载测试、压力测试
+└── 安全测试：漏洞扫描、渗透测试
+
+铁律保护
+├── IL-TEST001: E2E 必须覆盖核心流程
+├── IL-TEST002: 性能测试必须有基准
+└── IL-TEST003: 安全漏洞必须修复
+
+自动化工具
+└── /chaos-harness:auto-toolkit-installer
+```
+
+### 开发者使用指南
+
+```
+场景：功能开发
+────────────────────────────────────────
+自动检测技术栈
+├── Vue 2/3 项目 → 自动加载 vue 模板铁律
+├── React 项目 → 自动加载 react 模板铁律
+├── Spring Boot → 自动加载 java-spring 模板
+└── Django/Flask → 自动加载 python 模板
+
+铁律自动激活
+├── IL-VUE001: Props 只读
+├── IL-REACT001: 禁止直接修改 state
+└── IL-BE001: API 必须有版本控制
+
+自学习闭环
+└── 每次修复 → 自动记录 → learning-analyzer 分析
+```
+
+### 角色灵活配置
+
+用户可以通过配置文件自定义角色和阶段映射：
+
+```yaml
+# ~/.claude/harness/role-config.yaml
+
+# 自定义角色
+roles:
+  tech_lead:
+    name: "技术负责人"
+    stages: [P04, P05, P08, P09]
+    iron_laws: [IL-TECH001, IL-PLAN001, IL-TEST001]
+    
+  full_stack_dev:
+    name: "全栈开发"
+    stages: [P06, P07, P08]
+    templates: [vue3, java-spring]
+    
+# 阶段权限配置
+stage_permissions:
+  P02:  # 需求分析
+    can_edit: [product_manager, tech_lead]
+    can_view: [all]
+    
+  P04:  # 技术方案
+    can_edit: [architect, tech_lead]
+    can_view: [all]
+```
+
+### 多角色协作示例
+
+```
+项目：电商后台系统
+────────────────────────────────────────
+P01 → 产品经理：收集需求，创建需求池
+P02 → 产品经理：编写 PRD，定义 MVP
+P03 → 设计师：设计原型，评审交互
+P04 → 架构师：技术方案，API 设计
+P05 → 项目经理：任务分解，里程碑规划
+P06 → 前端开发：Vue3 组件开发
+P07 → 后端开发：Spring Boot API 开发
+P08 → 测试工程师：E2E + API 测试
+P09 → 运维工程师：部署上线
+P10 → 产品经理：数据分析，迭代规划
+
+每个阶段完成后自动通知下一阶段角色
+```
+
+---
+
 ## MCP Server 支持
 
 Chaos Harness 提供 MCP (Model Context Protocol) Server，支持外部系统调用核心能力。
