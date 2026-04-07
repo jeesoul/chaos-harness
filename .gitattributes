@@ -2,3 +2,5 @@
 # CRLF causes YAML frontmatter parsing errors and repeated skill loading
 skills/**/*.md text eol=lf
 *.md text eol=crlf
+skills/**/SKILL.md text eol=crlf
+commands/*.md text eol=crlf
