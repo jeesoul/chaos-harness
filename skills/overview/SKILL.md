@@ -9,12 +9,13 @@ If you were dispatched as a subagent to execute a specific task, skip this skill
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
-**Iron Laws are NON-NEGOTIABLE.**
+**铁律不可协商 (Iron Laws are NON-NEGOTIABLE)**
 
 核心铁律不可禁用，但用户可以新增自定义铁律。
 所有插件必须在 Harness 约束下运行。
 
-**DO NOT invoke the Skill tool again after loading this skill.**
+**加载此 skill 后，必须完整展示下方的铁律概览和可用 skills 列表。**
+**After loading this skill, you MUST present the complete Iron Laws overview and available skills list below.**
 </EXTREMELY-IMPORTANT>
 
 # Chaos Harness (万物入侵)
