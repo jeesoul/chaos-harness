@@ -1,6 +1,6 @@
 ---
 name: agent-team-orchestrator
-description: Agent Team 编排器。**自动调度多 Agent 并行工作**。在评审、开发阶段自动触发，负责任务分配、通信协调、进度监控、偷懒鞭策。触发词：并行开发、多agent、团队协作、分配任务
+description: "Agent Team 编排器。**自动调度多 Agent 并行工作**。在评审、开发阶段自动触发，负责任务分配、通信协调、进度监控、偷懒鞭策。触发词：并行开发、多agent、团队协作、分配任务"
 ---
 
 <EXTREMELY-IMPORTANT>

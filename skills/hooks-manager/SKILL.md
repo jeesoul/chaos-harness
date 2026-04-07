@@ -1,6 +1,6 @@
 ---
 name: hooks-manager
-description: 管理和配置Chaos Harness钩子系统。触发词：钩子、hooks、自纠正、自学习
+description: "管理和配置Chaos Harness钩子系统。触发词：钩子、hooks、自纠正、自学习"
 ---
 
 # Hooks Manager (钩子管理器)
