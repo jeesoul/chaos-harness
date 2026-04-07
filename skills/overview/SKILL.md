@@ -1,6 +1,6 @@
 ---
 name: overview
-description: "Chaos Harness system overview - shows Iron Laws, available skills, and plugin architecture. Use when user explicitly asks about chaos-harness capabilities."
+description: "Chaos Harness 系统概览 - 展示铁律、可用技能和插件架构。当用户明确询问 chaos-harness 功能时使用。"
 license: MIT
 ---
 
