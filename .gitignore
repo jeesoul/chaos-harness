@@ -11,6 +11,11 @@ coverage/
 docs/superpowers/specs/
 docs/superpowers/plans/
 
+# 设计思想和审计文档不提交
+docs/state-and-association-audit.md
+docs/*审计*.md
+docs/*设计*.md
+
 # CLAUDE.md is local-only, NOT for public repo
 CLAUDE.md
 
