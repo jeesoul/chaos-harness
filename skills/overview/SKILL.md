@@ -3,10 +3,6 @@ name: overview
 description: "Use when starting any conversation - establishes the Iron Laws that govern all behavior. 支持用户自定义铁律和插件扩展。触发词：扫描项目、生成Harness、工作流、铁律、偷懒检测、插件管理"
 ---
 
-<IMMEDIATE-ACTION>
-加载此 skill 后，立即展示 Chaos Harness 概览和可用功能。不要等待用户进一步指示。
-</IMMEDIATE-ACTION>
-
 <SUBAGENT-STOP>
 If you were dispatched as a subagent to execute a specific task, skip this skill.
 </SUBAGENT-STOP>
@@ -18,12 +14,13 @@ If you were dispatched as a subagent to execute a specific task, skip this skill
 所有插件必须在 Harness 约束下运行。
 
 **DO NOT invoke the Skill tool again after loading this skill.**
-此 skill 只加载一次。已加载后不要再调用 Skill(chaos-harness:overview)。
 </EXTREMELY-IMPORTANT>
 
 # Chaos Harness (万物入侵)
 
 > **Chaos demands order. Harness provides it.**
+
+**After loading this skill, present the overview of Iron Laws and available sub-skills below.**
 
 ## 核心铁律
 
