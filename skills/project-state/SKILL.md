@@ -1,6 +1,7 @@
 ---
 name: project-state
 description: "项目状态持久化与恢复。触发词：状态恢复、继续上次、项目进度、会话恢复、更新状态"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

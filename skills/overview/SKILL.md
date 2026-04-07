@@ -1,6 +1,7 @@
 ---
 name: overview
 description: "Chaos Harness system overview - shows Iron Laws, available skills, and plugin architecture. Use when user explicitly asks about chaos-harness capabilities."
+license: MIT
 ---
 
 <SUBAGENT-STOP>

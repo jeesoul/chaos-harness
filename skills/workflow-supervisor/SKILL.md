@@ -1,6 +1,7 @@
 ---
 name: workflow-supervisor
 description: "工作流监督器。**当用户提到流程、阶段、进度时自动激活**。触发词：工作流、阶段、流程管理、项目规模、进度、下一步"
+license: MIT
 ---
 
 # 工作流监督器 (Workflow Supervisor)

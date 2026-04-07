@@ -1,6 +1,7 @@
 ---
 name: auto-toolkit-installer
 description: "自动检测并安装 Chaos Harness 依赖的自动化工具链 (webapp-testing, skill-creator, Chrome DevTools MCP)，支持镜像加速"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

@@ -1,6 +1,7 @@
 ---
 name: plugin-manager
 description: "管理和配置插件、铁律扩展。触发词：插件管理、配置插件、添加铁律、自定义铁律"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

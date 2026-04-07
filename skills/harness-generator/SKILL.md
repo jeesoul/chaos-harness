@@ -1,6 +1,7 @@
 ---
 name: harness-generator
 description: "Harness 生成器。**当检测到新项目或首次运行时自动建议生成约束**。触发词：生成Harness、创建约束、铁律配置、防绕过规则、项目约束"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

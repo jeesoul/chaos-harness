@@ -1,6 +1,7 @@
 ---
 name: collaboration-reviewer
 description: "多Agent协作评审系统。**由 agent-team-orchestrator 自动调度**。支持评审阶段的自动启动、多视角评审、Agent 间讨论、结果汇总。触发词：评审、审查、协作、多人讨论"
+license: MIT
 ---
 
 

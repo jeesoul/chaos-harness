@@ -1,6 +1,7 @@
 ---
 name: learning-analyzer
 description: "分析历史学习记录，发现失败模式，生成铁律优化建议。**自动触发**：当 learning-log.json 有 5+ 条记录时，或用户说"分析学习记录"、"优化铁律"、"自学习"。触发词：学习分析、模式发现、铁律优化、自学习、闭环"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

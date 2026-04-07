@@ -1,6 +1,7 @@
 ---
 name: auto-context
 description: "智能场景感知。**自动检测当前操作并推荐相关 Skills/铁律**。始终激活的后台助手"
+license: MIT
 ---
 
 # 智能场景感知 (Auto Context)

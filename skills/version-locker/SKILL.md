@@ -1,6 +1,7 @@
 ---
 name: version-locker
 description: "版本锁定器。**在任何文档生成前自动检查版本锁定状态**。触发词：创建版本、锁定版本、版本管理、v0.1、版本号、版本目录"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

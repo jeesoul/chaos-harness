@@ -1,6 +1,7 @@
 ---
 name: java-checkstyle
 description: "Java代码风格强制规范。当生成或修改Java代码时自动应用，包含命名、注释、Controller接口、MyBatis-Plus规范。IL-JAVA001-004强制执行，无例外。"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

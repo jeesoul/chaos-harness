@@ -1,6 +1,7 @@
 ---
 name: project-scanner
 description: "项目扫描器。**当用户提到项目类型、技术栈、环境检测时自动触发**。触发词：扫描项目、分析项目、项目类型、技术栈检测、项目结构、环境状态"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

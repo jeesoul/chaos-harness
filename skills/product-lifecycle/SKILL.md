@@ -1,6 +1,7 @@
 ---
 name: product-lifecycle
 description: "产品全生命周期管理。**从需求到发布的完整研发流程 Harness**。触发词：PRD、需求分析、原型设计、研发规划、产品迭代、发布流程、研发流程"
+license: MIT
 ---
 
 <STATE-WRITE-REQUIRED>

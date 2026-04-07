@@ -1,6 +1,7 @@
 ---
 name: iron-law-enforcer
 description: "铁律执行器 - 始终激活，不可禁用。支持用户自定义新增铁律。触发词：铁律、约束、违规、绕过"
+license: MIT
 ---
 
 <SUBAGENT-STOP>
