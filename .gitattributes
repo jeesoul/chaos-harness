@@ -1,0 +1,4 @@
+# Force CRLF for SKILL.md files on Windows
+# This ensures Skill tool can parse frontmatter correctly
+skills/**/*.md text eol=crlf
+*.md text eol=crlf
