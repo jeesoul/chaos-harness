@@ -219,6 +219,84 @@ output/{version}/
 - **IL-AUTO-002**: 分析结果必须有明确的行动建议
 - **IL-AUTO-003**: 高优先级建议必须在下一 Session 前处理
 
+## 自动触发机制
+
+### Session 启动检测
+
+session-start hook 会检测 learning-log.json 数量：
+
+```
+IF learning-log 记录数 >= 5 THEN
+    OUTPUT: <CHAOS_HARNESS_LEARNING_TRIGGER>
+    MESSAGE: "检测到学习记录 N 条，建议运行 learning-analyzer"
+END IF
+```
+
+### 自动分析触发条件
+
+| 条件 | 自动动作 |
+|------|---------|
+| learning-log ≥ 5 条 | session-start 提示用户 |
+| learning-log ≥ 20 条 | **强制提示** + IL-AUTO-001 触发 |
+| 用户说"自适应 Harness" | 自动先检查 analysis-report |
+| 用户说"优化铁律" | 立即执行分析 |
+
+### 自动应用规则
+
+**高优先级建议自动应用：**
+
+```
+IF 建议优先级 = 高 AND 用户未明确拒绝 THEN
+    AUTO_APPLY:
+    1. 新增铁律 → .chaos-harness/iron-laws.yaml
+    2. 强化检查 → hooks/iron-law-check
+    3. 记录应用 → output/{version}/applied-optimizations.json
+END IF
+```
+
+**中优先级建议需确认：**
+
+```
+IF 建议优先级 = 中 THEN
+    ASK_USER: "是否应用此建议？"
+    IF 用户确认 THEN AUTO_APPLY END IF
+END IF
+```
+
+## 自学习闭环（完整流程）
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   自学习闭环（自动执行）                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Session 启动 → session-start hook → 检测 learning-log 数量 │
+│       │                                                     │
+│       ↓ ≥ 5 条                                              │
+│                                                             │
+│  提示用户 → 用户调用 learning-analyzer                       │
+│       │                                                     │
+│       ↓                                                     │
+│                                                             │
+│  分析学习记录 → 发现模式 → 生成建议                          │
+│       │                                                     │
+│       ├──────────────────────────────────┐                  │
+│       │                                  │                  │
+│       ↓ 高优先级                         ↓ 中优先级         │
+│                                                             │
+│  自动应用优化                   用户确认后应用               │
+│       │                                  │                  │
+│       ↓                                  ↓                  │
+│                                                             │
+│  harness-generator --adaptive ←─── 读取 analysis-report     │
+│       │                                                     │
+│       ↓                                                     │
+│                                                             │
+│  自适应生成 Harness → 应用优化铁律 → 下次 Session 生效       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 *Learning is the only sustainable competitive advantage.*

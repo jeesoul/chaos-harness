@@ -279,6 +279,104 @@ digraph harness_gen {
 | 扫描结果是否存在 | 执行项目扫描 |
 | 输出路径是否正确 | 纠正到版本目录 |
 
+## 自适应 Harness (--adaptive)
+
+**核心闭环：从历史学习自动优化 Harness 配置**
+
+### Step 0: 检查学习分析报告（adaptive 模式）
+
+当用户请求 `--adaptive` 或 `自适应生成 Harness` 时：
+
+1. 使用 Read 工具检查 `output/{version}/analysis-report.md` 是否存在
+2. 如果存在，读取优化建议
+3. 如果不存在，检查 `~/.claude/harness/learning-log.json` 记录数量
+4. 如果 learning-log 记录 ≥ 5 条，提示用户先运行 learning-analyzer
+
+### 自适应流程
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    自适应 Harness 闭环                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  learning-log.json → learning-analyzer → analysis-report    │
+│        ↑                                           │        │
+│        │                                           ↓        │
+│  应用优化 ← harness-generator --adaptive ← 读取建议          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 自适应规则应用
+
+从 analysis-report.md 中读取建议，按优先级应用：
+
+| 优先级 | 应用规则 |
+|--------|---------|
+| 高优先级 | 自动新增铁律到 iron-laws.yaml |
+| 高优先级 | 自动强化 hook 检查脚本 |
+| 中优先级 | 提示用户确认后应用 |
+| 待观察 | 仅记录，不自动应用 |
+
+### 自适应生成示例
+
+```yaml
+# 自适应生成的 Harness（基于历史学习）
+
+identity:
+  name: "项目名称"
+  type: java-spring
+  adaptive: true  # 标记为自适应生成
+  based_on_analysis: "output/v0.1/analysis-report.md"
+
+iron_laws:
+  # 核心铁律（固定）
+  - id: IL001
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    # ...
+
+  # 自适应新增铁律（基于历史违规）
+  - id: IL-C003
+    rule: "NO COMPLETION WITHOUT TEST OUTPUT"
+    description: "完成声明必须附带测试命令输出"
+    severity: critical
+    adaptive_added: true
+    reason: "IL003 违规 50% 都是'完成无验证'"
+
+anti_bypass:
+  # 自适应强化的防绕过规则
+  - id: "adaptive-001"
+    pattern: "完成了|搞定了|done"
+    iron_law_ref: "IL-C003"
+    rebuttal: |
+      你说完成了，测试输出在哪？
+      根据历史分析，50% 的完成声明没有验证证据。
+      铁律 IL-C003 要求必须提供测试命令输出。
+    adaptive_added: true
+```
+
+### 自适应触发条件
+
+| 条件 | 触发 |
+|------|------|
+| learning-log ≥ 5 条 | 提示用户运行 learning-analyzer |
+| analysis-report 存在 | 自动读取建议 |
+| analysis-report 建议高优先级 | 自动应用 |
+| 用户请求 `--adaptive` | 强制进入自适应模式 |
+
+### 自适应命令
+
+```
+# 自适应生成 Harness（推荐）
+你: 生成自适应 Harness
+你: 生成 Harness --adaptive
+你: 用历史学习优化 Harness
+
+# 查看自适应建议
+你: 查看学习分析报告
+你: 有什么优化建议
+```
+
 ## 输出要求
 
 1. **必须** 输出到版本目录下的 `Harness/` 子目录
@@ -286,3 +384,4 @@ digraph harness_gen {
 3. **必须** 包含防绕过规则
 4. **必须** 包含偷懒模式检测配置
 5. **应该** 根据项目类型选择合适模板
+6. **自适应模式** 必须读取并应用 analysis-report 建议

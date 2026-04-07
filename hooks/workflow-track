@@ -1,7 +1,17 @@
 #!/bin/sh
 # workflow-track - Track workflow progress
+# Records workflow events for state recovery
 
 DATA_DIR="$HOME/.claude/harness"
+WORKFLOW_LOG="$DATA_DIR/workflow-log.json"
 mkdir -p "$DATA_DIR"
+
+[ ! -f "$WORKFLOW_LOG" ] && printf '[]\n' > "$WORKFLOW_LOG"
+
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+if command -v jq >/dev/null 2>&1; then
+    printf '%s\n' "$(cat "$WORKFLOW_LOG")" | jq --arg ts "$TIMESTAMP" --arg event "tool_use" '. += [{"event": $event, "timestamp": $ts}]' > "$WORKFLOW_LOG"
+fi
 
 exit 0

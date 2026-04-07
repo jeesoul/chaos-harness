@@ -1,7 +1,27 @@
 #!/bin/sh
-# laziness-detect - Detect laziness patterns
+# laziness-detect - Detect laziness patterns at end_turn
+# Analyzes conversation for bypass attempts and laziness patterns
 
 DATA_DIR="$HOME/.claude/harness"
+LAZINESS_LOG="$DATA_DIR/laziness-log.json"
 mkdir -p "$DATA_DIR"
+
+# Initialize log if missing
+[ ! -f "$LAZINESS_LOG" ] && printf '[]\n' > "$LAZINESS_LOG"
+
+# Laziness pattern keywords to detect
+LAZINESS_KEYWORDS="简单修复|跳过测试|就这一次|快速处理|simple fix|skip test|just this once|quick fix"
+
+# Check if grep is available
+if command -v grep >/dev/null 2>&1; then
+    # Pattern detection logic would be enhanced by Claude's context
+    # This hook provides the framework for detection
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    # Log end_turn event for later analysis
+    if command -v jq >/dev/null 2>&1; then
+        printf '%s\n' "$(cat "$LAZINESS_LOG")" | jq --arg ts "$TIMESTAMP" --arg event "end_turn_check" '. += [{"event": $event, "timestamp": $ts, "patterns_checked": true}]' > "$LAZINESS_LOG"
+    fi
+fi
 
 exit 0

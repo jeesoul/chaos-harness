@@ -7,6 +7,7 @@ GLOBAL_DATA_DIR="$HOME/.claude/harness"
 PROJECT_STATE_DIR=""
 IRON_LAW_LOG="$GLOBAL_DATA_DIR/iron-law-log.json"
 PLUGIN_LOG="$GLOBAL_DATA_DIR/plugin-log.json"
+LEARNING_LOG="$GLOBAL_DATA_DIR/learning-log.json"
 
 # Ensure global data directory exists
 mkdir -p "$GLOBAL_DATA_DIR"
@@ -18,6 +19,10 @@ fi
 
 if [ ! -f "$PLUGIN_LOG" ]; then
     printf '[]\n' > "$PLUGIN_LOG"
+fi
+
+if [ ! -f "$LEARNING_LOG" ]; then
+    printf '[]\n' > "$LEARNING_LOG"
 fi
 
 # Detect project root (look for common project markers)
@@ -130,6 +135,21 @@ SESSION_ID=$(date +%s)
 
 if command -v jq >/dev/null 2>&1; then
     printf '%s\n' "$(cat "$PLUGIN_LOG")" | jq --arg ts "$TIMESTAMP" --arg sid "$SESSION_ID" --arg root "$PROJECT_ROOT" '. += [{"event": "session_start", "timestamp": $ts, "session_id": $sid, "project_root": $root}]' > "$PLUGIN_LOG"
+fi
+
+# Learning log analysis trigger check
+if command -v jq >/dev/null 2>&1; then
+    LEARNING_COUNT=$(cat "$LEARNING_LOG" | jq 'length')
+    if [ "$LEARNING_COUNT" -ge 5 ]; then
+        printf '\n'
+        printf '<CHAOS_HARNESS_LEARNING_TRIGGER>\n'
+        printf '检测到学习记录: %d 条\n' "$LEARNING_COUNT"
+        printf '\n'
+        printf '**建议操作:**\n'
+        printf '使用 /chaos-harness:learning-analyzer 分析学习记录并优化铁律。\n'
+        printf '或说 '\''分析学习记录'\'' 进行自学习闭环。\n'
+        printf '</CHAOS_HARNESS_LEARNING_TRIGGER>\n'
+    fi
 fi
 
 exit 0
