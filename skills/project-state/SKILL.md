@@ -1,13 +1,19 @@
 ---
 name: project-state
-description: 项目状态持久化与恢复。触发词：状态恢复、继续上次、项目进度、会话恢复
+description: 项目状态持久化与恢复。触发词：状态恢复、继续上次、项目进度、会话恢复、更新状态
 ---
 
 # 项目状态管理 (Project State)
 
-## 执行规则
+<IMMEDIATE-ACTION>
+加载此 skill 后，根据上下文执行：
+- 如果用户说"继续"、"恢复" → 执行状态恢复
+- 如果用户说"更新状态" → 执行状态更新
+- 如果用户说"查看状态" → 输出当前状态
+- 否则检测状态文件是否存在并引导用户
+</IMMEDIATE-ACTION>
 
-**加载此 skill 后，根据上下文执行：**
+## 执行规则
 
 ### Step 1: 检测项目状态文件
 
@@ -310,9 +316,38 @@ v0.2 (创建于 2026-04-05)
 ```
 你: 查看项目状态
 你: 继续上次进度
+你: 更新阶段状态 W08 completed
 你: 重置项目状态
 你: 查看决策历史
 你: 导出项目状态
+```
+
+## 状态更新辅助函数
+
+### 更新阶段状态
+
+```
+updateStageStatus(stage, status):
+  1. 读取 .chaos-harness/state.json
+  2. 根据 status 更新:
+     - completed: 添加到 stages_completed
+     - skipped: 添加到 stages_skipped
+     - blocked: 记录阻塞原因
+  3. 从 stages_pending 移除
+  4. 更新 current_stage 为下一阶段
+  5. 更新 last_session 时间戳
+  6. 写回文件
+```
+
+### 阶段完成时调用
+
+```
+阶段完成时必须调用:
+你: 更新阶段状态 W01 completed
+
+或者使用 skill 内置逻辑:
+- workflow-supervisor 在阶段转换时自动调用
+- stop hook 在会话结束时保存状态
 ```
 
 ## 与全局状态的关系
