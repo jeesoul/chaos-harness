@@ -3,6 +3,17 @@ name: java-checkstyle
 description: Java代码风格强制规范。当生成或修改Java代码时自动应用，包含命名、注释、Controller接口、MyBatis-Plus规范。IL-JAVA001-004强制执行，无例外。
 ---
 
+<STATE-WRITE-REQUIRED>
+**检测到违规时必须写入状态：**
+1. 使用 Edit 工具追加到 `~/.claude/harness/iron-law-log.json`
+2. 使用 Write 工具追加到 `output/{version}/effectiveness-log.md`
+
+调用 `shared/state-helpers.md` 中的函数：
+- Log-Iron-Law-Trigger(ironLawId, context, action)
+
+不写入状态 = 违规未被记录，无法追踪改进
+</STATE-WRITE-REQUIRED>
+
 # Java代码风格强制规范
 
 在生成或修改Java代码时，必须严格遵循以下规范。**所有规则都是强制性的，违反将导致代码审查不通过。**

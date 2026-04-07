@@ -3,6 +3,18 @@ name: project-scanner
 description: 项目扫描器。**当用户提到项目类型、技术栈、环境检测时自动触发**。触发词：扫描项目、分析项目、项目类型、技术栈检测、项目结构、环境状态
 ---
 
+<STATE-WRITE-REQUIRED>
+**扫描完成后必须写入状态：**
+1. 使用 Write 工具创建 `output/{version}/scan-result.json`
+2. 使用 Edit 工具更新 `.chaos-harness/state.json` 的 scan_result
+3. 使用 Edit 工具追加到 `~/.claude/harness/workflow-log.json`
+
+调用 `shared/state-helpers.md` 中的函数：
+- Update-Project-State({ scan_result: scanData })
+
+不写入状态 = 违反 IL003（完成声明需要验证证据）
+</STATE-WRITE-REQUIRED>
+
 # 项目扫描器 (Project Scanner)
 
 <IMMEDIATE-ACTION>

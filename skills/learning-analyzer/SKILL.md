@@ -3,6 +3,18 @@ name: learning-analyzer
 description: 分析历史学习记录，发现失败模式，生成铁律优化建议。**自动触发**：当 learning-log.json 有 5+ 条记录时，或用户说"分析学习记录"、"优化铁律"、"自学习"。触发词：学习分析、模式发现、铁律优化、自学习、闭环
 ---
 
+<STATE-WRITE-REQUIRED>
+**分析完成后必须写入状态：**
+1. 使用 Write 工具创建/追加 `output/{version}/analysis-report.md`
+2. 使用 Edit 工具更新 `.claos-harness/state.json` 标记分析已完成
+3. 如果有铁律优化建议，使用 Edit 工具更新 `.chaos-harness/iron-laws.yaml`
+
+调用 `shared/state-helpers.md` 中的函数：
+- Update-Effectiveness-Log(version, analysisResult)
+
+不写入状态 = 违反 IL003（完成声明需要验证证据）
+</STATE-WRITE-REQUIRED>
+
 # 学习分析器 (Learning Analyzer)
 
 <IMMEDIATE-ACTION>

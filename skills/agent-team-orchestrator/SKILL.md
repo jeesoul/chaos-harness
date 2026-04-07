@@ -14,6 +14,15 @@ description: Agent Team 编排器。**自动调度多 Agent 并行工作**。在
 **Supervisor 的核心职责就是确保每个 Agent 都在干活！**
 </EXTREMELY-IMPORTANT>
 
+<STATE-WRITE-REQUIRED>
+**Agent Team 执行完成后必须写入状态：**
+1. 使用 Write 工具追加到 `output/{version}/effectiveness-log.md`
+2. 如果检测到偷懒，使用 Edit 工具追加到 `~/.claude/harness/laziness-log.json`
+3. 如果检测到违规，使用 Edit 工具追加到 `~/.claude/harness/iron-law-log.json`
+
+不写入状态 = 违反 IL003（完成声明需要验证证据）
+</STATE-WRITE-REQUIRED>
+
 <LOOP-PREVENTION>
 **防止循环检测：**
 

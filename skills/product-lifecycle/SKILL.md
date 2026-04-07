@@ -3,6 +3,18 @@ name: product-lifecycle
 description: 产品全生命周期管理。**从需求到发布的完整研发流程 Harness**。触发词：PRD、需求分析、原型设计、研发规划、产品迭代、发布流程、研发流程
 ---
 
+<STATE-WRITE-REQUIRED>
+**阶段变更后必须写入状态：**
+1. 使用 Edit 工具更新 `.chaos-harness/state.json` 的产品阶段状态
+2. 使用 Edit 工具更新 `output/{version}/product-state.yaml`
+3. 使用 Edit 工具追加到 `~/.claude/harness/workflow-log.json`
+
+调用 `shared/state-helpers.md` 中的函数：
+- Update-Stage-Status(stage, status)
+
+不写入状态 = 违反 IL003（完成声明需要验证证据）
+</STATE-WRITE-REQUIRED>
+
 # 产品全生命周期管理 (Product Lifecycle)
 
 ## 执行规则

@@ -3,6 +3,14 @@ name: auto-toolkit-installer
 description: 自动检测并安装 Chaos Harness 依赖的自动化工具链 (webapp-testing, skill-creator, Chrome DevTools MCP)，支持镜像加速
 ---
 
+<STATE-WRITE-REQUIRED>
+**工具安装完成后必须写入状态：**
+1. 使用 Edit 工具更新 `.chaos-harness/toolkit-status.json`
+2. 使用 Edit 工具追加到 `~/.claude/harness/workflow-log.json`
+
+不写入状态 = 安装状态未被记录
+</STATE-WRITE-REQUIRED>
+
 # Auto Toolkit Installer
 
 自动检测并安装 Chaos Harness 完整自动化工具链。

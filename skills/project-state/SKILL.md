@@ -3,6 +3,17 @@ name: project-state
 description: 项目状态持久化与恢复。触发词：状态恢复、继续上次、项目进度、会话恢复、更新状态
 ---
 
+<STATE-WRITE-REQUIRED>
+**状态更新后必须写入：**
+1. 使用 Edit 工具更新 `.chaos-harness/state.json`
+2. 使用 Edit 工具追加到 `~/.claude/harness/workflow-log.json`
+
+调用 `shared/state-helpers.md` 中的函数：
+- Update-Project-State(updates)
+
+不写入状态 = 状态丢失，违反持久化原则
+</STATE-WRITE-REQUIRED>
+
 # 项目状态管理 (Project State)
 
 <IMMEDIATE-ACTION>

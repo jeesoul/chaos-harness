@@ -3,6 +3,14 @@ name: plugin-manager
 description: 管理和配置插件、铁律扩展。触发词：插件管理、配置插件、添加铁律、自定义铁律
 ---
 
+<STATE-WRITE-REQUIRED>
+**插件配置变更后必须写入状态：**
+1. 使用 Edit 工具更新 `.chaos-harness/plugins.yaml`
+2. 使用 Edit 工具追加到 `~/.claude/harness/workflow-log.json`
+
+不写入状态 = 配置变更未被持久化
+</STATE-WRITE-REQUIRED>
+
 # Chaos Harness 插件管理器
 
 ## 执行规则

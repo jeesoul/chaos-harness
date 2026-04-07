@@ -3,6 +3,18 @@ name: version-locker
 description: 版本锁定器。**在任何文档生成前自动检查版本锁定状态**。触发词：创建版本、锁定版本、版本管理、v0.1、版本号、版本目录
 ---
 
+<STATE-WRITE-REQUIRED>
+**版本创建后必须写入状态：**
+1. 使用 Edit 工具更新 `.chaos-harness/state.json` 的 current_version
+2. 使用 Write 工具创建 `output/{version}/VERSION-LOCK`
+3. 使用 Edit 工具追加到 `~/.claude/harness/workflow-log.json`
+
+调用 `shared/state-helpers.md` 中的函数：
+- Update-Project-State({ current_version: version })
+
+不写入状态 = 违反 IL001（无版本锁定不能生成文档）
+</STATE-WRITE-REQUIRED>
+
 # 版本锁定器 (Version Locker)
 
 ## 铁律

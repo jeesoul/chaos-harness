@@ -3,6 +3,18 @@ name: harness-generator
 description: Harness 生成器。**当检测到新项目或首次运行时自动建议生成约束**。触发词：生成Harness、创建约束、铁律配置、防绕过规则、项目约束
 ---
 
+<STATE-WRITE-REQUIRED>
+**Harness 生成后必须写入状态：**
+1. 使用 Write 工具创建 `output/{version}/Harness/harness.yaml`
+2. 使用 Edit 工具更新 `.chaos-harness/state.json` 标记 harness 已生成
+3. 使用 Edit 工具追加到 `~/.claude/harness/workflow-log.json`
+
+调用 `shared/state-helpers.md` 中的函数：
+- Update-Project-State({ harness_generated: true })
+
+不写入状态 = 违反 IL002（无扫描结果不能生成 Harness）
+</STATE-WRITE-REQUIRED>
+
 # Harness 生成器 (Harness Generator)
 
 ## 铁律
