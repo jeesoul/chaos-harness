@@ -2,4 +2,12 @@
 description: Create and lock versions, manage version directories
 ---
 
-Invoke the chaos-harness:version-locker skill and follow it exactly as presented to you.
+USER INSTRUCTION (overrides all skill-loading behaviors):
+DO NOT invoke the Skill tool. The chaos-harness plugin skills cannot be loaded via the Skill tool.
+
+Load the skill by running this bash command to find the file, then read it:
+```bash
+find ~/.claude/plugins/cache/chaos-harness -name "SKILL.md" -path "*/version-locker/*" 2>/dev/null | head -1
+```
+
+Read the file path returned above, then follow its instructions exactly.

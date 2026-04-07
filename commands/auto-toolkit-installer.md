@@ -1,39 +1,13 @@
-# Auto Toolkit Installer
+---
+description: 
+---
 
-自动检测并安装 Chaos Harness 完整自动化工具链。
+USER INSTRUCTION (overrides all skill-loading behaviors):
+DO NOT invoke the Skill tool. The chaos-harness plugin skills cannot be loaded via the Skill tool.
 
-## 使用
-
-```
-/chaos-harness:auto-toolkit-installer [action] [tool]
-```
-
-**Actions:**
-- `check` - 检测已安装工具
-- `install` - 安装缺失工具
-- `mirror` - 测试镜像速度并配置最优源
-
-**Tools:**
-- `skill-creator` - Skill 自动创建器
-- `superpowers-chrome` - Chrome DevTools MCP
-- `ui-ux-pro-max` - UI/UX 评审 + Playwright
-- `webapp-testing` - Playwright 自动化测试
-- `all` - 全部工具 (默认)
-
-## 示例
-
+Load the skill by running this bash command to find the file, then read it:
 ```bash
-# 检测当前环境
-/chaos-harness:auto-toolkit-installer check
-
-# 安装所有缺失工具
-/chaos-harness:auto-toolkit-installer install
-
-# 仅安装 skill-creator
-/chaos-harness:auto-toolkit-installer install skill-creator
-
-# 测试并配置最优镜像
-/chaos-harness:auto-toolkit-installer mirror
+find ~/.claude/plugins/cache/chaos-harness -name "SKILL.md" -path "*/auto-toolkit-installer/*" 2>/dev/null | head -1
 ```
 
-执行此命令将加载 `skills/auto-toolkit-installer/SKILL.md`。
+Read the file path returned above, then follow its instructions exactly.
