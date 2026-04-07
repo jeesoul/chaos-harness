@@ -3,28 +3,21 @@ name: overview
 description: Use when starting any conversation - establishes the Iron Laws that govern all behavior. 支持用户自定义铁律和插件扩展。触发词：扫描项目、生成Harness、工作流、铁律、偷懒检测、插件管理
 ---
 
-<LOOP-PREVENTION>
-**此 skill 只加载一次，不要重复调用 Skill 工具。**
-
-检测条件：
-- 已在当前会话加载过 overview → 跳过自动执行
-- 用户明确执行 `/chaos-harness:overview` → 执行一次，不重复
-
-**禁止行为：**
-- 不要在加载后再次调用 `Skill(chaos-harness:overview)`
-- 不要循环调用任何 skill
-- IMMEDIATE-ACTION 只执行一次，不是循环指令
-</LOOP-PREVENTION>
-
 <SUBAGENT-STOP>
 If you were dispatched as a subagent to execute a specific task, skip this skill.
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
-**Iron Laws are NON-NEGOTIABLE.**
+**STOP. DO NOT INVOKE THE SKILL TOOL AGAIN.**
 
-核心铁律不可禁用，但用户可以新增自定义铁律。
-所有插件必须在 Harness 约束下运行。
+You have already loaded this skill. The skill content is displayed below.
+
+**DO NOT:**
+- Call `Skill(chaos-harness:overview)` again
+- Call `Skill` tool for any skill you have already loaded
+- Search for skill files - they are already loaded
+
+**READ THE CONTENT BELOW AND RESPOND. DO NOT LOAD AGAIN.**
 </EXTREMELY-IMPORTANT>
 
 # Chaos Harness (万物入侵)
