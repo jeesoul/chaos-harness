@@ -300,6 +300,6 @@ END IF
 └─────────────────────────────────────────────────────────────┘
 ```
 
----
+***
 
 *Learning is the only sustainable competitive advantage.*

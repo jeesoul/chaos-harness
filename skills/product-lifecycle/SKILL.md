@@ -74,7 +74,7 @@ digraph product_lifecycle {
 }
 ```
 
----
+***
 
 ## P01: 需求收集
 
@@ -129,7 +129,7 @@ stakeholders: [list]
 key_insights: [关键发现]
 ```
 
----
+***
 
 ## P02: 需求分析
 
@@ -191,7 +191,7 @@ risk_count: {count}
 stakeholder_approved: true/false
 ```
 
----
+***
 
 ## P03: 原型设计
 
@@ -250,7 +250,7 @@ design_review_passed: true/false
 revision_count: {count}
 ```
 
----
+***
 
 ## P04: 技术方案
 
@@ -317,7 +317,7 @@ api_count: {count}
 tech_review_passed: true/false
 ```
 
----
+***
 
 ## P05: 开发规划
 
@@ -380,7 +380,7 @@ milestones: [里程碑列表]
 estimated_duration: {days}
 ```
 
----
+***
 
 ## P06: 前端开发
 
@@ -454,7 +454,7 @@ test_coverage: {percentage}
 bundle_size: {size}
 ```
 
----
+***
 
 ## P07: 后端开发
 
@@ -553,7 +553,7 @@ test_coverage: {percentage}
 db_migrations: [migration list]
 ```
 
----
+***
 
 ## P08: 集成测试
 
@@ -626,7 +626,7 @@ performance_score: {score}
 security_issues: {count}
 ```
 
----
+***
 
 ## P09: 验收交付
 
@@ -695,7 +695,7 @@ monitoring_configured: true/false
 issues_found: [list]
 ```
 
----
+***
 
 ## P10: 迭代优化
 
@@ -765,7 +765,7 @@ next_version_features: [list]
 lessons_learned: [经验教训]
 ```
 
----
+***
 
 ## 状态管理
 
@@ -799,7 +799,7 @@ pending → in_progress → completed
   blocked    needs_revision
 ```
 
----
+***
 
 ## 自学习机制
 
@@ -835,7 +835,7 @@ pending → in_progress → completed
 - 模板更新
 - 工具推荐
 
----
+***
 
 ## 铁律汇总
 
@@ -864,7 +864,7 @@ pending → in_progress → completed
 | IL-RELEASE002 | 发布必须有监控告警 | P09 |
 | IL-RELEASE003 | 发布后必须有验证 | P09 |
 
----
+***
 
 ## 工具集成
 
@@ -876,7 +876,7 @@ pending → in_progress → completed
 | P08 | webapp-testing + superpowers-chrome | E2E 测试 + 性能分析 |
 | P10 | learning-analyzer | 迭代分析 |
 
----
+***
 
 ## 输出目录结构
 
@@ -935,7 +935,7 @@ output/{version}/
 └── learning-log.json
 ```
 
----
+***
 
 ## 自适应规则
 
@@ -967,7 +967,7 @@ output/{version}/
 - 测试框架配置
 - 部署方案
 
----
+***
 
 ## 效果追踪
 
@@ -991,7 +991,7 @@ output/{version}/
 2. IL-FE003 触发频繁，建议增加接口 Mock 流程
 ```
 
----
+***
 
 **自学习闭环：**
 ```

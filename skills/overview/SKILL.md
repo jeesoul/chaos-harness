@@ -219,6 +219,6 @@ chaos-harness/
 └── README.md
 ```
 
----
+***
 
 *Chaos demands order. Harness provides it.*

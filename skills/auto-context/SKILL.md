@@ -56,7 +56,7 @@ description: "智能场景感知。**自动检测当前操作并推荐相关 Ski
 推荐: version-locker skill
 ```
 
----
+***
 
 ## 输出格式
 
@@ -88,7 +88,7 @@ description: "智能场景感知。**自动检测当前操作并推荐相关 Ski
 </HARNESS_WARNING>
 ```
 
----
+***
 
 ## 场景检测逻辑
 
@@ -134,7 +134,7 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 无 workflow-state.yaml → 推荐 workflow-supervisor
 ```
 
----
+***
 
 ## 与其他 Skills 的联动
 
@@ -154,7 +154,7 @@ context-aware-trigger (Hook)
     learning-update (记录)
 ```
 
----
+***
 
 ## 自动触发场景清单
 
@@ -204,7 +204,7 @@ auto-context 检测到阶段变化
 用户确认后才加载 skill
 ```
 
----
+***
 
 ## 配置自定义场景
 
@@ -228,7 +228,7 @@ custom_triggers:
       message: "检测到 Dockerfile，确保有回滚方案"
 ```
 
----
+***
 
 ## 日志记录
 
