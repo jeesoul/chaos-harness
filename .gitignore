@@ -27,3 +27,6 @@ CLAUDE.md
 
 # 迭代规划文档不提交（本地规划用）
 迭代规划/
+
+# 开发用 package.json 备份，不提交
+package.dev.json

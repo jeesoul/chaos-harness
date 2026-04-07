@@ -1,56 +1,5 @@
 {
   "name": "chaos-harness",
-  "version": "1.2.0",
-  "description": "Claude Code 智能项目入侵系统 - 纯 Skill 方式集成。扫描、版本约束、Harness生成、偷懒检测、工作流管理",
-  "files": [
-    "dist",
-    "templates",
-    "skills",
-    ".claude-plugin"
-  ],
-  "scripts": {
-    "build": "tsc",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "prepublishOnly": "npm run build && npm test"
-  },
-  "keywords": [
-    "claude",
-    "claude-code",
-    "harness",
-    "workflow",
-    "scanner",
-    "version-manager",
-    "iron-laws",
-    "project-invasion",
-    "laziness-detection",
-    "skills"
-  ],
-  "author": "jeesoul",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jeesoul/chaos-harness.git"
-  },
-  "bugs": {
-    "url": "https://github.com/jeesoul/chaos-harness/issues"
-  },
-  "homepage": "https://github.com/jeesoul/chaos-harness#readme",
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "@types/node": "^25.5.0",
-    "@types/xml2js": "^0.4.14",
-    "execa": "^9.6.1",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.5",
-    "vitest": "^4.1.2",
-    "xml2js": "^0.6.2",
-    "yaml": "^2.8.3"
-  }
+  "version": "1.2.0"
 }
+
