@@ -9,15 +9,24 @@ PROJECT_ROOT=""
 mkdir -p "$DATA_DIR"
 [ ! -f "$TRIGGER_LOG" ] && printf '[]\n' > "$TRIGGER_LOG"
 
-# 检测项目根目录
+# 检测项目根目录 - 使用更安全的方式避免 Windows Git Bash 崩溃
 detect_project_root() {
     _dir="$PWD"
-    while [ "$_dir" != "/" ]; do
-        [ -f "$_dir/.git" ] && { printf '%s\n' "$_dir"; return; }
+    _max_depth=20
+    _count=0
+
+    while [ "$_count" -lt "$_max_depth" ]; do
+        [ -d "$_dir/.git" ] && { printf '%s\n' "$_dir"; return; }
         [ -f "$_dir/pom.xml" ] && { printf '%s\n' "$_dir"; return; }
         [ -f "$_dir/package.json" ] && { printf '%s\n' "$_dir"; return; }
         [ -f "$_dir/requirements.txt" ] && { printf '%s\n' "$_dir"; return; }
-        _dir="$(dirname "$_dir")"
+        parent="$(dirname "$_dir")"
+        # Stop if we've reached the root (parent equals current)
+        if [ "$parent" = "$_dir" ]; then
+            break
+        fi
+        _dir="$parent"
+        _count=$((_count + 1))
     done
     printf '%s\n' "$PWD"
 }

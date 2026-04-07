@@ -5,15 +5,24 @@
 DATA_DIR="$HOME/.claude/harness"
 mkdir -p "$DATA_DIR"
 
-# Detect project root
+# Detect project root - use safer approach for Windows Git Bash
 PROJECT_ROOT="$PWD"
 _dir="$PWD"
-while [ "$_dir" != "/" ]; do
-    if [ -f "$_dir/.git" ] || [ -f "$_dir/pom.xml" ] || [ -f "$_dir/package.json" ]; then
+_max_depth=20
+_count=0
+
+while [ "$_count" -lt "$_max_depth" ]; do
+    if [ -d "$_dir/.git" ] || [ -f "$_dir/pom.xml" ] || [ -f "$_dir/package.json" ]; then
         PROJECT_ROOT="$_dir"
         break
     fi
-    _dir="$(dirname "$_dir")"
+    parent="$(dirname "$_dir")"
+    # Stop if we've reached the root (parent equals current)
+    if [ "$parent" = "$_dir" ]; then
+        break
+    fi
+    _dir="$parent"
+    _count=$((_count + 1))
 done
 
 # Save state if exists

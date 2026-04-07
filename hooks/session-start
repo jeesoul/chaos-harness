@@ -25,10 +25,13 @@ if [ ! -f "$LEARNING_LOG" ]; then
     printf '[]\n' > "$LEARNING_LOG"
 fi
 
-# Detect project root (look for common project markers)
+# Detect project root - use safer approach for Windows Git Bash
 detect_project_root() {
     dir="$PWD"
-    while [ "$dir" != "/" ]; do
+    max_depth=20
+    count=0
+
+    while [ "$count" -lt "$max_depth" ]; do
         if [ -f "$dir/.chaos-harness/state.json" ] || \
            [ -f "$dir/pom.xml" ] || \
            [ -f "$dir/package.json" ] || \
@@ -37,7 +40,13 @@ detect_project_root() {
             printf '%s\n' "$dir"
             return 0
         fi
-        dir="$(dirname "$dir")"
+        parent="$(dirname "$dir")"
+        # Stop if we've reached the root (parent equals current)
+        if [ "$parent" = "$dir" ]; then
+            break
+        fi
+        dir="$parent"
+        count=$((count + 1))
     done
     printf '%s\n' "$PWD"
 }
