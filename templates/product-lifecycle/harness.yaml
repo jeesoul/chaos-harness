@@ -1,0 +1,101 @@
+identity:
+  name: product-lifecycle-harness
+  version: "1.1.0"
+  createdAt: "2026-04-06"
+  createdBy: workflow
+  suitableFor:
+    - product
+    - lifecycle
+    - workflow
+    - prd
+  confidenceThreshold: 0.5
+  isWorkflowTemplate: true
+
+selfCheck:
+  activationConditions:
+    - field: "context.type"
+      operator: "equals"
+      value: "product-development"
+      description: "Product lifecycle workflow detected"
+  warningConditions: []
+
+ironLaws:
+  # IL-PRD001: PRD 验收标准
+  - id: "IL-PRD001"
+    rule: "NO PRD WITHOUT ACCEPTANCE CRITERIA"
+    enforcement: block
+    violationAction: "PRD must include clear acceptance criteria"
+
+  # IL-PRD002: PRD 可追溯
+  - id: "IL-PRD002"
+    rule: "NO REQUIREMENT WITHOUT TRACEABILITY"
+    enforcement: warn
+    violationAction: "Each requirement must trace to source"
+
+  # IL-TECH001: 技术选型对比
+  - id: "IL-TECH001"
+    rule: "NO TECH DECISION WITHOUT COMPARISON"
+    enforcement: block
+    violationAction: "Technical decisions must include comparison of alternatives"
+
+  # IL-PLAN001: 负责人明确
+  - id: "IL-PLAN001"
+    rule: "NO TASK WITHOUT OWNER"
+    enforcement: block
+    violationAction: "Every task must have a designated owner"
+
+loopholeClosure:
+  - pattern: "PRD 可以先写个大概"
+    rebuttal: "PRD 必须有验收标准，否则无法验证交付"
+    ironLawRef: "IL-PRD001"
+  - pattern: "需求来源不重要"
+    rebuttal: "需求必须可追溯到来源，否则变更无法追溯"
+    ironLawRef: "IL-PRD002"
+  - pattern: "技术方案直接选就行"
+    rebuttal: "技术选型必须有对比分析，否则决策缺乏依据"
+    ironLawRef: "IL-TECH001"
+
+recommendations:
+  - id: "R-PL001"
+    rule: "P01-P10 阶段流转必须有输出产物"
+    skipCondition: "None"
+
+phases:
+  - id: "P01"
+    name: "需求收集"
+    outputs: ["需求清单", "痛点分析"]
+  - id: "P02"
+    name: "需求分析"
+    outputs: ["PRD", "MVP 范围"]
+  - id: "P03"
+    name: "原型设计"
+    outputs: ["原型", "交互流程"]
+  - id: "P04"
+    name: "技术方案"
+    outputs: ["技术方案", "架构设计"]
+  - id: "P05"
+    name: "开发规划"
+    outputs: ["开发计划", "资源分配"]
+  - id: "P06"
+    name: "前端开发"
+    outputs: ["前端代码", "组件库"]
+  - id: "P07"
+    name: "后端开发"
+    outputs: ["后端代码", "API 文档"]
+  - id: "P08"
+    name: "集成测试"
+    outputs: ["测试报告", "Bug 列表"]
+  - id: "P09"
+    name: "验收交付"
+    outputs: ["发布包", "部署文档"]
+  - id: "P10"
+    name: "迭代优化"
+    outputs: ["迭代计划", "优化清单"]
+
+antiBypass:
+  - id: "AB-PL001"
+    excuse: "这个阶段可以跳过"
+    rebuttal: "阶段流转必须有输出产物，不能跳过"
+    ironLawRef: "IL-PLAN001"
+
+effectivenessLog: "version-logs/product-lifecycle-effectiveness.md"
