@@ -2,6 +2,10 @@
 # session-start - SessionStart hook script
 # Injects iron laws and restores project state at session start
 
+# Disable MSYS2 path conversion to prevent Git Bash crash on Windows
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL="*"
+
 # Data directories
 GLOBAL_DATA_DIR="$HOME/.claude/harness"
 PROJECT_STATE_DIR=""

@@ -2,6 +2,10 @@
 # laziness-detect - Detect laziness patterns at end_turn
 # Analyzes conversation for bypass attempts and laziness patterns
 
+# Disable MSYS2 path conversion to prevent Git Bash crash on Windows
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL="*"
+
 DATA_DIR="$HOME/.claude/harness"
 LAZINESS_LOG="$DATA_DIR/laziness-log.json"
 mkdir -p "$DATA_DIR"

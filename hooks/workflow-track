@@ -2,6 +2,10 @@
 # workflow-track - Track workflow progress
 # Records workflow events for state recovery
 
+# Disable MSYS2 path conversion to prevent Git Bash crash on Windows
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL="*"
+
 DATA_DIR="$HOME/.claude/harness"
 WORKFLOW_LOG="$DATA_DIR/workflow-log.json"
 mkdir -p "$DATA_DIR"

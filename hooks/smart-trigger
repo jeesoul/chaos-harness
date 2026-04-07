@@ -2,6 +2,10 @@
 # smart-trigger - 智能触发引擎
 # 自动检测用户意图并推荐/激活对应 Skill
 
+# Disable MSYS2 path conversion to prevent Git Bash crash on Windows
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL="*"
+
 DATA_DIR="$HOME/.claude/harness"
 TRIGGER_LOG="$DATA_DIR/trigger-log.json"
 PROJECT_ROOT=""

@@ -2,6 +2,10 @@
 # stop - Stop hook script
 # Saves project state for next session recovery
 
+# Disable MSYS2 path conversion to prevent Git Bash crash on Windows
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL="*"
+
 DATA_DIR="$HOME/.claude/harness"
 mkdir -p "$DATA_DIR"
 

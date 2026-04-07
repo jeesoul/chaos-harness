@@ -2,6 +2,10 @@
 # iron-law-check - PreToolUse hook for Write|Edit operations
 # Validates operations against iron laws IL001-IL005
 
+# Disable MSYS2 path conversion to prevent Git Bash crash on Windows
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL="*"
+
 TOOL_NAME="$1"
 TOOL_INPUT="$2"
 
