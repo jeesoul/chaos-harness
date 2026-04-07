@@ -167,3 +167,38 @@ iron_laws:
     severity: critical
     enforcement: block
     bypass_allowed: false
+
+  IL-TEAM005:
+    rule: "NO SINGLE-THREAD DEGRADATION"
+    severity: critical
+    enforcement: block
+    bypass_allowed: false
+    description: "核心铁律：主 Agent 不得自己干活，必须 spawn Agent Team"
+    auto_correct: true
+
+# ============================================================
+# 单线程退化检测配置
+# ============================================================
+
+single_thread_detection:
+  # 检测周期
+  check_interval: 30s
+
+  # 检测规则
+  rules:
+    - condition: "team_stage AND main_agent_working AND spawned_count = 0"
+      severity: critical
+      message: "检测到单线程退化！主 Agent 在自己干活！"
+      action: "block_and_auto_spawn"
+
+    - condition: "team_stage AND spawned_count < 2"
+      severity: warning
+      message: "Agent 数量不足，需要至少 2 个"
+      action: "warn_and_recommend"
+
+  # 自动纠正
+  auto_correct:
+    enabled: true
+    spawn_agents: true
+    transfer_task: true
+    log_to_effectiveness: true

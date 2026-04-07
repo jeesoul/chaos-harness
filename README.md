@@ -418,14 +418,36 @@ claude plugins marketplace remove chaos-harness
 | `/chaos-harness:version-locker` | 版本管理：锁定、创建、变更追踪 |
 | `/chaos-harness:harness-generator` | 约束生成：基于扫描数据生成专属 Harness |
 | `/chaos-harness:workflow-supervisor` | 工作流编排：阶段控制、进度监控、Agent协调 |
+| `/chaos-harness:agent-team-orchestrator` | **Agent Team 编排：自动并行、监督鞭策、防单线程** |
 | `/chaos-harness:iron-law-enforcer` | 铁律执行：自定义规则、绕过检测、驳回生成 |
-| `/chaos-harness:collaboration-reviewer` | 多Agent协作：角色分配、冲突检测、结果合并 |
+| `/chaos-harness:collaboration-reviewer` | 多Agent评审：自动启动、多视角、结果汇总 |
 | `/chaos-harness:hooks-manager` | 钩子配置：启用/禁用、日志查看、行为审计 |
 | `/chaos-harness:plugin-manager` | 插件管理：第三方接入、约束配置、阶段映射 |
 | `/chaos-harness:project-state` | 状态持久化：进度保存、会话恢复、断点续传 |
 | `/chaos-harness:auto-toolkit-installer` | 工具链检测：自动安装依赖工具、镜像加速 |
 | `/chaos-harness:learning-analyzer` | 自学习分析：失败模式识别、铁律优化建议、闭环迭代 |
 | `/chaos-harness:product-lifecycle` | 产品全生命周期：需求→原型→开发→测试→发布→迭代 |
+
+### Agent Team 自动编排
+
+**评审/开发阶段自动启动多 Agent 并行工作：**
+
+```
+W02/W04/W09 评审阶段
+├── 自动 spawn 3 个评审 Agent
+├── 并行评审 → 讨论争议点
+└── 汇总结果给用户确认
+
+W07/W08 开发阶段
+├── 自动拆分任务
+├── 分配给多个开发 Agent 并行
+├── Supervisor 监控（30s/次）
+├── 2 分钟无产出 → 提醒
+├── 5 分钟无产出 → 鞭策
+└── 10 分钟无产出 → 任务重分配
+```
+
+**核心铁律 IL-TEAM005**：禁止单线程退化，主 Agent 不得自己干活！
 
 ### 产品全生命周期 (Product Lifecycle)
 

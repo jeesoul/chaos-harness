@@ -3,7 +3,16 @@ name: agent-team-orchestrator
 description: Agent Team 编排器。**自动调度多 Agent 并行工作**。在评审、开发阶段自动触发，负责任务分配、通信协调、进度监控、偷懒鞭策。触发词：并行开发、多agent、团队协作、分配任务
 ---
 
-# Agent Team 编排器 (Agent Team Orchestrator)
+<EXTREMELY-IMPORTANT>
+**单 Agent 是低效的，多 Agent 才是正道。**
+
+检测到以下情况必须立即阻止并纠正：
+- 主 Agent 自己干活而不是 spawn Agent Team
+- Agent Team 中有 Agent 不干活
+- 长时间没有进度输出
+
+**Supervisor 的核心职责就是确保每个 Agent 都在干活！**
+</EXTREMELY-IMPORTANT>
 
 <IMMEDIATE-ACTION>
 加载此 skill 后，根据当前工作流阶段自动启动对应的 Agent Team 配置。不要等待用户指示。
@@ -214,7 +223,54 @@ Supervisor 检测到冲突：
 
 ---
 
-## 监督机制
+## 监督机制（核心）
+
+### ⚠️ 防止单线程退化
+
+**问题**：主 Agent 自己干活而不是 spawn Agent Team
+
+**检测规则**：
+```typescript
+function detectSingleThreadDegradation(context: WorkContext) {
+  // 检测主 Agent 是否在执行本应分配给 Team 的任务
+  const teamStages = ['W02', 'W04', 'W07', 'W08', 'W09'];
+  const currentStage = context.workflowStage;
+
+  if (teamStages.includes(currentStage)) {
+    const spawnedAgents = context.spawnedAgents || [];
+
+    if (spawnedAgents.length === 0) {
+      // 主 Agent 没有 spawn 任何 Agent，自己在干活
+      return {
+        detected: true,
+        severity: 'critical',
+        message: '主 Agent 单线程执行，未启动 Agent Team'
+      };
+    }
+
+    if (spawnedAgents.length < 2) {
+      // Agent 数量不足
+      return {
+        detected: true,
+        severity: 'warning',
+        message: `Agent 数量不足：${spawnedAgents.length}，需要至少 2 个`
+      };
+    }
+  }
+
+  return { detected: false };
+}
+```
+
+**强制纠正**：
+```
+IF 检测到单线程退化 THEN
+    BLOCK: "检测到主 Agent 单线程执行"
+    MESSAGE: "此阶段必须启动 Agent Team 并行工作"
+    ACTION: "立即 spawn 所需数量的 Agent"
+    REASON: "单线程效率低下，违反 IL-TEAM001/IL-TEAM002"
+END IF
+```
 
 ### 进度监控
 
@@ -229,21 +285,52 @@ interface AgentStatus {
   lastOutput: Date;
   progress: number; // 0-100
   status: 'working' | 'idle' | 'blocked' | 'completed';
+  outputCount: number; // 产出数量
 }
 
 function monitorAgents(agents: AgentStatus[]) {
+  const report = {
+    working: [],
+    idle: [],
+    blocked: [],
+    completed: []
+  };
+
   for (const agent of agents) {
     const idleTime = Date.now() - agent.lastOutput.getTime();
+    const outputRate = agent.outputCount / (idleTime / 60000); // 每分钟产出
 
-    if (idleTime > 120000) { // 2 分钟无产出
-      triggerLazinessWarning(agent);
-    }
-
-    if (idleTime > 300000) { // 5 分钟无产出
-      triggerWhip(agent); // 鞭策
+    // 更新状态
+    if (agent.status === 'completed') {
+      report.completed.push(agent);
+    } else if (idleTime > 300000) { // 5 分钟无产出
+      agent.status = 'idle';
+      report.idle.push(agent);
+    } else if (outputRate < 0.5) { // 每分钟产出 < 0.5
+      agent.status = 'blocked';
+      report.blocked.push(agent);
+    } else {
+      agent.status = 'working';
+      report.working.push(agent);
     }
   }
+
+  return report;
 }
+```
+
+### 心跳检测机制
+
+```
+Supervisor → Agent-X (每 30s):
+"PING: 请报告你的进度"
+
+Agent-X → Supervisor:
+"PONG: 任务 {task}, 进度 {progress}%, 预计还需 {eta}"
+
+如果 60s 无响应:
+Supervisor → Agent-X:
+"WARNING: 心跳检测失败，请立即响应"
 ```
 
 ### 偷懒鞭策
@@ -274,6 +361,22 @@ Supervisor → Agent-backend-2:
 Supervisor 会持续监控你的进度。"
 ```
 
+### 强制重新分配
+
+如果 Agent 10 分钟无产出：
+
+```
+Supervisor 决策:
+1. 终止 Agent-backend-2
+2. 将任务 'API-02 用户注册' 重新分配给 Agent-backend-3
+3. 记录到 effectiveness-log
+
+通知 Agent-backend-3:
+"你被分配了新任务 'API-02 用户注册'
+原因：原 Agent 10 分钟无产出
+请立即开始工作"
+```
+
 ### 鞭策话术模板
 
 | 空闲时间 | 鞭策级别 | 消息模板 |
@@ -282,6 +385,32 @@ Supervisor 会持续监控你的进度。"
 | 3 分钟 | 明确要求 | "1 分钟内输出进度，否则记录到日志" |
 | 5 分钟 | 严重警告 | "已记录到 effectiveness-log，请解释原因" |
 | 10 分钟 | 任务重分配 | "任务将重新分配给其他 Agent" |
+
+### 监督报告输出
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  📊 Agent Team 监控报告                                       │
+├─────────────────────────────────────────────────────────────┤
+│  监控周期: 每 30s                                             │
+│  总 Agent: 5                                                 │
+├─────────────────────────────────────────────────────────────┤
+│  🟢 工作中 (3)                                               │
+│    ├── Agent-backend-1: 67% - 用户登录 API                   │
+│    ├── Agent-backend-3: 45% - 商品列表 API                   │
+│    └── Agent-frontend-1: 80% - 登录页面                      │
+├─────────────────────────────────────────────────────────────┤
+│  🟡 可能阻塞 (1)                                              │
+│    └── Agent-backend-2: 20% - 用户注册 API (等待依赖)         │
+├─────────────────────────────────────────────────────────────┤
+│  🔴 空闲告警 (1)                                              │
+│    └── Agent-backend-4: 0% - 3 分钟无产出 ⚠️                  │
+└─────────────────────────────────────────────────────────────┘
+
+建议操作:
+1. 检查 Agent-backend-2 是否需要帮助
+2. 鞭策 Agent-backend-4
+```
 
 ---
 
@@ -357,6 +486,14 @@ REVIEW REQUIRES MULTIPLE AGENTS
 
 评审阶段必须启动至少 2 个 Agent，不能单人评审。
 
+**检测**：
+```
+IF 评审阶段 AND spawned_agents < 2 THEN
+    BLOCK: "评审需要多 Agent 并行"
+    AUTO_SPAWN: 启动所需 Agent
+END IF
+```
+
 ### IL-TEAM002: 开发必须并行
 
 ```
@@ -364,6 +501,14 @@ DEVELOPMENT REQUIRES PARALLEL AGENTS
 ```
 
 开发阶段必须启动多个 Agent 并行开发，不能串行。
+
+**检测**：
+```
+IF 开发阶段 AND 任务可拆分 AND spawned_agents = 0 THEN
+    BLOCK: "开发任务必须分配给 Agent Team"
+    AUTO_SPAWN: 根据任务数量启动 Agent
+END IF
+```
 
 ### IL-TEAM003: 监督必须持续
 
@@ -373,6 +518,13 @@ MONITORING MUST BE CONTINUOUS
 
 Supervisor 必须全程监控 Agent 进度，检测到偷懒必须鞭策。
 
+**检测**：
+```
+IF Agent 空闲 > 2 分钟 THEN 提醒
+IF Agent 空闲 > 5 分钟 THEN 鞭策 + 记录日志
+IF Agent 空闲 > 10 分钟 THEN 任务重分配
+```
+
 ### IL-TEAM004: 结果必须汇总
 
 ```
@@ -380,6 +532,114 @@ RESULTS REQUIRE SYNTHESIS
 ```
 
 多 Agent 结果必须汇总给用户确认，不能直接通过。
+
+### IL-TEAM005: 禁止单线程退化 ⚠️ 新增
+
+```
+NO SINGLE-THREAD DEGRADATION
+```
+
+**核心铁律**：主 Agent 不得自己干活，必须 spawn Agent Team。
+
+**检测模式**：
+```typescript
+function detectSingleThreadViolation(context: WorkContext): boolean {
+  const teamRequiredStages = ['W02', 'W04', 'W07', 'W08', 'W09'];
+
+  if (teamRequiredStages.includes(context.currentStage)) {
+    // 检查是否 spawn 了 Agent
+    const spawnedCount = context.spawnedAgents?.length || 0;
+
+    // 检查主 Agent 是否在执行任务
+    const mainAgentWorking = context.mainAgentTask !== null;
+
+    if (spawnedCount === 0 && mainAgentWorking) {
+      // 主 Agent 在干活，但没有 spawn Agent Team
+      return true; // 违规
+    }
+  }
+
+  return false;
+}
+```
+
+**强制纠正**：
+```
+IF 检测到单线程退化 THEN
+    BLOCK: 立即停止主 Agent 任务
+    MESSAGE: "此阶段需要 Agent Team 并行工作"
+    AUTO_SPAWN: 根据阶段启动对应 Agent Team
+    TRANSFER: 将主 Agent 的任务转移给 Agent Team
+    LOG: 记录到 effectiveness-log
+END IF
+```
+
+**反驳借口**：
+| 借口 | 反驳 |
+|------|------|
+| "我自己做更快" | "单线程不是快，是返工的开始。启动 Agent Team。" |
+| "任务太小不需要 Team" | "任务大小不是理由。IL-TEAM005 无例外。" |
+| "启动 Agent 太麻烦" | "麻烦是暂时的，效率是永久的。自动启动。" |
+| "我等着 Agent 自己干" | "Supervisor 必须监控。不监控 = 违反 IL-TEAM003。" |
+
+---
+
+## Skills 关联推荐
+
+此 skill 与以下 skills 协同工作：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Skills 协作关系图                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  workflow-supervisor                                        │
+│       │                                                     │
+│       │ 检测阶段变化                                          │
+│       ▼                                                     │
+│  auto-context ─────────────────────────────────────────┐   │
+│       │                                                │   │
+│       │ 推荐启动 Agent Team                              │   │
+│       ▼                                                │   │
+│  agent-team-orchestrator ◄────────────────────────────┘   │
+│       │                                                     │
+│       ├──── spawn 评审 Agent ────► collaboration-reviewer  │
+│       │                                                     │
+│       ├──── spawn 开发 Agent ────► 各技术栈模板 skill        │
+│       │                                                     │
+│       └──── 监控 + 鞭策 ─────────► iron-law-enforcer        │
+│                                          │                  │
+│                                          │ 记录违规          │
+│                                          ▼                  │
+│                                    learning-analyzer        │
+│                                          │                  │
+│                                          │ 分析 + 优化建议   │
+│                                          ▼                  │
+│                                   effectiveness-log         │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 自动关联触发
+
+| 当前 Skill | 检测条件 | 自动推荐/加载 |
+|-----------|---------|--------------|
+| workflow-supervisor | 到达 W02/W04/W07/W08/W09 | **自动加载** agent-team-orchestrator |
+| agent-team-orchestrator | 评审阶段 | **自动加载** collaboration-reviewer |
+| agent-team-orchestrator | 开发阶段 | **推荐** 对应技术栈模板 |
+| agent-team-orchestrator | 检测到违规 | **自动调用** iron-law-enforcer |
+| iron-law-enforcer | 记录到日志 | **自动调用** learning-analyzer |
+| collaboration-reviewer | 评审完成 | **返回** agent-team-orchestrator 汇总 |
+
+### 用户触发词检测
+
+| 用户说... | 检测为... | 自动推荐... |
+|----------|---------|------------|
+| "评审一下" | 需要多视角评审 | agent-team-orchestrator + collaboration-reviewer |
+| "并行开发" | 需要并行 Agent | agent-team-orchestrator |
+| "为什么这么慢" | 可能单线程 | 检查 Agent Team 状态 |
+| "分配任务" | 需要任务拆分 | agent-team-orchestrator W07 |
+| "监督一下" | 需要监控 | agent-team-orchestrator Supervisor |
 
 ---
 

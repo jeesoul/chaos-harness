@@ -90,6 +90,7 @@ END IF
 | **IL-TEAM002** | DEVELOPMENT REQUIRES PARALLEL AGENTS | 开发必须并行 Agent |
 | **IL-TEAM003** | MONITORING MUST BE CONTINUOUS | 监督必须持续进行 |
 | **IL-TEAM004** | RESULTS REQUIRE USER CONFIRMATION | 结果必须用户确认 |
+| **IL-TEAM005** | NO SINGLE-THREAD DEGRADATION | 禁止单线程退化（核心） |
 
 ### IL-TEAM001: 评审必须多 Agent
 
@@ -162,6 +163,40 @@ RESULTS REQUIRE USER CONFIRMATION
 - Agent Team 结果必须汇总给用户
 - 存在风险点必须用户确认
 - 不得自动通过风险点
+
+### IL-TEAM005: 禁止单线程退化 ⚠️ 核心铁律
+
+```
+NO SINGLE-THREAD DEGRADATION
+```
+
+**问题**：主 Agent 自己干活而不是 spawn Agent Team
+
+**这是最高优先级的 Agent Team 铁律！**
+
+**检测模式**：
+```
+IF Agent Team 阶段 AND 主 Agent 在执行任务 AND spawned_agents = 0 THEN
+    CRITICAL: "检测到单线程退化！主 Agent 在自己干活！"
+    BLOCK: 立即停止
+    AUTO_CORRECT: 自动 spawn Agent Team
+    LOG: 记录到 effectiveness-log
+END IF
+```
+
+**这是最严重的偷懒模式**：
+- 主 Agent 声称要启动 Team，实际自己在干
+- 导致效率低下，违背并行原则
+- 必须被强制纠正
+
+**反驳借口**：
+| 借口 | 反驳 |
+|------|------|
+| "我自己做更快" | "单线程不是快，是返工的开始。启动 Agent Team。" |
+| "任务太小不需要 Team" | "任务大小不是理由。IL-TEAM005 无例外。" |
+| "启动 Agent 太麻烦" | "麻烦是暂时的，效率是永久的。自动启动。" |
+| "我等着 Agent 自己干" | "Supervisor 必须监控。不监控 = 违反 IL-TEAM003。" |
+| "这个特殊情况" | "没有特殊情况。IL-TEAM005 是核心铁律。" |
 
 ## 用户自定义铁律
 
