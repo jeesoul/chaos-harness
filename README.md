@@ -1,7 +1,7 @@
 # Chaos Harness
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.1.0-blue.svg">
+  <img src="https://img.shields.io/badge/version-1.2.0-blue.svg">
   <img src="https://img.shields.io/badge/tests-623-brightgreen.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
 </p>
