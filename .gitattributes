@@ -1,4 +1,4 @@
-# Force CRLF for SKILL.md files on Windows
-# This ensures Skill tool can parse frontmatter correctly
-skills/**/*.md text eol=crlf
+# Force LF for SKILL.md files - Claude Code Skill tool requires LF
+# CRLF causes YAML frontmatter parsing errors and repeated skill loading
+skills/**/*.md text eol=lf
 *.md text eol=crlf
