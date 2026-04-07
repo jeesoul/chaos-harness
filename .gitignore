@@ -15,6 +15,8 @@ docs/superpowers/plans/
 docs/state-and-association-audit.md
 docs/*审计*.md
 docs/*设计*.md
+docs/*design*.md
+docs/skills-review.md
 
 # CLAUDE.md is local-only, NOT for public repo
 CLAUDE.md
