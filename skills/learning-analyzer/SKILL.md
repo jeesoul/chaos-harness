@@ -23,11 +23,6 @@ description: "分析历史学习记录，发现失败模式，生成铁律优化
 
 # 学习分析器 (Learning Analyzer)
 
-<IMMEDIATE-ACTION>
-加载此 skill 后，立即执行以下步骤。不要等待用户进一步指示。
-
-**注意：此 skill 只加载一次，不要重复调用 Skill 工具。**
-</IMMEDIATE-ACTION>
 
 ## 铁律
 
