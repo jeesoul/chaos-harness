@@ -14,8 +14,24 @@ description: Agent Team 编排器。**自动调度多 Agent 并行工作**。在
 **Supervisor 的核心职责就是确保每个 Agent 都在干活！**
 </EXTREMELY-IMPORTANT>
 
+<LOOP-PREVENTION>
+**防止循环检测：**
+
+此 skill 在以下情况下**跳过自动执行**，避免循环：
+1. 已在当前会话中执行过
+2. 被其他 skill 的 IMMEDIATE-ACTION 触发时
+3. 未明确指定工作流阶段时
+
+只有在用户明确调用 `/chaos-harness:agent-team-orchestrator` 或工作流阶段明确变更时才执行。
+</LOOP-PREVENTION>
+
 <IMMEDIATE-ACTION>
-加载此 skill 后，根据当前工作流阶段自动启动对应的 Agent Team 配置。不要等待用户指示。
+加载此 skill 后，检查是否满足执行条件：
+1. 是否有明确的工作流阶段？
+2. 是否已在本次会话执行过？
+
+如果满足条件，根据当前工作流阶段自动启动对应的 Agent Team 配置。
+如果不满足，输出使用说明等待用户明确调用。
 </IMMEDIATE-ACTION>
 
 ## 核心理念

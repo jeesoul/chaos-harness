@@ -173,9 +173,14 @@ context-aware-trigger (Hook)
 
 ## 工作流阶段自动触发
 
-以下阶段到达时，**自动加载对应 skill 并启动 Agent Team**：
+**⚠️ 防止循环检测：**
+- 此 skill 只**推荐**，不**强制加载**其他 skill
+- 用户必须明确确认才会加载推荐的 skill
+- 不会在已执行过的情况下重复触发
 
-| 工作流阶段 | 自动触发 | Agent Team 配置 |
+以下阶段到达时，**推荐**启动 Agent Team（需要用户确认）：
+
+| 工作流阶段 | 推荐触发 | Agent Team 配置 |
 |-----------|---------|----------------|
 | W02 需求评审 | agent-team-orchestrator | product_manager + architect + user_advocate |
 | W04 架构评审 | agent-team-orchestrator | architect + security_expert + senior_dev |
@@ -183,17 +188,20 @@ context-aware-trigger (Hook)
 | W08 开发实现 | agent-team-orchestrator | 并行开发 Agent + Supervisor 监控 |
 | W09 代码审查 | agent-team-orchestrator | code_reviewer + security_reviewer + perf_reviewer |
 
-**触发机制**：
+**推荐机制（非强制）**：
 ```
 workflow-supervisor 更新阶段状态
     ↓
 auto-context 检测到阶段变化
     ↓
-判断是否为 Agent Team 阶段 (W02/W04/W07/W08/W09)
+输出推荐信息给用户（不是自动加载）
     ↓
-是 → 自动加载 agent-team-orchestrator
+<HARNESS_RECOMMEND>
+📌 检测到评审阶段，建议启动 Agent Team
+使用 /chaos-harness:agent-team-orchestrator 开始
+</HARNESS_RECOMMEND>
     ↓
-agent-team-orchestrator 自动启动 Agent Team
+用户确认后才加载 skill
 ```
 
 ---

@@ -182,45 +182,36 @@ pending → in_progress → completed
 
 ### 自动触发 Agent Team
 
-以下阶段到达时，**自动加载 agent-team-orchestrator skill**，无需用户确认：
+**⚠️ 防止循环检测：**
+- 此 skill 不会自动加载其他 skill
+- 只输出推荐信息，由用户决定是否执行
+- 推荐信息不会重复输出（同一阶段只推荐一次）
+
+以下阶段到达时，**推荐**用户启动 Agent Team：
 
 ```
-W02 需求评审 → 自动启动评审 Agent Team
-    ↓
-Supervisor spawn 3 个 Agent:
-├── product_manager: 需求合理性
-├── architect: 技术可行性
-└── user_advocate: 用户体验
-
-W04 架构评审 → 自动启动评审 Agent Team
-    ↓
-Supervisor spawn 3 个 Agent:
-├── architect: 架构合理性
-├── security_expert: 安全风险
-└── senior_dev: 实现可行性
-
-W07 Agent分配 → 自动启动开发 Agent Team
-    ↓
-Supervisor 分析 API 数量:
-├── 每个 API 分配给一个 backend Agent
-├── 前端页面分配给 frontend Agent
-└── 建立 Agent 间通信关系
-
-W08 开发实现 → 自动启动并行开发
-    ↓
-Supervisor 监控所有 Agent:
-├── 每 30s 检查进度
-├── 2 分钟无产出 → 提醒
-├── 5 分钟无产出 → 鞭策
-└── 10 分钟无产出 → 重分配任务
-
-W09 代码审查 → 自动启动审查 Agent Team
-    ↓
-Supervisor spawn 3 个 Agent:
-├── code_reviewer: 代码质量
-├── security_reviewer: 安全漏洞
-└── perf_reviewer: 性能问题
+W02 需求评审 → 推荐: /chaos-harness:agent-team-orchestrator
+W04 架构评审 → 推荐: /chaos-harness:agent-team-orchestrator
+W07 Agent分配 → 推荐: /chaos-harness:agent-team-orchestrator
+W08 开发实现 → 推荐: /chaos-harness:agent-team-orchestrator
+W09 代码审查 → 推荐: /chaos-harness:agent-team-orchestrator
 ```
+
+**推荐输出格式**：
+```
+<HARNESS_RECOMMEND>
+📌 当前阶段: W04 架构评审
+
+建议启动 Agent Team 进行多视角评审：
+- 架构师: 架构合理性
+- 安全专家: 安全风险
+- 高级开发: 实现可行性
+
+使用命令: /chaos-harness:agent-team-orchestrator
+</HARNESS_RECOMMEND>
+```
+
+**注意**：推荐不会自动执行，需要用户确认。
 
 ## 跳过请求处理
 
