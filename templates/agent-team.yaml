@@ -1,0 +1,169 @@
+# Agent Team 配置模板
+# 用于配置评审和开发阶段的 Agent Team 行为
+
+# ============================================================
+# 评审阶段配置
+# ============================================================
+
+review:
+  # W02 需求评审
+  W02:
+    agents:
+      - role: product_manager
+        focus: 需求合理性、业务价值
+        weight: 1.0
+      - role: architect
+        focus: 技术可行性、实现复杂度
+        weight: 1.0
+      - role: user_advocate
+        focus: 用户体验、交互流畅性
+        weight: 0.8
+    min_agents: 3
+    min_consensus: 0.6  # 60% 同意即通过
+    blocking: true
+    auto_start: true    # 自动启动，无需用户确认
+
+  # W04 架构评审
+  W04:
+    agents:
+      - role: architect
+        focus: 架构合理性、扩展性
+        weight: 1.0
+      - role: security_expert
+        focus: 安全风险、数据保护
+        weight: 1.2  # 安全视角权重更高
+      - role: senior_dev
+        focus: 实现可行性、技术债务
+        weight: 1.0
+    min_agents: 3
+    min_consensus: 0.7  # 70% 同意即通过
+    blocking: true
+    auto_start: true
+
+  # W09 代码审查
+  W09:
+    agents:
+      - role: code_reviewer
+        focus: 代码质量、规范遵守
+        weight: 1.0
+      - role: security_reviewer
+        focus: 安全漏洞、注入风险
+        weight: 1.2
+      - role: perf_reviewer
+        focus: 性能问题、资源泄漏
+        weight: 0.8
+    min_agents: 3
+    min_consensus: 0.6
+    blocking: true
+    auto_start: true
+
+# ============================================================
+# 开发阶段配置
+# ============================================================
+
+development:
+  # 最大并行 Agent 数
+  max_parallel_agents: 5
+
+  # 任务拆分策略
+  task_split_strategy: by_api  # by_api, by_module, by_feature
+
+  # 任务分配规则
+  assignment_rules:
+    - pattern: "Controller*.java"
+      assign_to: backend_dev
+    - pattern: "Service*.java"
+      assign_to: backend_dev
+    - pattern: "*.vue"
+      assign_to: frontend_dev
+    - pattern: "*.tsx"
+      assign_to: frontend_dev
+
+  # 依赖关系处理
+  dependency_handling:
+    notify_related_agents: true
+    wait_for_dependencies: true
+    timeout: 30m
+
+  # 监控配置
+  monitoring:
+    check_interval: 30s
+    idle_warning_threshold: 2m
+    idle_critical_threshold: 5m
+    reassign_threshold: 10m
+
+  # 鞭策配置
+  whip:
+    enabled: true
+    log_to_effectiveness: true
+    templates:
+      warning: "你的任务 '{task}' 已经 {idle_time} 没有进展。其他 Agent 已完成 {progress}%。"
+      critical: "⚠️ 已 {idle_time} 无产出，将被记录到 effectiveness-log。"
+      reassign: "任务 '{task}' 将重新分配给其他 Agent。"
+
+# ============================================================
+# Supervisor 配置
+# ============================================================
+
+supervisor:
+  # Supervisor Agent 角色定义
+  role: "team_supervisor"
+
+  # 职责
+  responsibilities:
+    - task_assignment
+    - progress_monitoring
+    - laziness_detection
+    - conflict_resolution
+    - result_synthesis
+
+  # 通信配置
+  communication:
+    # Agent 间通信频率
+    heartbeat_interval: 30s
+    # 最大等待响应时间
+    response_timeout: 60s
+    # 冲突检测频率
+    conflict_check_interval: 1m
+
+  # 结果汇总配置
+  result_synthesis:
+    # 自动通过条件
+    auto_pass:
+      min_score: 8.0
+      max_risks: 0
+      max_controversies: 0
+    # 必须用户确认条件
+    require_user_confirm:
+      min_score: 6.0
+      has_risks: true
+      has_controversies: true
+
+# ============================================================
+# 铁律配置
+# ============================================================
+
+iron_laws:
+  IL-TEAM001:
+    rule: "REVIEW REQUIRES MULTIPLE AGENTS"
+    severity: critical
+    enforcement: block
+    bypass_allowed: false
+
+  IL-TEAM002:
+    rule: "DEVELOPMENT REQUIRES PARALLEL AGENTS"
+    severity: warning
+    enforcement: warn
+    bypass_allowed: false
+
+  IL-TEAM003:
+    rule: "MONITORING MUST BE CONTINUOUS"
+    severity: critical
+    enforcement: block
+    bypass_allowed: false
+
+  IL-TEAM004:
+    rule: "RESULTS REQUIRE USER CONFIRMATION"
+    severity: critical
+    enforcement: block
+    bypass_allowed: false

@@ -80,6 +80,89 @@ END IF
 | **IL004** | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | **IL005** | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
+## Agent Team 铁律
+
+以下铁律用于 Agent Team 协作：
+
+| ID | 铁律 | 说明 |
+|----|------|------|
+| **IL-TEAM001** | REVIEW REQUIRES MULTIPLE AGENTS | 评审必须多 Agent 并行 |
+| **IL-TEAM002** | DEVELOPMENT REQUIRES PARALLEL AGENTS | 开发必须并行 Agent |
+| **IL-TEAM003** | MONITORING MUST BE CONTINUOUS | 监督必须持续进行 |
+| **IL-TEAM004** | RESULTS REQUIRE USER CONFIRMATION | 结果必须用户确认 |
+
+### IL-TEAM001: 评审必须多 Agent
+
+```
+REVIEW REQUIRES MULTIPLE AGENTS
+```
+
+- 评审阶段必须启动至少 2 个 Agent
+- 单 Agent 评审无效
+- 拒绝"单人评审就够了"的借口
+
+**检测模式**：
+```
+IF 评审阶段 AND Agent数量 < 2 THEN
+    BLOCK: "评审需要多个 Agent 视角，请启动 Agent Team"
+END IF
+```
+
+**绕过尝试检测**：
+| 借口 | 反驳 |
+|------|------|
+| "这个很简单，一个人审就行" | "简单不是绕过多视角的理由。自动启动 Agent Team。" |
+| "时间紧急，来不及多 Agent" | "时间紧急更需要多 Agent 避免返工。无例外。" |
+| "我已经是专家了" | "专家也需要其他视角。IL-TEAM001 无例外。" |
+
+### IL-TEAM002: 开发必须并行
+
+```
+DEVELOPMENT REQUIRES PARALLEL AGENTS
+```
+
+- 开发阶段必须启动多个 Agent 并行
+- 大型任务自动拆分
+- 拒绝串行开发
+
+**检测模式**：
+```
+IF 开发阶段 AND 任务可拆分 AND Agent数量 = 1 THEN
+    WARN: "开发任务可以并行，建议启动多个 Agent"
+END IF
+
+IF 大型项目 AND Agent数量 = 1 THEN
+    BLOCK: "大型项目必须并行开发，自动启动 Agent Team"
+END IF
+```
+
+### IL-TEAM003: 监督必须持续
+
+```
+MONITORING MUST BE CONTINUOUS
+```
+
+- Supervisor 必须全程监控 Agent 进度
+- 检测到偷懒必须鞭策
+- 不得忽略 Agent 无响应
+
+**监控周期**：
+| 空闲时间 | 动作 |
+|---------|------|
+| 2 分钟 | 提醒更新进度 |
+| 5 分钟 | 鞭策警告 |
+| 10 分钟 | 任务重分配 |
+
+### IL-TEAM004: 结果必须用户确认
+
+```
+RESULTS REQUIRE USER CONFIRMATION
+```
+
+- Agent Team 结果必须汇总给用户
+- 存在风险点必须用户确认
+- 不得自动通过风险点
+
 ## 用户自定义铁律
 
 用户可以在 `.claude/harness/iron-laws.yaml` 中定义自己的铁律：

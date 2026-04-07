@@ -171,6 +171,31 @@ context-aware-trigger (Hook)
 | PRD 编写 | *PRD*, *需求* | product-lifecycle |
 | 原型设计 | *prototype*, *design* | product-lifecycle P03 |
 
+## 工作流阶段自动触发
+
+以下阶段到达时，**自动加载对应 skill 并启动 Agent Team**：
+
+| 工作流阶段 | 自动触发 | Agent Team 配置 |
+|-----------|---------|----------------|
+| W02 需求评审 | agent-team-orchestrator | product_manager + architect + user_advocate |
+| W04 架构评审 | agent-team-orchestrator | architect + security_expert + senior_dev |
+| W07 Agent分配 | agent-team-orchestrator | 自动拆分任务，分配开发 Agent |
+| W08 开发实现 | agent-team-orchestrator | 并行开发 Agent + Supervisor 监控 |
+| W09 代码审查 | agent-team-orchestrator | code_reviewer + security_reviewer + perf_reviewer |
+
+**触发机制**：
+```
+workflow-supervisor 更新阶段状态
+    ↓
+auto-context 检测到阶段变化
+    ↓
+判断是否为 Agent Team 阶段 (W02/W04/W07/W08/W09)
+    ↓
+是 → 自动加载 agent-team-orchestrator
+    ↓
+agent-team-orchestrator 自动启动 Agent Team
+```
+
 ---
 
 ## 配置自定义场景

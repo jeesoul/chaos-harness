@@ -114,14 +114,14 @@ digraph workflow {
 | 阶段 | 名称 | 输入 | 输出 | 角色 |
 |------|------|------|------|------|
 | W01 | 需求设计 | 项目描述 | 需求文档 | architect |
-| W02 | 需求评审 | 需求文档 | 评审报告 | **collaboration-reviewer** |
+| W02 | 需求评审 | 需求文档 | 评审报告 | **agent-team-orchestrator** (自动启动 3 个评审 Agent) |
 | W03 | 架构设计 | 需求文档 | 架构文档 | architect |
-| W04 | 架构评审 | 架构文档 | 评审报告 | **collaboration-reviewer** |
+| W04 | 架构评审 | 架构文档 | 评审报告 | **agent-team-orchestrator** (自动启动 3 个评审 Agent) |
 | W05 | 技术选型 | 架构文档 | 技术方案 | architect |
 | W06 | API设计 | 技术方案 | API文档 | backend_dev |
-| W07 | Agent分配 | 全部文档 | 分配方案 | supervisor |
-| W08 | 开发实现 | 设计文档 | 代码 | backend/frontend |
-| W09 | 代码审查 | 代码 | 审查报告 | **collaboration-reviewer** |
+| W07 | Agent分配 | 全部文档 | 分配方案 | **agent-team-orchestrator** (自动拆分任务) |
+| W08 | 开发实现 | 设计文档 | 代码 | **agent-team-orchestrator** (自动启动并行开发) |
+| W09 | 代码审查 | 代码 | 审查报告 | **agent-team-orchestrator** (自动启动 3 个审查 Agent) |
 | W10 | 测试验证 | 代码 | 测试报告 | tester |
 | W11 | 文档完善 | 全部产出 | 文档 | backend_dev |
 | W12 | 发布部署 | 全部产出 | 发布包 + **effectiveness-log** | backend_dev |
@@ -179,6 +179,48 @@ pending → in_progress → completed
 | in_progress | completed | 阶段产出完成 + 验证通过 |
 | pending | skipped | 用户批准 + 非必经阶段 |
 | in_progress | blocked | 检测到阻塞问题 |
+
+### 自动触发 Agent Team
+
+以下阶段到达时，**自动加载 agent-team-orchestrator skill**，无需用户确认：
+
+```
+W02 需求评审 → 自动启动评审 Agent Team
+    ↓
+Supervisor spawn 3 个 Agent:
+├── product_manager: 需求合理性
+├── architect: 技术可行性
+└── user_advocate: 用户体验
+
+W04 架构评审 → 自动启动评审 Agent Team
+    ↓
+Supervisor spawn 3 个 Agent:
+├── architect: 架构合理性
+├── security_expert: 安全风险
+└── senior_dev: 实现可行性
+
+W07 Agent分配 → 自动启动开发 Agent Team
+    ↓
+Supervisor 分析 API 数量:
+├── 每个 API 分配给一个 backend Agent
+├── 前端页面分配给 frontend Agent
+└── 建立 Agent 间通信关系
+
+W08 开发实现 → 自动启动并行开发
+    ↓
+Supervisor 监控所有 Agent:
+├── 每 30s 检查进度
+├── 2 分钟无产出 → 提醒
+├── 5 分钟无产出 → 鞭策
+└── 10 分钟无产出 → 重分配任务
+
+W09 代码审查 → 自动启动审查 Agent Team
+    ↓
+Supervisor spawn 3 个 Agent:
+├── code_reviewer: 代码质量
+├── security_reviewer: 安全漏洞
+└── perf_reviewer: 性能问题
+```
 
 ## 跳过请求处理
 
