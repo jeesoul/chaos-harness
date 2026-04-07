@@ -1,6 +1,6 @@
 identity:
   name: product-lifecycle-harness
-  version: "1.1.0"
+  version: "1.2.0"
   createdAt: "2026-04-06"
   createdBy: workflow
   suitableFor:

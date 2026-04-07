@@ -50,7 +50,7 @@ export type {
 } from './core/version-manager/index.js';
 
 // Version
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 
 // Environment Fixer
 export {

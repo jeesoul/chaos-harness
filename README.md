@@ -407,6 +407,36 @@ claude plugins uninstall chaos-harness@chaos-harness
 claude plugins marketplace remove chaos-harness
 ```
 
+### 升级指南
+
+**从源码升级（推荐）：**
+
+```bash
+# 1. 拉取最新代码
+cd /path/to/chaos-harness
+git pull origin main
+
+# 2. 重新注册 marketplace
+claude plugins marketplace remove chaos-harness
+claude plugins marketplace add "/path/to/chaos-harness"    # 使用你的实际路径
+
+# 3. 卸载旧版本并安装新版本
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins install chaos-harness@chaos-harness
+
+# 4. 验证版本
+# 重启 Claude Code 后执行
+/chaos-harness:overview
+```
+
+**版本升级说明：**
+
+| 版本 | 主要更新 | 升级注意 |
+|------|---------|---------|
+| 1.2.0 | 自学习闭环系统、自适应 Harness、Agent Team 铁律 | 建议清理旧日志：`rm -rf ~/.claude/harness/*.json` |
+| 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 | 首次稳定版本 |
+| 1.0.0 | 核心框架：Skills + Hooks + Templates | 初始版本 |
+
 ---
 
 ## 命令速查
