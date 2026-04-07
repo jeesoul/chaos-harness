@@ -222,7 +222,35 @@ RESULTS REQUIRE USER CONFIRMATION
 
 ## 评审日志
 
-每次评审记录到 `output/{version}/review-log.md`：
+每次评审完成后，必须记录到状态文件：
+
+使用 `shared/state-helpers.md` 中的函数：
+
+```markdown
+评审完成后:
+
+1. Log-Review-Complete(version, stage, result)
+   → 写入 output/{version}/review-log.md
+   → 更新 .chaos-harness/state.json 的阶段状态
+
+2. Update-Stage-Status(stage, 'completed')
+   → 更新工作流状态
+```
+
+**示例调用**：
+```markdown
+W04 架构评审完成后:
+
+调用: Log-Review-Complete('v0.1', 'W04', {
+  agents: ['architect-1', 'security-1', 'senior-dev-1'],
+  score: 7.5,
+  controversies: 1,
+  risks: 1,
+  user_confirmed: true
+})
+```
+
+**记录格式示例**：
 
 ```markdown
 ## 评审记录 - {阶段}

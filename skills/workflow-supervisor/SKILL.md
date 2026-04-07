@@ -423,9 +423,31 @@ function detectWorkflowLaziness(state, context) {
 
 **阶段完成后更新效果日志：**
 
-使用 `shared/helpers.md#Update-Effectiveness-Log` 写入：
+使用 `shared/state-helpers.md` 中的函数：
+
 ```
-output/{version}/effectiveness-log.md
+阶段完成时必须执行:
+1. Update-Stage-Status(stage, 'completed', outputPath)
+   → 更新 .chaos-harness/state.json
+   → 写入 workflow-log.json
+
+2. Update-Effectiveness-Log(version, content)
+   → 追加到 output/{version}/effectiveness-log.md
+```
+
+**示例调用**：
+```markdown
+阶段 W08 开发实现完成时:
+
+调用: Update-Stage-Status('W08', 'completed', 'output/v0.1/W08')
+调用: Update-Effectiveness-Log('v0.1', '
+## W08 开发实现 完成于 ${timestamp}
+
+- 完成的任务: UserService, OrderService
+- 测试覆盖率: 85%
+- 代码文件: 12 个
+- 铁律触发: 2 次
+')
 ```
 
 统计内容：
@@ -435,7 +457,7 @@ output/{version}/effectiveness-log.md
 - 阶段效果评分
 
 **自学习闭环：**
-1. 阶段完成 → Update-Effectiveness-Log
+1. 阶段完成 → Update-Stage-Status + Update-Effectiveness-Log
 2. 效果数据 → learning-analyzer 分析
 3. 发现问题 → 优化工作流
 4. 下次运行 → 更高效

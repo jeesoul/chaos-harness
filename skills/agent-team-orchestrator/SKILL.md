@@ -609,59 +609,124 @@ END IF
 │                    Skills 协作关系图                          │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
+│  project-scanner                                            │
+│       │                                                     │
+│       │ 扫描完成，推荐生成 Harness                           │
+│       ▼                                                     │
+│  harness-generator                                          │
+│       │                                                     │
+│       │ Harness 生成完成，推荐启动工作流                     │
+│       ▼                                                     │
 │  workflow-supervisor                                        │
 │       │                                                     │
-│       │ 检测阶段变化                                          │
+│       │ 阶段到达 W02/W04/W07/W08/W09                        │
+│       │ 推荐启动 Agent Team（非自动）                        │
 │       ▼                                                     │
-│  auto-context ─────────────────────────────────────────┐   │
-│       │                                                │   │
-│       │ 推荐启动 Agent Team                              │   │
-│       ▼                                                │   │
-│  agent-team-orchestrator ◄────────────────────────────┘   │
+│  agent-team-orchestrator ◄────────────────────────────────┐ │
+│       │                                                   │ │
+│       ├──── 评审阶段 ────► collaboration-reviewer         │ │
+│       │       │                                           │ │
+│       │       └──── 评审完成 ────► 更新工作流状态 ────────┘ │
 │       │                                                     │
-│       ├──── spawn 评审 Agent ────► collaboration-reviewer  │
+│       ├──── 开发阶段 ────► 技术栈模板 skill                  │
+│       │                   (java-checkstyle, etc.)           │
 │       │                                                     │
-│       ├──── spawn 开发 Agent ────► 各技术栈模板 skill        │
+│       ├──── 检测偷懒 ────► Log-Laziness-Pattern             │
+│       │                   ↓                                  │
+│       │             laziness-log.json                        │
 │       │                                                     │
-│       └──── 监控 + 鞭策 ─────────► iron-law-enforcer        │
-│                                          │                  │
-│                                          │ 记录违规          │
-│                                          ▼                  │
-│                                    learning-analyzer        │
-│                                          │                  │
-│                                          │ 分析 + 优化建议   │
-│                                          ▼                  │
-│                                   effectiveness-log         │
+│       └──── 检测违规 ────► iron-law-enforcer                 │
+│                           │                                  │
+│                           ├─► Log-Iron-Law-Trigger          │
+│                           │     ↓                            │
+│                           │   iron-law-log.json              │
+│                           │                                  │
+│                           └─► 推荐调用 learning-analyzer     │
+│                                 ↓                            │
+│                           learning-log.json                  │
+│                                                              │
+│  version-locker                                              │
+│       │                                                     │
+│       │ 创建版本后，其他 skill 自动使用版本信息              │
+│       ▼                                                     │
+│  所有输出 skill                                              │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### 自动关联触发
 
-| 当前 Skill | 检测条件 | 自动推荐/加载 |
-|-----------|---------|--------------|
-| workflow-supervisor | 到达 W02/W04/W07/W08/W09 | **自动加载** agent-team-orchestrator |
-| agent-team-orchestrator | 评审阶段 | **自动加载** collaboration-reviewer |
-| agent-team-orchestrator | 开发阶段 | **推荐** 对应技术栈模板 |
-| agent-team-orchestrator | 检测到违规 | **自动调用** iron-law-enforcer |
-| iron-law-enforcer | 记录到日志 | **自动调用** learning-analyzer |
-| collaboration-reviewer | 评审完成 | **返回** agent-team-orchestrator 汇总 |
+| 当前 Skill | 检测条件 | 推荐下一步 | 状态写入 |
+|-----------|---------|-----------|---------|
+| project-scanner | 扫描完成 | harness-generator | scan-result.json |
+| harness-generator | 生成完成 | workflow-supervisor | harness.yaml |
+| workflow-supervisor | 到达 W02/W04/W07/W08/W09 | agent-team-orchestrator | state.json |
+| agent-team-orchestrator | 评审阶段 | collaboration-reviewer | effectiveness-log.md |
+| agent-team-orchestrator | 开发阶段 | 对应技术栈模板 | effectiveness-log.md |
+| agent-team-orchestrator | 检测到违规 | iron-law-enforcer | laziness-log.json |
+| iron-law-enforcer | 违规记录 | learning-analyzer | iron-law-log.json |
+| collaboration-reviewer | 评审完成 | workflow-supervisor（状态更新） | review-log.md |
+| version-locker | 版本创建 | 所有输出 skill 使用版本 | state.json |
 
 ### 用户触发词检测
 
-| 用户说... | 检测为... | 自动推荐... |
-|----------|---------|------------|
-| "评审一下" | 需要多视角评审 | agent-team-orchestrator + collaboration-reviewer |
-| "并行开发" | 需要并行 Agent | agent-team-orchestrator |
-| "为什么这么慢" | 可能单线程 | 检查 Agent Team 状态 |
-| "分配任务" | 需要任务拆分 | agent-team-orchestrator W07 |
-| "监督一下" | 需要监控 | agent-team-orchestrator Supervisor |
+| 用户说... | 检测为... | 推荐调用... | 状态写入 |
+|----------|---------|------------|---------|
+| "评审一下" | 需要多视角评审 | agent-team-orchestrator + collaboration-reviewer | review-log.md |
+| "并行开发" | 需要并行 Agent | agent-team-orchestrator | effectiveness-log.md |
+| "为什么这么慢" | 可能单线程 | 检查 Agent Team 状态 | laziness-log.json |
+| "分配任务" | 需要任务拆分 | agent-team-orchestrator W07 | state.json |
+| "监督一下" | 需要监控 | agent-team-orchestrator Supervisor | laziness-log.json |
+| "扫描项目" | 需要项目分析 | project-scanner | scan-result.json |
+| "生成约束" | 需要 Harness | harness-generator | harness.yaml |
+| "创建版本" | 需要版本锁定 | version-locker | state.json |
+| "查看进度" | 需要状态查看 | project-state | state.json |
+| "分析学习" | 需要优化建议 | learning-analyzer | learning-log.json |
 
 ---
 
 ## 效果追踪
 
-每次 Agent Team 执行后，记录到 effectiveness-log：
+**每次 Agent Team 执行后，必须记录到状态文件：**
+
+使用 `shared/state-helpers.md` 中的函数：
+
+```markdown
+Agent Team 执行完成后:
+
+1. Log-Agent-Team-Execution(version, execution)
+   → 写入 output/{version}/effectiveness-log.md
+
+2. 如果检测到偷懒:
+   Log-Laziness-Pattern(agentId, patternId, context)
+   → 写入 ~/.claude/harness/laziness-log.json
+
+3. 如果检测到违规:
+   Log-Iron-Law-Trigger(ironLawId, context, action)
+   → 写入 ~/.claude/harness/iron-law-log.json
+```
+
+**示例调用**：
+```markdown
+Agent Team 执行完成后:
+
+调用: Log-Agent-Team-Execution('v0.1', {
+  stage: 'W04',
+  agents: [
+    { id: 'architect-1', role: 'architect', status: 'completed', duration: 5000 },
+    { id: 'security-1', role: 'security_expert', status: 'completed', duration: 7000 },
+    { id: 'senior-dev-1', role: 'senior_dev', status: 'completed', duration: 4000 }
+  ],
+  total_duration: 16000,
+  violations: 0,
+  whip_count: 0
+})
+
+如果 Agent-backend-2 偷懒:
+调用: Log-Laziness-Pattern('backend-2', 'LP001', '5分钟无产出')
+```
+
+**记录格式示例**：
 
 ```markdown
 ## Agent Team 执行记录
