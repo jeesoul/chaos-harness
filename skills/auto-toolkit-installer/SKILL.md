@@ -15,12 +15,15 @@ version: "1.3.0"
 
 ## 检测工具
 
-| 工具 | 用途 | 插件 ID |
-|------|------|--------|
+| 工具 | 用途 | 类型 |
+|------|------|------|
+| web-access | CDP 浏览器自动化、搜索、网页抓取 | **内置 Skill** |
 | skill-creator | 创建业务场景专属 skill | `skill-creator@claude-plugins-official` |
 | superpowers-chrome | Chrome DevTools MCP 浏览器自动化 | `superpowers-chrome@superpowers-marketplace` |
 | ui-ux-pro-max | UI/UX 设计评审 | `ui-ux-pro-max@ui-ux-pro-max-skill` |
 | webapp-testing | Playwright 自动化测试 | `webapp-testing@anthropics/skills` |
+
+**web-access** 是 chaos-harness 内置的联网 skill，无需额外安装。提供 CDP Proxy 直连用户日常 Chrome，天然携带登录态，支持搜索、网页抓取、浏览器自动化操作。
 
 ## 安装流程
 

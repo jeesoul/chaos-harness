@@ -19,7 +19,7 @@ version: "1.3.0"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（15 个）
+## 可用 Skills（16 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
@@ -38,6 +38,7 @@ version: "1.3.0"
 | plugin-manager | 插件、配置 | 插件和铁律管理 |
 | auto-toolkit-installer | 工具链、安装 | 自动化工具检测安装 |
 | auto-context | 后台自动 | 智能场景感知 |
+| web-access | 搜索、网页、CDP、浏览器 | 联网操作与 CDP 浏览器自动化 |
 
 ## 插件系统
 

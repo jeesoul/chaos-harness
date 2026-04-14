@@ -77,6 +77,13 @@ SessionStart → 自动分析(learning-log ≥ 5 或 iron-law ≥ 3) → analysi
 | "手动分析" | 运行 learning-analyzer.mjs |
 | "清理日志" | 重置所有日志文件 |
 
+## 内置 Skill 与 Hook 映射
+
+| Skill | Hook 触发 | 说明 |
+|-------|-----------|------|
+| web-access (CDP 操作) | learning-update | CDP 操作的 curl 命令上下文被记录 |
+| web-access (站点经验) | project-pattern-writer | 新发现的站点模式自动积累 |
+
 ## References 索引
 
 | 文件 | 何时加载 |

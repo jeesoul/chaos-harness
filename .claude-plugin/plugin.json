@@ -24,6 +24,9 @@
     "self-learning",
     "auto-toolkit-installer",
     "playwright",
-    "chrome-devtools"
+    "chrome-devtools",
+    "web-access",
+    "cdp-proxy",
+    "browser-automation"
   ]
 }

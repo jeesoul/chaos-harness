@@ -32,5 +32,9 @@ CLAUDE.md
 references/project-patterns/*.md
 !references/project-patterns/.gitkeep
 
+# 站点经验积累（web-access 跨会话本地知识）
+skills/web-access/references/site-patterns/*.md
+!skills/web-access/references/site-patterns/.gitkeep
+
 # 开发用 package.json 备份，不提交
 package.dev.json
