@@ -56,6 +56,18 @@ if (state) {
   hookPrint(`- 版本: ${state.current_version || '未设置'}`);
   hookPrint(`- 阶段: ${state.workflow?.current_stage || '未开始'}`);
   hookPrint(`- 上次会话: ${state.last_session || 'N/A'}`);
+
+  // P03 阶段智能提示
+  const currentStage = state.workflow?.current_stage || '';
+  const stagesCompleted = state.workflow?.stages_completed || [];
+  const hasP02 = stagesCompleted.some(s => s.stage && (s.stage.includes('P02') || s.stage.includes('W02')));
+  if (currentStage === 'P03' && hasP02) {
+    hookPrint('');
+    hookPrint('**P03 原型设计阶段已就绪:**');
+    hookPrint("说 '生成界面' 启动 UI 生成（从 PRD 自动生成可运行的前端代码）");
+    hookPrint("说 '查看工作流' 了解当前阶段详情");
+  }
+
   hookPrint('</CHAOS_HARNESS_STATE_RECOVERY>');
 } else {
   hookPrint('');

@@ -157,6 +157,7 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 | 敏感配置 | .env, *secret* | IL005 |
 | PRD 编写 | *PRD*, *需求* | product-lifecycle |
 | 原型设计 | *prototype*, *design* | product-lifecycle P03 |
+| P03 阶段 + PRD 就绪 | state.json current_stage=P02→P03 | 直接加载 ui-generator |
 
 ## 工作流阶段自动触发
 
@@ -174,6 +175,18 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 | W07 Agent分配 | agent-team-orchestrator | 自动拆分任务，分配开发 Agent |
 | W08 开发实现 | agent-team-orchestrator | 并行开发 Agent + Supervisor 监控 |
 | W09 代码审查 | agent-team-orchestrator | code_reviewer + security_reviewer + perf_reviewer |
+
+### P03 原型设计阶段 — 直接加载
+
+当检测到 P03 阶段且有 PRD 时，**主动提示并直接加载 ui-generator**：
+
+```
+检测到 P03 原型设计阶段 + PRD 已就绪
+→ 自动提示: "检测到你在原型设计阶段，PRD 已就绪。可以说'生成界面'启动 UI 生成"
+→ 如用户确认，直接加载 ui-generator skill
+```
+
+这是 auto-context 唯一的例外规则 — 因为 P03 + PRD = 明确的可执行状态，减少交互步骤。
 
 **推荐机制（非强制）**：
 ```
