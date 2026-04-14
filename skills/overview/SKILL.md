@@ -19,7 +19,7 @@ version: "1.3.0"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（18 个）
+## 可用 Skills（20 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
@@ -32,6 +32,8 @@ version: "1.3.0"
 | harness-generator | 生成约束 | 基于扫描生成铁律 |
 | learning-analyzer | 学习分析、自学习 | 失败模式发现、铁律优化 |
 | product-lifecycle | PRD、需求、原型 | 产品全生命周期（含强制评审） |
+| product-manager | 需求分析、竞品分析、Kano | 产品经理工作助手 |
+| prd-validator | PRD检查、PRD验证 | PRD 质量检查器 |
 | java-checkstyle | Java 项目 | Java 代码规范 |
 | project-state | 继续、恢复 | 会话持久化 |
 | hooks-manager | 钩子、hooks | 查看钩子状态 |

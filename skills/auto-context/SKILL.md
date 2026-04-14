@@ -173,10 +173,14 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 | 文档输出 | output/*.md (无版本) | IL001 |
 | 敏感配置 | .env, *secret* | IL005 |
 | PRD 编写 | *PRD*, *需求* | product-lifecycle |
+| PRD 编辑中 | 编辑 *PRD*.md | prd-validator（实时检查） |
 | 原型设计 | *prototype*, *design* | product-lifecycle P03 |
 | P03 阶段 + PRD 就绪 | state.json current_stage=P02→P03 | 直接加载 ui-generator |
 | **P03 设计完成** | **P03-memory.yaml + ui_generated=true** | **agent-team-orchestrator (product_manager + user_advocate + designer)** |
 | **P04 技术完成** | **tech/architecture.md + tech/api-design.md 存在** | **agent-team-orchestrator (architect + security_expert + senior_dev)** |
+| 需求文件创建 | *需求*, *访谈*, *调研* | product-manager (P01 流程) |
+| 竞品分析讨论 | 内容包含 "竞品"/"对手" | product-manager (竞品分析模块) |
+| MVP/优先级讨论 | 内容包含 "优先级"/"MVP"/"重要" | product-manager (Kano 分析) |
 
 ## 工作流阶段自动触发
 

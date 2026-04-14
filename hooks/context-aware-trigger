@@ -40,7 +40,13 @@ if [ -n "$FILE_PATH" ]; then
             recommend "检测到 React 组件，已加载 React 模板铁律"
             ;;
         *PRD*|*需求*|*requirement*)
-            recommend "检测到 PRD 文档，建议使用 product-lifecycle"
+            recommend "检测到 PRD 文档，建议使用 product-lifecycle，完成后使用 prd-validator 检查质量"
+            ;;
+        *访谈*|*调研*|*用户*)
+            recommend "检测到需求相关文件，建议使用 product-manager 进行需求池分析"
+            ;;
+        *竞品*|*competitor*)
+            recommend "检测到竞品分析，建议使用 product-manager 竞品分析模块"
             ;;
         *.sql|*migration*|*schema*)
             printf '\n<HARNESS_IRON_LAW>⚡ IL-TECH003: 数据库变更需要迁移脚本</HARNESS_IRON_LAW>\n'
