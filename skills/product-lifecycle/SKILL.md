@@ -20,60 +20,15 @@ license: MIT
 
 ## 执行规则
 
-**加载此 skill 后，你必须执行以下步骤：**
+加载此 skill 后：
 
-### Step 1: 检测当前阶段
-
-使用 Read 检查 `output/{version}/product-state.yaml`：
-- 存在 → 恢复当前阶段
-- 不存在 → 从 P01 开始新流程
-
-### Step 2: 显示阶段状态
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  产品研发流程状态                                            │
-├─────────────────────────────────────────────────────────────┤
-│  版本: {version}                                             │
-│  当前阶段: {stage}                                           │
-│  完成度: {percentage}%                                       │
-│  待处理: {pending items}                                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Step 3: 执行当前阶段
-
-根据阶段执行对应流程（见 10 阶段定义）
-
-### Step 4: 阶段验证与记忆
-
-每个阶段完成后：
-1. 执行自验证检查点
-2. 写入阶段记忆到 `output/{version}/memory/{stage}-memory.md`
-3. 更新 `product-state.yaml`
-4. 触发学习记录
+1. **检测当前阶段** — 读取 `output/{version}/product-state.yaml`，存在则恢复，不存在则从 P01 开始
+2. **执行当前阶段** — 根据阶段编号执行对应流程（见 10 阶段定义）
+3. **阶段完成后** — 执行自验证 → 写入阶段记忆 → 更新 product-state.yaml → 触发学习记录
 
 ## 10 阶段研发流程
 
-```dot
-digraph product_lifecycle {
-    rankdir=LR;
-    
-    P01 [label="P01\n需求收集", shape=box, style=filled, fillcolor="#E3F2FD"];
-    P02 [label="P02\n需求分析", shape=box, style=filled, fillcolor="#E3F2FD"];
-    P03 [label="P03\n原型设计", shape=box, style=filled, fillcolor="#E8F5E9"];
-    P04 [label="P04\n技术方案", shape=box, style=filled, fillcolor="#E8F5E9"];
-    P05 [label="P05\n开发规划", shape=box, style=filled, fillcolor="#FFF3E0"];
-    P06 [label="P06\n前端开发", shape=box, style=filled, fillcolor="#FFF3E0"];
-    P07 [label="P07\n后端开发", shape=box, style=filled, fillcolor="#FFF3E0"];
-    P08 [label="P08\n集成测试", shape=box, style=filled, fillcolor="#FCE4EC"];
-    P09 [label="P09\n验收交付", shape=box, style=filled, fillcolor="#F3E5F5"];
-    P10 [label="P10\n迭代优化", shape=box, style=filled, fillcolor="#E0E0E0"];
-    
-    P01 -> P02 -> P03 -> P04 -> P05 -> P06 -> P07 -> P08 -> P09 -> P10;
-    P10 -> P01 [label="下一迭代", style=dashed];
-}
-```
+P01 需求收集 → P02 需求分析 → P03 原型设计 → P04 技术方案 → P05 开发规划 → P06 前端开发 → P07 后端开发 → P08 集成测试 → P09 验收交付 → P10 迭代优化 → （回到 P01 下一迭代）
 
 ***
 
@@ -881,60 +836,19 @@ pending → in_progress → completed
 
 ## 输出目录结构
 
-```
-output/{version}/
-├── requirements/
-│   ├── pool.md
-│   ├── sources.md
-│   ├── mvp-scope.md
-│   └── risk-assessment.md
-├── docs/
-│   ├── PRD.md
-│   ├── api-docs.md
-│   ├── user-manual.md
-│   └── ops-manual.md
-├── design/
-│   ├── ia-diagram.md
-│   ├── user-flow.md
-│   ├── prototypes/
-│   └── design-system.md
-├── tech/
-│   ├── architecture.md
-│   ├── api-design.md
-│   ├── database-design.md
-│   └── tech-review.md
-├── plan/
-│   ├── task-breakdown.md
-│   ├── milestones.md
-│   ├── resource-allocation.md
-│   └── risk-plan.md
-├── dev/
-│   ├── frontend-log.md
-│   └── backend-log.md
-├── test/
-│   ├── frontend-coverage.md
-│   ├── backend-coverage.md
-│   ├── e2e-report.md
-│   ├── api-test-report.md
-│   ├── performance-report.md
-│   └── security-report.md
-├── release/
-│   ├── checklist.md
-│   ├── rollback-plan.md
-│   └── release-note.md
-├── iteration/
-│   ├── data-analysis.md
-│   ├── user-feedback.md
-│   ├── retrospective.md
-│   └── next-version-plan.md
-├── memory/
-│   ├── P01-memory.yaml
-│   ├── P02-memory.yaml
-│   └── ...
-├── product-state.yaml
-├── VERSION-LOCK
-└── learning-log.json
-```
+| 目录 | 内容 |
+|------|------|
+| `requirements/` | pool.md, sources.md, mvp-scope.md, risk-assessment.md |
+| `docs/` | PRD.md, api-docs.md, user-manual.md, ops-manual.md |
+| `design/` | ia-diagram.md, user-flow.md, prototypes/, design-system.md |
+| `tech/` | architecture.md, api-design.md, database-design.md, tech-review.md |
+| `plan/` | task-breakdown.md, milestones.md, resource-allocation.md, risk-plan.md |
+| `dev/` | frontend-log.md, backend-log.md |
+| `test/` | frontend-coverage.md, backend-coverage.md, e2e-report.md, api-test-report.md, performance-report.md, security-report.md |
+| `release/` | checklist.md, rollback-plan.md, release-note.md |
+| `iteration/` | data-analysis.md, user-feedback.md, retrospective.md, next-version-plan.md |
+| `memory/` | P01-memory.yaml, P02-memory.yaml, ... |
+| 根目录 | product-state.yaml, VERSION-LOCK, learning-log.json |
 
 ***
 

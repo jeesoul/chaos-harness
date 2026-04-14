@@ -17,10 +17,12 @@ version: "1.3.0"
 
 ```
 ~/.claude/harness/
-├── plugins.yaml           # 插件配置
-├── iron-laws.yaml         # 自定义铁律
-├── plugin-log.json        # 插件执行日志
-└── iron-law-log.json      # 铁律触发日志
+| 文件 | 用途 |
+|------|------|
+| plugins.yaml | 插件配置 |
+| iron-laws.yaml | 自定义铁律 |
+| plugin-log.json | 插件执行日志 |
+| iron-law-log.json | 铁律触发日志 |
 ```
 
 ## 查看插件

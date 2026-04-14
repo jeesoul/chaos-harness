@@ -139,21 +139,7 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 
 ## 与其他 Skills 的联动
 
-```
-context-aware-trigger (Hook)
-        ↓
-    检测场景
-        ↓
-┌───────┴───────┐
-↓               ↓
-推荐 Skill   激活铁律
-↓               ↓
-用户确认    自动执行
-↓               ↓
-└───────┬───────┘
-        ↓
-    learning-update (记录)
-```
+场景感知触发流程：Hook 检测场景 → 推荐 Skill / 激活铁律 → 用户确认后加载 → 记录到 learning-update。
 
 ***
 

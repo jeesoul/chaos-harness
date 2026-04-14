@@ -27,14 +27,13 @@ version: "1.3.0"
 
 ## 数据文件
 
-```
-~/.claude/harness/
-├── iron-law-log.json      # 铁律违规记录
-├── laziness-log.json      # 偷懒模式检测
-├── learning-log.json      # 学习记录
-├── workflow-log.json      # 工作流事件
-└── last-compact.json      # 压缩前状态快照
-```
+| 文件 | 用途 |
+|------|------|
+| `~/.claude/harness/iron-law-log.json` | 铁律违规记录 |
+| `~/.claude/harness/laziness-log.json` | 偷懒模式检测 |
+| `~/.claude/harness/learning-log.json` | 学习记录 |
+| `~/.claude/harness/workflow-log.json` | 工作流事件 |
+| `~/.claude/harness/last-compact.json` | 压缩前状态快照 |
 
 ## 铁律与钩子映射
 
