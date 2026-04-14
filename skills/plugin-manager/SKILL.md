@@ -64,3 +64,12 @@ custom_iron_laws:
 | "查看插件列表" | 列出已安装插件 |
 | "添加铁律: xxx" | 添加到 iron-laws.yaml |
 | "查看自定义铁律" | 读取 iron-laws.yaml |
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `~/.claude/harness/plugins.yaml` | 查看插件配置时 |
+| `~/.claude/harness/iron-laws.yaml` | 查看或添加自定义铁律时 |
+| `~/.claude/harness/plugin-log.json` | 查看插件执行日志时 |
+| `~/.claude/harness/iron-law-log.json` | 查看铁律触发日志时 |

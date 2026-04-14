@@ -253,3 +253,12 @@ custom_triggers:
   }
 ]
 ```
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `.chaos-harness/state.json` | 读取项目当前状态和工作流阶段时 |
+| `~/.claude/harness/trigger-log.json` | 查看自动触发历史时 |
+| `.claude/harness/auto-context.yaml` | 读取用户自定义触发规则时 |
+| `CLAUDE.md` | 查看项目级铁律和角色配置时 |

@@ -73,3 +73,13 @@ done
 | "查看学习日志" | 读取 learning-log.json |
 | "查看铁律日志" | 读取 iron-law-log.json |
 | "清理日志" | 重置所有日志文件 |
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `~/.claude/harness/iron-law-log.json` | 查看铁律触发历史时 |
+| `~/.claude/harness/laziness-log.json` | 查看偷懒检测历史时 |
+| `~/.claude/harness/learning-log.json` | 查看学习记录时 |
+| `~/.claude/harness/workflow-log.json` | 查看工作流事件时 |
+| `~/.claude/harness/last-compact.json` | 查看压缩前状态快照时 |

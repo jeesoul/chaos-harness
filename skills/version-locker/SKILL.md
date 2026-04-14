@@ -146,3 +146,11 @@ output/v0.1/
 
 后续所有文档将在此目录下生成。
 ```
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `shared/state-helpers.md` | 需要状态管理函数（update_version, create_version）时 |
+| `.chaos-harness/state.json` | 读取当前版本锁状态时 |
+| `output/VERSION-LOG.md` | 查看版本变更历史时 |

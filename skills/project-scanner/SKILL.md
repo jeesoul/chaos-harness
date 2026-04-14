@@ -110,3 +110,12 @@ python --version # 检测 Python
 ## 发现的问题
 1. {问题}
 ```
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `shared/state-helpers.md` | 需要状态管理函数（write_scan_result, update_project_state）时 |
+| `.chaos-harness/state.json` | 读取已有扫描结果时 |
+| `output/{version}/scan-result.json` | 查看历史扫描报告时 |
+

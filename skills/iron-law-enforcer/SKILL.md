@@ -103,3 +103,11 @@ echo '{"iron_law":"IL001","context":"文档输出无版本目录","action":"bloc
   {"iron_law":"IL001","context":"...","action":"block","timestamp":"..."}
 ]
 ```
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `~/.claude/harness/iron-laws.yaml` | 需要查看用户自定义铁律时 |
+| `~/.claude/harness/iron-law-log.json` | 查看历史铁律触发记录时 |
+| `skills/plugin-manager/SKILL.md` | 需要添加或管理自定义铁律时 |

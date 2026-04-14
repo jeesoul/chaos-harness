@@ -377,3 +377,12 @@ project/.chaos-harness/     # 项目级（特定项目）
 ```
 
 **原则：学习共享，状态隔离**
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `shared/state-helpers.md` | 需要状态管理函数（update_stage, resume_session, save_state）时 |
+| `.chaos-harness/state.json` | 读取项目当前状态时 |
+| `.chaos-harness/decisions-log.json` | 查看历史决策时 |
+| `~/.claude/harness/workflow-log.json` | 查看工作流事件历史时 |

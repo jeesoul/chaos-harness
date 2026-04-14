@@ -1002,3 +1002,13 @@ P01-P10执行 → 阶段记忆 → learning-log.json
                 ↓
          规则优化 → 下次迭代
 ```
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `shared/state-helpers.md` | 需要状态管理函数（update_stage_status, log_learning_entry, update_effectiveness_log）时 |
+| `output/{version}/product-state.yaml` | 读取当前产品阶段状态时 |
+| `output/{version}/memory/{stage}-memory.yaml` | 读取历史阶段记忆时 |
+| `~/.claude/harness/learning-log.json` | 读取学习记录进行自学习分析时 |
+| `templates/product-lifecycle/` | 读取 PRD 等模板文件时 |

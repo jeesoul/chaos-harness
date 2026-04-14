@@ -386,3 +386,13 @@ anti_bypass:
 4. **必须** 包含偷懒模式检测配置
 5. **应该** 根据项目类型选择合适模板
 6. **自适应模式** 必须读取并应用 analysis-report 建议
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `shared/state-helpers.md` | 需要状态管理函数时 |
+| `output/{version}/scan-result.json` | 读取扫描结果选择模板时 |
+| `output/{version}/analysis-report.md` | 自适应模式读取优化建议时 |
+| `~/.claude/harness/learning-log.json` | 自适应模式检查学习记录数时 |
+| `templates/` | 读取 Harness 模板文件时 |

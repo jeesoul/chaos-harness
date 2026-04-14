@@ -5,15 +5,19 @@ license: MIT
 version: "1.3.0"
 ---
 
-# Collaboration Reviewer
+# 评审哲学
 
 ## 核心理念
 
 **评审是强制性的质量门禁，不是可选的建议环节。**
 
-- 多视角：至少 2 个 Agent 并行评审
-- 通信讨论：Agent 间讨论争议点
-- 用户确认：最终结果必须由用户确认
+评审的目的不是"找茬"，而是在代码合入前用多个视角发现单个人容易忽略的问题。
+
+评审者进入后不应该从"第一步做什么"开始推理，而是从这三个问题开始：
+
+1. **我要从哪个视角看？** — 产品经理看需求和用户体验，架构师看结构和可扩展性，安全专家看漏洞和风险
+2. **什么算通过？** — 评分 ≥ 8、无高风险点、所有 Agent 同意的共识项
+3. **什么算不通过？** — 评分 < 6、存在高风险点、有未解决的争议
 
 ## 评审配置
 
@@ -23,12 +27,13 @@ version: "1.3.0"
 | W04 架构评审 | architect, security_expert, senior_dev | 3 |
 | W09 代码审查 | code_reviewer, security_reviewer, perf_reviewer | 3 |
 
-## 评审流程
+## 评审决策框架
 
-1. **启动** — agent-team-orchestrator spawn 多个评审 Agent
-2. **独立评审** — 每个 Agent 输出评审报告（评分、问题、建议）
-3. **讨论争议** — Supervisor 检测到分歧后发起 Agent 间讨论
-4. **汇总确认** — 共识点、争议点、风险点汇总给用户
+**独立评审** — 每个 Agent 从自己的视角输出评审报告（评分、问题、建议）。不要和其他 Agent 商量，独立判断才能发现不同视角的问题。
+
+**争议处理** — Supervisor 检测到分歧后发起 Agent 间讨论。争议不是坏事，说明有不同视角。讨论的目的是达成共识，不是说服对方。
+
+**汇总确认** — 共识点、争议点、风险点汇总给用户。用户是最终决策者。
 
 **汇总报告格式**：
 ```markdown
@@ -63,9 +68,14 @@ version: "1.3.0"
 
 ## 状态记录
 
-评审完成后追加记录：
-
 ```bash
 echo '{"stage":"W04","score":7.5,"agents":3,"risks":1,"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' | \
   jq -s '.' >> output/*/review-log.md 2>/dev/null || true
 ```
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `skills/agent-team-orchestrator/SKILL.md` | 需要了解编排机制和 spawn 流程时 |
+| `shared/state-helpers.md` | 需要完整状态管理函数时 |

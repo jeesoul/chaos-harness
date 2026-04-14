@@ -71,3 +71,10 @@ claude plugins install webapp-testing@anthropics/skills
 | "检测工具链" | 列出已安装和缺失的工具 |
 | "安装缺失工具" | 安装所有缺失的 |
 | "使用镜像安装" | 用国内镜像源安装 |
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `~/.claude/plugins/` | 查看已安装插件目录时 |
+| `skills/collaboration-reviewer/SKILL.md` | 需要了解评审工具链配置时 |

@@ -71,3 +71,11 @@ plugins:
 | LP004 | 试图跳过测试 | critical |
 | LP005 | 擅自更改版本号 | critical |
 | LP006 | 自动处理高风险配置 | critical |
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `skills/*/SKILL.md` | 需要了解特定 skill 的详细指引时 |
+| `.chaos-harness/state.json` | 查看项目当前状态时 |
+| `CLAUDE.md` | 查看项目完整上下文时 |
