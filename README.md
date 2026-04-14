@@ -6,6 +6,7 @@
 </p>
 
 <p align="center"><strong>确定性 AI Agent 约束框架</strong></p>
+<p align="center"><em>v1.3.0 孔明 — 运筹帷幄，决胜千里；以智御局，以律治心</em></p>
 <p align="center"><em>Chaos demands order. Harness provides it.</em></p>
 
 ---
