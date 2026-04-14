@@ -10,7 +10,6 @@ import {
   GLOBAL_DATA_DIR,
   ensureDir,
   readJson,
-  writeFileSync,
   appendLog,
   detectProjectRoot,
   readProjectState,
@@ -21,7 +20,7 @@ import {
 } from './hook-utils.mjs';
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 // 初始化日志文件
