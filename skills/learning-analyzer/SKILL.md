@@ -13,71 +13,77 @@ version: "1.3.0"
 
 没有分析的学习 = 数据堆积，没有行动的分析 = 纸上谈兵。
 
-## 分析流程
+## 自动分析
 
-### 1. 读取学习日志
+**session-start hook 已内置自动分析** — 当学习记录 ≥ 5 条或铁律触发 ≥ 3 次时，自动运行分析脚本，不需要手动触发。
 
-路径：`~/.claude/harness/learning-log.json`
-
-### 2. 统计失败模式
-
-按铁律 ID 分组计数，提取高频失败上下文。输出格式：
-
-```markdown
-## 失败模式统计
-| 铁律 | 触发次数 | 占比 |
-|------|---------|------|
-| IL003 | 15 | 50% |
-
-## 高频失败上下文
-1. "完成" 但无验证证据 (12次)
+手动触发命令：
+```bash
+node scripts/learning-analyzer.mjs
 ```
 
-### 3. 识别模式
+## 分析内容
 
-| 模式 | 判定 |
-|------|------|
-| 重复违规 | 同一铁律触发 3+ 次 |
-| 新问题 | 之前未出现的失败类型 |
-| 系统性问题 | 所有失败与同一上下文相关 |
+分析脚本自动读取以下日志并生成报告：
 
-### 4. 生成优化建议
+| 数据源 | 分析内容 |
+|--------|---------|
+| `iron-law-log.json` | 铁律触发统计、高频违规上下文 |
+| `laziness-log.json` | 偷懒模式检测统计 |
+| `learning-log.json` | 操作类型分布、文件类型分布 |
 
-按优先级分类：
-- **高**：同一铁律频繁违规 → 需要强化或新增铁律
-- **中**：提示不足 → 改进 Hook 提示
-- **待观察**：低频问题 → 继续收集数据
+## 输出
 
-### 5. 用户确认 → 应用
+分析报告自动写入两个位置：
+- 全局：`~/.claude/harness/analysis-report.md`
+- 项目版本目录：`output/{version}/analysis-report.md`（如果 state.json 中有 current_version）
 
-高优先级建议默认自动应用（用户未拒绝时），中优先级需确认。
+## 报告格式
 
-## 自动触发
+```markdown
+# 自学习分析报告
 
-session-start hook 已内置检测：learning-log 达到 5+ 条时自动提示。
+生成时间: ...
 
-| 记录数 | 行为 |
-|--------|------|
-| < 5 | 继续积累 |
-| 5-20 | 基础分析 |
-| 20+ | 深度分析 |
+## 数据概览
+- 铁律触发记录: N 条
+- 偷懒检测记录: N 条
+- 学习操作记录: N 条
+
+## 铁律触发统计
+- IL003: 15 次 — 典型上下文: 完成声明无验证
+
+## 偷懒模式统计
+- LP001: 5 次
+
+## 操作类型分布
+- Write: 50 次
+
+## 文件类型分布
+- java-code: 30 次
+
+## 优化建议
+🔴 [high] iron_law_reinforce: 强化 Hook 拦截规则
+   铁律: IL003 (违规 15 次)
+```
+
+## 优化建议优先级
+
+| 优先级 | 条件 | 动作 |
+|--------|------|------|
+| high | 同一铁律触发 3+ 次 | 强化 Hook 拦截规则 |
+| medium | 偷懒模式检测 2+ 次 | 新增检测规则 |
+| low | 特定文件类型操作 10+ 次 | 积累项目经验 |
 
 ## 闭环
 
 ```
-行为 → learning-log.json → 分析 → 建议 → 应用 → 新行为
+行为 → learning-log.json / iron-law-log.json → 自动分析 → analysis-report.md → harness-generator --adaptive → 新行为
 ```
 
-应用后清空已分析的记录，开始新一轮积累。
+## 与 harness-generator 联动
 
-## 状态记录
-
-分析完成后，追加记录：
-
-```bash
-echo '{"type":"learning_analysis","records_analyzed":15,"patterns_found":3,"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' | \
-  jq -s '.' >> ~/.claude/harness/learning-log.json 2>/dev/null || true
-```
+`harness-generator --adaptive` 模式自动读取 `analysis-report.md`，根据优化建议调整铁律配置。
 
 ## References 索引
 
@@ -86,4 +92,6 @@ echo '{"type":"learning_analysis","records_analyzed":15,"patterns_found":3,"time
 | `~/.claude/harness/learning-log.json` | 需要读取学习记录进行分析时 |
 | `~/.claude/harness/laziness-log.json` | 需要读取偷懒检测记录时 |
 | `~/.claude/harness/iron-law-log.json` | 需要读取铁律触发记录时 |
+| `~/.claude/harness/analysis-report.md` | 需要查看最近的分析报告时 |
+| `scripts/learning-analyzer.mjs` | 需要手动触发分析时 |
 | `skills/plugin-manager/SKILL.md` | 需要应用铁律优化建议时 |

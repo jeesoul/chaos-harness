@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * session-start — 会话启动 Hook
- * 注入铁律上下文 + 恢复项目状态
+ * 注入铁律上下文 + 恢复项目状态 + 自动学习分析
  *
  * 调用: node session-start.mjs
  */
@@ -10,6 +10,7 @@ import {
   GLOBAL_DATA_DIR,
   ensureDir,
   readJson,
+  writeFileSync,
   appendLog,
   detectProjectRoot,
   readProjectState,
@@ -19,7 +20,8 @@ import {
   printIronLawsContext,
 } from './hook-utils.mjs';
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 // 初始化日志文件
@@ -28,8 +30,8 @@ ensureDir(GLOBAL_DATA_DIR);
 const IRON_LAW_LOG = join(GLOBAL_DATA_DIR, 'iron-law-log.json');
 const PLUGIN_LOG = join(GLOBAL_DATA_DIR, 'plugin-log.json');
 const LEARNING_LOG = join(GLOBAL_DATA_DIR, 'learning-log.json');
+const ANALYSIS_REPORT = join(GLOBAL_DATA_DIR, 'analysis-report.md');
 
-// 确保日志文件存在
 for (const f of [IRON_LAW_LOG, PLUGIN_LOG, LEARNING_LOG]) {
   if (!readJson(f, null)) {
     writeFileSync(f, '[]', 'utf-8');
@@ -43,7 +45,6 @@ const state = readProjectState(PROJECT_ROOT);
 printIronLawsContext();
 
 if (state) {
-  // 项目状态恢复
   hookPrint('');
   hookPrint('<CHAOS_HARNESS_STATE_RECOVERY>');
   hookPrint(`项目状态文件已检测到: ${join(PROJECT_ROOT, '.chaos-harness', 'state.json')}`);
@@ -51,17 +52,13 @@ if (state) {
   hookPrint('**建议操作:**');
   hookPrint("使用 /chaos-harness:project-state 或说 '继续上次进度' 恢复会话。");
   hookPrint('');
-
-  // 快速状态显示
   hookPrint('**快速状态:**');
   hookPrint(`- 项目: ${state.project_name || 'Unknown'}`);
   hookPrint(`- 版本: ${state.current_version || '未设置'}`);
   hookPrint(`- 阶段: ${state.workflow?.current_stage || '未开始'}`);
   hookPrint(`- 上次会话: ${state.last_session || 'N/A'}`);
-
   hookPrint('</CHAOS_HARNESS_STATE_RECOVERY>');
 } else {
-  // 新项目引导
   hookPrint('');
   hookPrint('<CHAOS_HARNESS_NEW_PROJECT>');
   hookPrint('未检测到项目状态文件。');
@@ -86,17 +83,56 @@ appendLog(PLUGIN_LOG, {
   project_root: PROJECT_ROOT,
 });
 
-// 学习记录触发检查
+// ---- 自学习分析 ----
 const learningLogs = readJson(LEARNING_LOG);
-if (learningLogs.length >= 5) {
+const ironLogs = readJson(IRON_LAW_LOG);
+
+// 阈值：学习记录 ≥ 5 或 铁律触发 ≥ 3 → 自动分析
+const shouldAnalyze = learningLogs.length >= 5 || ironLogs.length >= 3;
+
+if (shouldAnalyze) {
+  // 检查是否有已有报告
+  const reportExists = existsSync(ANALYSIS_REPORT);
+  let existingReport = null;
+  if (reportExists) {
+    try {
+      existingReport = readFileSync(ANALYSIS_REPORT, 'utf-8');
+    } catch { /* ignore */ }
+  }
+
+  // 运行 learning-analyzer 脚本
+  const scriptPath = join(process.cwd(), 'scripts', 'learning-analyzer.mjs');
+  const result = spawnSync('node', [scriptPath], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 10000,
+  });
+
+  if (result.stdout) {
+    hookPrint(result.stdout.toString());
+  }
+
+  // 输出分析摘要
+  const newIronCount = ironLogs.length;
+  const newLazyCount = learningLogs.length;
+
   hookPrint('');
-  hookPrint('<CHAOS_HARNESS_LEARNING_TRIGGER>');
-  hookPrint(`检测到学习记录: ${learningLogs.length} 条`);
-  hookPrint('');
-  hookPrint('**建议操作:**');
-  hookPrint('使用 /chaos-harness:learning-analyzer 分析学习记录并优化铁律。');
-  hookPrint("或说 '分析学习记录' 进行自学习闭环。");
-  hookPrint('</CHAOS_HARNESS_LEARNING_TRIGGER>');
+  hookPrint('<CHAOS_HARNESS_LEARNING_ANALYSIS>');
+  hookPrint('📊 自学习分析已自动执行');
+  hookPrint(`   铁律触发: ${ironLogs.length} 条 | 学习记录: ${learningLogs.length} 条`);
+
+  if (ironLogs.length > 0) {
+    // 统计高频铁律
+    const counts = {};
+    for (const log of ironLogs) {
+      const law = log.iron_law || log.iron_law_id || 'unknown';
+      counts[law] = (counts[law] || 0) + 1;
+    }
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    hookPrint(`   高频铁律: ${top.map(([l, c]) => `${l}(${c}次)`).join(', ')}`);
+  }
+
+  hookPrint(`   完整报告: ${ANALYSIS_REPORT}`);
+  hookPrint('</CHAOS_HARNESS_LEARNING_ANALYSIS>');
 }
 
 process.exit(0);

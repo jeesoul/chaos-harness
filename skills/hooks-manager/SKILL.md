@@ -17,11 +17,12 @@ version: "1.3.0"
 
 | Hook | 触发时机 | 功能 |
 |------|---------|------|
-| session-start | 会话开始 | 注入铁律上下文 + 状态恢复 |
+| session-start | 会话开始 | 铁律注入 + 状态恢复 + **自动学习分析** |
 | iron-law-check | PreToolUse (Write/Edit) | IL001 版本目录 + IL005 敏感配置检查 |
-| learning-update | PostToolUse (Write/Edit) | 记录操作到学习日志 |
+| learning-update | PostToolUse (Write/Edit) | 记录操作上下文到学习日志 |
+| project-pattern-writer | PostToolUse (Write/Edit) | 自动积累项目经验 |
 | workflow-track | PostToolUse (Write/Edit) | 追踪工作流事件 |
-| stop | 回合结束 | 偷懒模式检测 |
+| stop | 回合结束 | 保存会话状态 |
 | laziness-detect | 回合结束 | 绕过话术识别 |
 | pre-compact | 对话压缩前 | 保存关键上下文快照 |
 
@@ -31,9 +32,31 @@ version: "1.3.0"
 |------|------|
 | `~/.claude/harness/iron-law-log.json` | 铁律违规记录 |
 | `~/.claude/harness/laziness-log.json` | 偷懒模式检测 |
-| `~/.claude/harness/learning-log.json` | 学习记录 |
+| `~/.claude/harness/learning-log.json` | 学习记录（操作类型、文件路径、上下文） |
 | `~/.claude/harness/workflow-log.json` | 工作流事件 |
+| `~/.claude/harness/analysis-report.md` | 自动生成的学习分析报告 |
 | `~/.claude/harness/last-compact.json` | 压缩前状态快照 |
+
+## 自学习闭环
+
+数据在钩子之间自动流动：
+
+```
+Write/Edit → iron-law-check (拦截) → iron-law-log.json
+          → learning-update (记录) → learning-log.json
+          → project-pattern-writer (积累) → references/project-patterns/
+
+Stop → laziness-detect → laziness-log.json
+
+SessionStart → 自动分析(learning-log ≥ 5 或 iron-law ≥ 3) → analysis-report.md
+                                                    ↓
+                              harness-generator --adaptive → 铁律优化
+```
+
+**自动触发条件**：
+- learning-log ≥ 5 条 → 自动运行 learning-analyzer
+- iron-law-log ≥ 3 条 → 自动运行 learning-analyzer
+- 分析报告自动写入全局和项目版本目录
 
 ## 铁律与钩子映射
 
@@ -41,36 +64,17 @@ version: "1.3.0"
 |------|------|---------|
 | IL001 | iron-law-check | 文档输出到 output/ 必须有版本号 |
 | IL005 | iron-law-check | 敏感文件修改警告 |
-| IL003 | stop | 完成声明必须有验证证据 |
-
-## 查看状态
-
-用 `jq` 读取各日志文件，输出统计：
-
-```bash
-# 统计各日志记录数
-for f in iron-law-log.json laziness-log.json learning-log.json workflow-log.json; do
-  count=$(jq 'length' "$HOME/.claude/harness/$f" 2>/dev/null || echo 0)
-  echo "$f: $count 条"
-done
-```
-
-## 清理日志
-
-```bash
-# 重置所有日志
-for f in iron-law-log.json laziness-log.json learning-log.json workflow-log.json; do
-  printf '[]\n' > "$HOME/.claude/harness/$f"
-done
-```
+| IL003 | laziness-detect | 完成声明必须有验证证据 |
 
 ## 快捷命令
 
 | 你说 | 动作 |
 |------|------|
-| "查看钩子状态" | 统计各日志记录数 |
+| "查看钩子状态" | 列出所有钩子和日志统计 |
+| "查看学习报告" | 读取 analysis-report.md |
 | "查看学习日志" | 读取 learning-log.json |
 | "查看铁律日志" | 读取 iron-law-log.json |
+| "手动分析" | 运行 learning-analyzer.mjs |
 | "清理日志" | 重置所有日志文件 |
 
 ## References 索引
@@ -80,5 +84,7 @@ done
 | `~/.claude/harness/iron-law-log.json` | 查看铁律触发历史时 |
 | `~/.claude/harness/laziness-log.json` | 查看偷懒检测历史时 |
 | `~/.claude/harness/learning-log.json` | 查看学习记录时 |
+| `~/.claude/harness/analysis-report.md` | 查看最近的学习分析报告时 |
 | `~/.claude/harness/workflow-log.json` | 查看工作流事件时 |
 | `~/.claude/harness/last-compact.json` | 查看压缩前状态快照时 |
+| `scripts/learning-analyzer.mjs` | 需要手动触发分析时 |
