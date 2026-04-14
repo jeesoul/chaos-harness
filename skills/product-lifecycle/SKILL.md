@@ -587,46 +587,69 @@ db_migrations: [migration list]
 - 前端代码
 - 后端代码
 - 测试用例
+- PRD 用户故事（用于推导 E2E 场景）
 
 ### 活动
 
-1. **E2E 测试**
-   - 用户场景测试
-   - 关键路径测试
-   - 异常场景测试
+1. **E2E 测试（混合模式：webapp-testing + web-access）**
+
+   **webapp-testing（Playwright）**：执行结构化、可重复的自动化测试用例
+   - 用户场景测试（登录 → 操作 → 验证结果）
+   - 关键路径测试（核心业务流程）
+   - 异常流程测试（错误输入、网络异常）
+   - 适合：稳定场景、回归测试、CI/CD 集成
+
+   **web-access（CDP）**：灵活验证、需要登录态/交互的场景
+   - 需要登录态的操作（后台管理、个人中心）
+   - 截图验证（页面渲染正确性）
+   - 动态内容验证（懒加载、实时数据）
+   - 适合：一次性验证、复杂交互、视觉检查
+
+   **组合策略**：
+   - 核心流程用 Playwright 写自动化用例（持久化）
+   - 临时验证用 CDP 快速检查（无需写代码）
+   - 视觉回归用 CDP 截图对比（visual-regression skill）
 
 2. **接口测试**
-   - 接口响应验证
-   - 边界值测试
-   - 并发测试
+   - 接口响应验证（状态码、响应体结构）
+   - 边界值测试（空值、超长、特殊字符）
+   - 并发测试（同时请求、竞态条件）
 
 3. **性能测试**
-   - 负载测试
-   - 压力测试
-   - 性能基准
+   - 负载测试（正常并发）
+   - 压力测试（极限并发）
+   - 性能基准（响应时间基线）
 
 4. **安全测试**
-   - 漏洞扫描
-   - 渗透测试
-   - 权限测试
+   - 漏洞扫描（XSS、CSRF、SQL 注入）
+   - 权限测试（越权访问、角色权限）
+   - 敏感数据验证（密码加密、Token 安全）
 
 5. **兼容性测试**
-   - 浏览器兼容
-   - 设备兼容
-   - 系统兼容
+   - 浏览器兼容（Chrome/Firefox/Safari）
+   - 设备兼容（Desktop/Tablet/Mobile）
+   - 系统兼容（Windows/macOS/Linux）
+
+6. **可视化回归测试（可选，新增）**
+   - 基准截图建立（核心页面多分辨率）
+   - 当前 vs 基准像素对比
+   - 差异区域标注和确认
+   - 使用 visual-regression skill + web-access CDP
 
 ### 输出
 - `output/{version}/test/e2e-report.md` - E2E 测试报告
 - `output/{version}/test/api-test-report.md` - 接口测试报告
 - `output/{version}/test/performance-report.md` - 性能测试报告
 - `output/{version}/test/security-report.md` - 安全测试报告
+- `output/{version}/test/visual-regression-report.md` - 可视化回归报告（可选）
 
 ### 验证检查点
-- [ ] E2E 测试是否通过？
+- [ ] E2E 测试是否通过？（Playwright + CDP 混合验证）
 - [ ] 接口测试覆盖率 ≥ 90%？
 - [ ] 性能是否满足 SLA？
 - [ ] 安全漏洞是否修复？
 - [ ] 是否有回归测试？
+- [ ] **核心页面是否通过视觉回归检查？**（可选）
 
 ### 铁律检查
 | 铁律 | 检查项 |
@@ -636,8 +659,10 @@ db_migrations: [migration list]
 | IL-TEST003 | 安全漏洞必须修复 |
 
 ### 工具集成
-- **webapp-testing**：Playwright 自动化测试
-- **superpowers-chrome**：Chrome DevTools 性能分析
+- **webapp-testing**：Playwright 结构化自动化测试（持久化用例）
+- **web-access CDP**：灵活浏览器操作、登录态验证、截图对比（临时验证）
+- **visual-regression**：可视化回归测试（截图对比）
+- **test-assistant**：测试用例生成、覆盖率检查、回归报告对比
 
 ### 记忆写入
 ```yaml
@@ -650,6 +675,10 @@ api_tests: {count}
 api_passed: {count}
 performance_score: {score}
 security_issues: {count}
+# 可视化回归字段（新增）
+visual_regression_passed: true/false
+visual_baseline_pages: [页面列表]
+visual_diff_pages: [差异页面列表]
 ```
 
 ***

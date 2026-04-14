@@ -54,6 +54,15 @@ if [ -n "$FILE_PATH" ]; then
         *.env|*secret*|*credential*)
             printf '\n<HARNESS_IRON_LAW>⚡ IL005: 敏感配置修改需要批准</HARNESS_IRON_LAW>\n'
             ;;
+        *.test.*|*.spec.*)
+            recommend "检测到测试文件，建议使用 test-assistant 检查覆盖率"
+            ;;
+        *e2e*|*E2E*|*playwright*)
+            recommend "检测到 E2E 测试，建议使用 webapp-testing + web-access 混合模式"
+            ;;
+        *screenshot*|*截图*|*visual*)
+            recommend "检测到视觉检查，建议使用 visual-regression + web-access CDP 截图对比"
+            ;;
     esac
 fi
 

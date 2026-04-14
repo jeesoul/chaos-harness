@@ -181,6 +181,10 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 | 需求文件创建 | *需求*, *访谈*, *调研* | product-manager (P01 流程) |
 | 竞品分析讨论 | 内容包含 "竞品"/"对手" | product-manager (竞品分析模块) |
 | MVP/优先级讨论 | 内容包含 "优先级"/"MVP"/"重要" | product-manager (Kano 分析) |
+| 测试文件创建 | *.test.*, *.spec.* | test-assistant (覆盖率检查) |
+| E2E/集成测试讨论 | 内容包含 "E2E"/"集成测试"/"端到端" | test-assistant + web-access |
+| 截图/视觉检查讨论 | 内容包含 "截图"/"视觉"/"UI 对比" | visual-regression + web-access |
+| P08 阶段开始 | current_stage=P08 | test-assistant + webapp-testing + web-access |
 
 ## 工作流阶段自动触发
 
@@ -205,6 +209,7 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 |---------|---------|----------------|---------|
 | P03 设计完成 | agent-team-orchestrator | product_manager + user_advocate + designer | 需求覆盖、用户体验、设计规范 |
 | P04 技术完成 | agent-team-orchestrator | architect + security_expert + senior_dev | 架构合理性、安全、可行性 |
+| **P08 测试就绪** | **agent-team-orchestrator** | **qa_engineer + security_expert + perf_engineer** | **E2E 覆盖、安全漏洞、性能基线** |
 
 ### P03 原型设计阶段 — 直接加载
 
