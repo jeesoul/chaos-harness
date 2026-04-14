@@ -1,308 +1,183 @@
 # 状态辅助函数 (State Helpers)
 
-共享的状态写入和读取函数，所有 skill 都应使用这些函数来保证状态一致性。
+所有 skill 都应使用以下 bash 命令来更新状态，保证一致性。
 
 ---
 
-## 状态文件路径
+## 文件路径
 
-```typescript
-// 全局状态
-const GLOBAL_STATE_DIR = "~/.claude/harness"
-const IRON_LAW_LOG = `${GLOBAL_STATE_DIR}/iron-law-log.json`
-const LEARNING_LOG = `${GLOBAL_STATE_DIR}/learning-log.json`
-const LAZINESS_LOG = `${GLOBAL_STATE_DIR}/laziness-log.json`
-const WORKFLOW_LOG = `${GLOBAL_STATE_DIR}/workflow-log.json`
-const TRIGGER_LOG = `${GLOBAL_STATE_DIR}/trigger-log.json`
+```bash
+# 全局日志（所有项目共享）
+GLOBAL_DIR="$HOME/.claude/harness"
+IRON_LAW_LOG="$GLOBAL_DIR/iron-law-log.json"
+LEARNING_LOG="$GLOBAL_DIR/learning-log.json"
+LAZINESS_LOG="$GLOBAL_DIR/laziness-log.json"
+WORKFLOW_LOG="$GLOBAL_DIR/workflow-log.json"
 
-// 项目状态
-const PROJECT_STATE_DIR = ".chaos-harness"
-const PROJECT_STATE = `${PROJECT_STATE_DIR}/state.json`
-const SCAN_RESULT = `${PROJECT_STATE_DIR}/scan-result.json`
-const DECISIONS_LOG = `${PROJECT_STATE_DIR}/decisions-log.json`
+# 项目状态（项目根目录下）
+PROJECT_STATE=".chaos-harness/state.json"
+SCAN_RESULT=".chaos-harness/scan-result.json"
+DECISIONS_LOG=".chaos-harness/decisions-log.json"
 
-// 版本状态
-const getOutputPath = (version: string) => `output/${version}`
-const EFFECTIVENESS_LOG = (version: string) => `${getOutputPath(version)}/effectiveness-log.md`
-const REVIEW_LOG = (version: string) => `${getOutputPath(version)}/review-log.md`
+# 版本状态
+OUTPUT_PATH="output/<version>"  # 替换 <version> 为实际版本号
 ```
 
 ---
 
-## 通用写入函数
+## 通用追加函数
 
-### appendToJsonLog
+所有 skill 直接使用的 bash 命令，不是伪代码：
 
-```typescript
-/**
- * 追加记录到 JSON 日志文件
- * @param filePath 日志文件路径
- * @param entry 要追加的记录
- */
-async function appendToJsonLog(filePath: string, entry: object): Promise<void> {
-  // 1. 读取现有日志
-  const content = await fs.readFile(filePath, 'utf-8').catch(() => '[]')
-  const log = JSON.parse(content)
+### 追加 JSON 日志
 
-  // 2. 添加时间戳
-  entry.timestamp = new Date().toISOString()
-
-  // 3. 追加记录
-  log.push(entry)
-
-  // 4. 写回文件
-  await fs.writeFile(filePath, JSON.stringify(log, null, 2))
+```bash
+# 用法: append_json_log <file> '<json_object>'
+append_json_log() {
+  local file="$1" entry="$2"
+  mkdir -p "$(dirname "$file")"
+  [ ! -f "$file" ] && printf '[]\n' > "$file"
+  local tmp="/tmp/log_$$.json"
+  printf '%s\n' "$(cat "$file")" | jq --argjson e "$entry" '. += [$e]' > "$tmp" && \
+    cat "$tmp" > "$file"
+  rm -f "$tmp"
 }
 ```
 
-### appendToMarkdownLog
+### 更新时间戳
 
-```typescript
-/**
- * 追加内容到 Markdown 日志文件
- * @param filePath 日志文件路径
- * @param content Markdown 内容
- */
-async function appendToMarkdownLog(filePath: string, content: string): Promise<void> {
-  // 1. 检查文件是否存在
-  const exists = await fs.access(filePath).then(() => true).catch(() => false)
-
-  // 2. 如果不存在，创建并写入标题
-  if (!exists) {
-    await fs.writeFile(filePath, `# 效果追踪日志\n\n创建于: ${new Date().toISOString()}\n\n---\n\n`)
-  }
-
-  // 3. 追加内容
-  const timestamp = new Date().toISOString()
-  await fs.appendFile(filePath, `\n## ${timestamp}\n\n${content}\n\n---\n`)
+```bash
+# 更新 .chaos-harness/state.json 的 last_session
+update_session_time() {
+  if [ -f .chaos-harness/state.json ] && command -v jq >/dev/null 2>&1; then
+    local ts tmp
+    ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    tmp="/tmp/state_$$.json"
+    jq --arg ts "$ts" '.last_session = $ts' .chaos-harness/state.json > "$tmp" && \
+      cat "$tmp" > .chaos-harness/state.json
+    rm -f "$tmp"
+  fi
 }
 ```
 
 ---
 
-## 专用状态写入函数
+## 专用状态操作
 
-### Update-Project-State
+### 更新项目状态
 
-```typescript
-/**
- * 更新项目状态
- * @param updates 要更新的字段
- */
-async function updateProjectState(updates: Partial<ProjectState>): Promise<void> {
-  const state = await readProjectState()
-
-  // 合并更新
-  Object.assign(state, updates, {
-    last_session: new Date().toISOString()
-  })
-
-  // 写回文件
-  await fs.writeFile(PROJECT_STATE, JSON.stringify(state, null, 2))
+```bash
+# 更新任意字段
+# 用法: update_project_state '{"current_stage":"W08"}'
+update_project_state() {
+  if [ -f .chaos-harness/state.json ] && command -v jq >/dev/null 2>&1; then
+    local updates="$1" ts tmp
+    ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+    tmp="/tmp/state_$$.json"
+    jq --arg ts "$ts" --argjson u "$updates" \
+      '.last_session = $ts | . * $u' \
+      .chaos-harness/state.json > "$tmp" && \
+      cat "$tmp" > .chaos-harness/state.json
+    rm -f "$tmp"
+  fi
 }
 ```
 
-### Update-Stage-Status
+### 阶段完成标记
 
-```typescript
-/**
- * 更新阶段状态
- * @param stage 阶段 ID
- * @param status 状态 (completed | skipped | blocked)
- * @param output 输出路径（可选）
- */
-async function updateStageStatus(
-  stage: string,
-  status: 'completed' | 'skipped' | 'blocked',
-  output?: string
-): Promise<void> {
-  const state = await readProjectState()
+```bash
+# 用法: complete_stage "W01" "output/v1.3.0/W01"
+complete_stage() {
+  local stage="$1" output="${2:-}" ts
+  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-  if (status === 'completed') {
-    state.workflow.stages_completed = state.workflow.stages_completed || []
-    state.workflow.stages_completed.push({
-      stage,
-      completed_at: new Date().toISOString(),
-      output_path: output
-    })
-  } else if (status === 'skipped') {
-    state.workflow.stages_skipped = state.workflow.stages_skipped || []
-    state.workflow.stages_skipped.push({
-      stage,
-      skipped_at: new Date().toISOString()
-    })
-  }
+  if [ -f .chaos-harness/state.json ] && command -v jq >/dev/null 2>&1; then
+    local tmp="/tmp/state_$$.json"
+    jq --arg ts "$ts" --arg stage "$stage" --arg output "$output" '
+      .last_session = $ts |
+      .workflow.stages_completed += [{"stage": $stage, "completed_at": $ts, "output_path": $output}] |
+      .workflow.stages_pending = [.workflow.stages_pending[] | select(. != $stage)]
+    ' .chaos-harness/state.json > "$tmp" && cat "$tmp" > .chaos-harness/state.json
+    rm -f "$tmp"
+  fi
 
-  // 从 pending 移除
-  state.workflow.stages_pending = (state.workflow.stages_pending || [])
-    .filter(s => s !== stage)
-
-  // 更新当前阶段
-  const nextStage = getNextStage(stage)
-  if (nextStage) {
-    state.workflow.current_stage = nextStage
-    state.workflow.stage_start_time = new Date().toISOString()
-  }
-
-  state.last_session = new Date().toISOString()
-  await fs.writeFile(PROJECT_STATE, JSON.stringify(state, null, 2))
-
-  // 同时写入 workflow-log
-  await appendToJsonLog(WORKFLOW_LOG, {
-    event: 'stage_status_update',
-    stage,
-    status,
-    timestamp: new Date().toISOString()
-  })
+  # 追加到工作流日志
+  append_json_log "$WORKFLOW_LOG" \
+    '{"event":"stage_complete","stage":"'"$stage"'","timestamp":"'"$ts"'"}'
 }
 ```
 
-### Log-Iron-Law-Trigger
+### 记录铁律触发
 
-```typescript
-/**
- * 记录铁律触发
- * @param ironLawId 铁律 ID
- * @param context 上下文
- * @param action 采取的动作
- */
-async function logIronLawTrigger(
-  ironLawId: string,
-  context: string,
-  action: 'warn' | 'block' | 'pressure'
-): Promise<void> {
-  await appendToJsonLog(IRON_LAW_LOG, {
-    iron_law_id: ironLawId,
-    context,
-    action,
-    timestamp: new Date().toISOString()
-  })
+```bash
+# 用法: log_iron_law "IL001" "文档无版本目录" "block"
+log_iron_law() {
+  local law="$1" context="$2" action="$3" ts
+  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  append_json_log "$IRON_LAW_LOG" \
+    '{"iron_law_id":"'"$law"'","context":"'"$context"'","action":"'"$action"'","timestamp":"'"$ts"'"}'
 }
 ```
 
-### Log-Laziness-Pattern
+### 记录偷懒模式
 
-```typescript
-/**
- * 记录偷懒模式
- * @param agentId Agent ID
- * @param patternId 偷懒模式 ID
- * @param context 上下文
- */
-async function logLazinessPattern(
-  agentId: string,
-  patternId: string,
-  context: string
-): Promise<void> {
-  await appendToJsonLog(LAZINESS_LOG, {
-    agent_id: agentId,
-    pattern_id: patternId,
-    context,
-    timestamp: new Date().toISOString()
-  })
+```bash
+# 用法: log_laziness "LP001" "声称完成但无验证"
+log_laziness() {
+  local pattern="$1" context="$2" ts
+  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  append_json_log "$LAZINESS_LOG" \
+    '{"pattern_id":"'"$pattern"'","context":"'"$context"'","timestamp":"'"$ts"'"}'
 }
 ```
 
-### Update-Effectiveness-Log
+### 记录学习内容
 
-```typescript
-/**
- * 更新效果日志
- * @param version 版本号
- * @param content Markdown 内容
- */
-async function updateEffectivenessLog(version: string, content: string): Promise<void> {
-  await appendToMarkdownLog(EFFECTIVENESS_LOG(version), content)
+```bash
+# 用法: log_learning "error" "铁律IL003触发: 无验证完成声明" "完成必须附带证据"
+log_learning() {
+  local type="$1" context="$2" lesson="$3" ts
+  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  append_json_log "$LEARNING_LOG" \
+    '{"type":"'"$type"'","context":"'"$context"'","lesson":"'"$lesson"'","timestamp":"'"$ts"'"}'
 }
 ```
 
-### Log-Review-Complete
+---
 
-```typescript
-/**
- * 记录评审完成
- * @param version 版本号
- * @param stage 阶段
- * @param result 评审结果
- */
-async function logReviewComplete(
-  version: string,
-  stage: string,
-  result: {
-    agents: string[]
-    score: number
-    controversies: number
-    risks: number
-    user_confirmed: boolean
-  }
-): Promise<void> {
-  const content = `
-## 评审记录 - ${stage}
+## 状态读取
 
-**时间**: ${new Date().toISOString()}
+### 读取当前版本
 
-**参与者**: ${result.agents.join(', ')}
-
-**评分**: ${result.score}/10
-
-**争议点**: ${result.controversies}
-
-**风险点**: ${result.risks}
-
-**用户确认**: ${result.user_confirmed ? '✅' : '❌'}
-`
-
-  await appendToMarkdownLog(REVIEW_LOG(version), content)
-
-  // 同时更新工作流状态
-  await updateStageStatus(stage, 'completed')
+```bash
+get_current_version() {
+  if [ -f .chaos-harness/state.json ] && command -v jq >/dev/null 2>&1; then
+    jq -r '.current_version // empty' .chaos-harness/state.json
+  fi
 }
 ```
 
-### Log-Agent-Team-Execution
+### 读取当前阶段
 
-```typescript
-/**
- * 记录 Agent Team 执行
- * @param version 版本号
- * @param execution 执行详情
- */
-async function logAgentTeamExecution(
-  version: string,
-  execution: {
-    stage: string
-    agents: Array<{
-      id: string
-      role: string
-      status: string
-      duration: number
-    }>
-    total_duration: number
-    violations: number
-    whip_count: number
-  }
-): Promise<void> {
-  const content = `
-## Agent Team 执行记录
+```bash
+get_current_stage() {
+  if [ -f .chaos-harness/state.json ] && command -v jq >/dev/null 2>&1; then
+    jq -r '.workflow.current_stage // "W01"' .chaos-harness/state.json
+  else
+    echo "W01"
+  fi
+}
+```
 
-**阶段**: ${execution.stage}
+### 读取项目规模
 
-**执行时间**: ${new Date().toISOString()}
-
-**总耗时**: ${execution.total_duration}ms
-
-### Agent 状态
-
-| Agent | 角色 | 状态 | 耗时 |
-|-------|------|------|------|
-${execution.agents.map(a => `| ${a.id} | ${a.role} | ${a.status} | ${a.duration}ms |`).join('\n')}
-
-**违规次数**: ${execution.violations}
-
-**鞭策次数**: ${execution.whip_count}
-`
-
-  await updateEffectivenessLog(version, content)
+```bash
+get_project_scale() {
+  if [ -f .chaos-harness/state.json ] && command -v jq >/dev/null 2>&1; then
+    jq -r '.workflow.scale // "medium"' .chaos-harness/state.json
+  else
+    echo "medium"
+  fi
 }
 ```
 
@@ -310,63 +185,27 @@ ${execution.agents.map(a => `| ${a.id} | ${a.role} | ${a.status} | ${a.duration}
 
 ## 使用示例
 
-### 在 workflow-supervisor 中
+### 阶段完成时
 
-```markdown
-阶段完成时：
-1. 调用 Update-Stage-Status(stage, 'completed', outputPath)
-2. 调用 Update-Effectiveness-Log(version, content)
+```bash
+complete_stage "W08" "output/v1.3.0/W08"
+update_session_time
 ```
 
-### 在 agent-team-orchestrator 中
+### 铁律触发时
 
-```markdown
-Agent Team 执行后：
-1. 调用 Log-Agent-Team-Execution(version, execution)
-2. 如果检测到偷懒，调用 Log-Laziness-Pattern(agentId, patternId, context)
+```bash
+log_iron_law "IL001" "文档输出到 output/ 但无版本目录" "block"
 ```
 
-### 在 collaboration-reviewer 中
+### 检测到偷懒时
 
-```markdown
-评审完成后：
-1. 调用 Log-Review-Complete(version, stage, result)
+```bash
+log_laziness "LP003" "Agent-backend-2 超过 5 分钟无产出"
 ```
 
-### 在 iron-law-enforcer 中
+### 学习记录
 
-```markdown
-铁律触发时：
-1. 调用 Log-Iron-Law-Trigger(ironLawId, context, action)
-```
-
----
-
-## 状态读取函数
-
-### Read-Project-State
-
-```typescript
-async function readProjectState(): Promise<ProjectState> {
-  const content = await fs.readFile(PROJECT_STATE, 'utf-8')
-  return JSON.parse(content)
-}
-```
-
-### Get-Current-Version
-
-```typescript
-async function getCurrentVersion(): Promise<string | null> {
-  const state = await readProjectState()
-  return state.current_version
-}
-```
-
-### Get-Current-Stage
-
-```typescript
-async function getCurrentStage(): Promise<string> {
-  const state = await readProjectState()
-  return state.workflow?.current_stage || 'W01'
-}
+```bash
+log_learning "iron_law_violation" "IL003 触发: 完成声明无验证" "完成必须附带测试输出"
 ```
