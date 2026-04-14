@@ -51,6 +51,23 @@ license: MIT
 关联: IL-TEST001 (E2E 测试覆盖)
 警告: "测试覆盖率低于 80%，建议增加测试"
 
+场景: P03 设计完成
+检测: P03-memory.yaml 存在 + ui_generated=true
+关联:
+  - IL-TEAM001 (评审必须多 Agent)
+推荐: agent-team-orchestrator
+团队配置: product_manager + user_advocate + designer
+触发: 说 "启动设计评审" 或点击推荐
+
+场景: P04 技术完成
+检测: tech/architecture.md + tech/api-design.md 存在
+关联:
+  - IL-TEAM001 (评审必须多 Agent)
+  - IL-TECH001 (技术选型对比)
+推荐: agent-team-orchestrator
+团队配置: architect + security_expert + senior_dev
+触发: 说 "启动技术评审" 或点击推荐
+
 场景: 版本目录缺失
 检测: output/ 下无 vX.Y 目录
 关联: IL001
@@ -158,6 +175,8 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 | PRD 编写 | *PRD*, *需求* | product-lifecycle |
 | 原型设计 | *prototype*, *design* | product-lifecycle P03 |
 | P03 阶段 + PRD 就绪 | state.json current_stage=P02→P03 | 直接加载 ui-generator |
+| **P03 设计完成** | **P03-memory.yaml + ui_generated=true** | **agent-team-orchestrator (product_manager + user_advocate + designer)** |
+| **P04 技术完成** | **tech/architecture.md + tech/api-design.md 存在** | **agent-team-orchestrator (architect + security_expert + senior_dev)** |
 
 ## 工作流阶段自动触发
 
@@ -175,6 +194,13 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 | W07 Agent分配 | agent-team-orchestrator | 自动拆分任务，分配开发 Agent |
 | W08 开发实现 | agent-team-orchestrator | 并行开发 Agent + Supervisor 监控 |
 | W09 代码审查 | agent-team-orchestrator | code_reviewer + security_reviewer + perf_reviewer |
+
+以下产品设计阶段完成后，**推荐**启动 Multi-Agent 评审：
+
+| 产品阶段 | 推荐触发 | Agent Team 配置 | 评审维度 |
+|---------|---------|----------------|---------|
+| P03 设计完成 | agent-team-orchestrator | product_manager + user_advocate + designer | 需求覆盖、用户体验、设计规范 |
+| P04 技术完成 | agent-team-orchestrator | architect + security_expert + senior_dev | 架构合理性、安全、可行性 |
 
 ### P03 原型设计阶段 — 直接加载
 

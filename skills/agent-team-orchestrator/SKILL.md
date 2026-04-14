@@ -23,6 +23,8 @@ version: "1.3.0"
 
 到达以下阶段时推荐启动 Agent Team：
 
+### 工作流评审阶段
+
 | 阶段 | 团队配置 | 最少 Agent 数 |
 |------|---------|-------------|
 | W02 需求评审 | product_manager, architect, user_advocate | 3 |
@@ -30,6 +32,13 @@ version: "1.3.0"
 | W07 Agent 分配 | 根据 API 模块分配 | 按需 |
 | W08 开发实现 | backend_dev, frontend_dev | 2+ |
 | W09 代码审查 | code_reviewer, security_reviewer, perf_reviewer | 3 |
+
+### 产品设计评审阶段（P03/P04）
+
+| 阶段 | 团队配置 | 最少 Agent 数 | 评审维度 |
+|------|---------|-------------|---------|
+| P03 设计评审 | product_manager, user_advocate, designer | 3 | 需求覆盖、用户体验、设计规范 |
+| P04 技术评审 | architect, security_expert, senior_dev | 3 | 架构合理性、安全、实现可行性 |
 
 ## 编排决策框架
 

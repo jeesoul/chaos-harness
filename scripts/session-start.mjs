@@ -22,6 +22,7 @@ import {
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { basename } from 'node:path';
 
 // 初始化日志文件
 ensureDir(GLOBAL_DATA_DIR);
@@ -66,6 +67,53 @@ if (state) {
     hookPrint('**P03 原型设计阶段已就绪:**');
     hookPrint("说 '生成界面' 启动 UI 生成（从 PRD 自动生成可运行的前端代码）");
     hookPrint("说 '查看工作流' 了解当前阶段详情");
+  }
+
+  // P03 设计完成 → 推荐 Multi-Agent 设计评审
+  if (PROJECT_ROOT && currentStage === 'P03') {
+    const p03MemoryPath = join(PROJECT_ROOT, 'output', 'v1', 'memory', 'P03-memory.yaml');
+    if (existsSync(p03MemoryPath)) {
+      const p03Content = readFileSync(p03MemoryPath, 'utf-8');
+      if (p03Content.includes('ui_generated: true')) {
+        // 检查是否已有评审通过记录
+        if (!p03Content.includes('design_review_passed: true')) {
+          hookPrint('');
+          hookPrint('<CHAOS_HARNESS_DESIGN_REVIEW_READY>');
+          hookPrint('📋 P03 设计产出物已就绪，建议启动 Multi-Agent 设计评审：');
+          hookPrint('   - 产品经理: 需求覆盖率、用户故事完整性');
+          hookPrint('   - 用户倡导者: 用户体验、可访问性');
+          hookPrint('   - 设计师: 设计规范一致性、技术可行性');
+          hookPrint("说 '启动设计评审' 自动分配 3 个评审 Agent");
+          hookPrint('</CHAOS_HARNESS_DESIGN_REVIEW_READY>');
+        }
+      }
+    }
+  }
+
+  // P04 技术完成 → 推荐 Multi-Agent 技术评审
+  if (PROJECT_ROOT && currentStage === 'P04') {
+    const techDir = join(PROJECT_ROOT, 'output', 'v1', 'tech');
+    const hasArch = existsSync(join(techDir, 'architecture.md'));
+    const hasApi = existsSync(join(techDir, 'api-design.md'));
+    if (hasArch && hasApi) {
+      // 检查是否已有评审通过记录
+      const p04MemoryPath = join(PROJECT_ROOT, 'output', 'v1', 'memory', 'P04-memory.yaml');
+      let reviewed = false;
+      if (existsSync(p04MemoryPath)) {
+        const p04Content = readFileSync(p04MemoryPath, 'utf-8');
+        reviewed = p04Content.includes('tech_review_passed: true');
+      }
+      if (!reviewed) {
+        hookPrint('');
+        hookPrint('<CHAOS_HARNESS_TECH_REVIEW_READY>');
+        hookPrint('📋 P04 技术产出物已就绪，建议启动 Multi-Agent 技术评审：');
+        hookPrint('   - 架构师: 架构合理性、可扩展性');
+        hookPrint('   - 安全专家: 安全风险、数据泄露');
+        hookPrint('   - 高级开发: 实现可行性、技术债务');
+        hookPrint("说 '启动技术评审' 自动分配 3 个评审 Agent");
+        hookPrint('</CHAOS_HARNESS_TECH_REVIEW_READY>');
+      }
+    }
   }
 
   hookPrint('</CHAOS_HARNESS_STATE_RECOVERY>');

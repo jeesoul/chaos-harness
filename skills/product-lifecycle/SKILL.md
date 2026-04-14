@@ -187,10 +187,24 @@ stakeholder_approved: true/false
    - 高保真原型（Figma/Sketch）
    - 设计规范（颜色、字体、组件）
 
-5. **设计评审**
-   - 内部评审
-   - 干系人确认
-   - 迭代修改
+5. **设计评审（强制 Multi-Agent）**
+
+   **IL-TEAM001: 评审必须多 Agent，不得单 Agent 自检**
+
+   设计产出物（信息架构 + 交互流程 + 生成的 UI 组件）完成后，必须启动 multi-agent 评审：
+
+   - **product_manager**: 需求覆盖率、用户故事完整性、PRD 可追溯性
+   - **user_advocate**: 用户体验、可访问性、交互合理性
+   - **designer** 或 **architect**: 设计规范一致性、技术可行性
+
+   **评审通过标准**：
+   - 所有 Agent 评分 ≥ 7
+   - 无高风险项
+   - 用户确认接受
+
+   **评审不通过** → 退回 Step 3（UI 生成）修改 → 重新评审
+
+   **自动触发**：设计产出物生成后，auto-context 自动检测到并推荐启动 Agent Team，用户确认后执行。
 
 ### 输出
 - `output/{version}/design/ia-diagram.md` - 信息架构图
@@ -208,6 +222,7 @@ stakeholder_approved: true/false
 - [ ] 原型是否可交互演示？
 - [ ] 干系人是否签字确认？
 - [ ] 生成的 UI 组件是否通过 CDP 预览验证？
+- [ ] **Multi-Agent 设计评审是否通过？**（IL-TEAM001）
 
 ### 工具集成
 - **ui-generator**：从需求直接生成可运行的前端界面（Step 3）
@@ -229,6 +244,11 @@ generated_framework: Vue3/React/Vue2/none
 generated_components: [组件名称列表]
 cdp_preview_passed: true/false
 cdp_preview_url: http://localhost:{port}
+# multi-agent 评审字段
+design_review_agents: [agent角色列表]
+design_review_score: 平均分
+design_review_passed: true/false
+design_review_risks: [风险项]
 ```
 
 ***
@@ -260,7 +280,26 @@ cdp_preview_url: http://localhost:{port}
    - 索引设计
    - 数据迁移方案
 
-4. **技术风险评估**
+4. **技术评审（强制 Multi-Agent）**
+
+   **IL-TEAM001: 评审必须多 Agent，不得单 Agent 自检**
+
+   技术产出物（架构文档 + API 设计 + 数据库设计）完成后，必须启动 multi-agent 评审：
+
+   - **architect**: 架构合理性、可扩展性、模块边界
+   - **security_expert**: 安全风险、数据泄露、权限漏洞
+   - **senior_dev**: 实现可行性、技术债务、性能隐患
+
+   **评审通过标准**：
+   - 所有 Agent 评分 ≥ 7
+   - 无高风险项
+   - 用户确认接受
+
+   **评审不通过** → 退回对应步骤修改 → 重新评审
+
+   **自动触发**：技术产出物生成后，auto-context 自动检测到并推荐启动 Agent Team，用户确认后执行。
+
+5. **技术风险评估**
    - 性能瓶颈
    - 安全风险
    - 依赖风险
@@ -277,6 +316,7 @@ cdp_preview_url: http://localhost:{port}
 - [ ] 数据库设计是否满足第三范式？
 - [ ] 是否有性能测试方案？
 - [ ] 安全方案是否完整？
+- [ ] **Multi-Agent 技术评审是否通过？**（IL-TEAM001）
 
 ### 铁律检查
 | 铁律 | 检查项 |
@@ -296,6 +336,11 @@ tech_stack:
   database: {tech}
 api_count: {count}
 tech_review_passed: true/false
+# multi-agent 评审字段
+tech_review_agents: [agent角色列表]
+tech_review_score: 平均分
+tech_review_passed: true/false
+tech_review_risks: [风险项]
 ```
 
 ***

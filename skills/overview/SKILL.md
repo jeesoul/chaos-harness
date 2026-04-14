@@ -25,13 +25,13 @@ version: "1.3.0"
 |-------|--------|------|
 | iron-law-enforcer | 铁律、约束、违规 | 始终激活 |
 | workflow-supervisor | 工作流、阶段、进度 | 12 阶段工作流管理 |
-| agent-team-orchestrator | 并行、多agent、协作 | Agent Team 编排 |
+| agent-team-orchestrator | 并行、多agent、协作 | Agent Team 编排（含设计/技术评审） |
 | collaboration-reviewer | 评审、审查 | 多 Agent 协作评审 |
 | project-scanner | 扫描、分析项目 | 项目类型/环境检测 |
 | version-locker | 版本、锁定 | 版本管理和锁定 |
 | harness-generator | 生成约束 | 基于扫描生成铁律 |
 | learning-analyzer | 学习分析、自学习 | 失败模式发现、铁律优化 |
-| product-lifecycle | PRD、需求、原型 | 产品全生命周期 |
+| product-lifecycle | PRD、需求、原型 | 产品全生命周期（含强制评审） |
 | java-checkstyle | Java 项目 | Java 代码规范 |
 | project-state | 继续、恢复 | 会话持久化 |
 | hooks-manager | 钩子、hooks | 查看钩子状态 |
