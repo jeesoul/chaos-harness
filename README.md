@@ -108,6 +108,66 @@ Harness 结果：插件接入后自动继承铁律，操作受监督，日志自
 
 ---
 
+## 安装指南
+
+### 快速安装
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/jeesoul/chaos-harness.git
+
+# 2. 注册本地 marketplace
+claude plugins marketplace add "D:\path\to\chaos-harness"    # Windows
+claude plugins marketplace add ~/path/to/chaos-harness      # macOS/Linux
+
+# 3. 安装插件
+claude plugins install chaos-harness@chaos-harness
+
+# 4. 重启 Claude Code
+# 验证安装成功
+/chaos-harness:overview
+```
+
+### 卸载
+
+```bash
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins marketplace remove chaos-harness
+```
+
+### 升级指南
+
+**从源码升级（推荐）：**
+
+```bash
+# 1. 拉取最新代码
+cd /path/to/chaos-harness
+git pull origin main
+
+# 2. 重新注册 marketplace
+claude plugins marketplace remove chaos-harness
+claude plugins marketplace add "/path/to/chaos-harness"    # 使用你的实际路径
+
+# 3. 卸载旧版本并安装新版本
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins install chaos-harness@chaos-harness
+
+# 4. 验证版本
+# 重启 Claude Code 后执行
+/chaos-harness:overview
+```
+
+**版本升级说明：**
+
+| 版本 | 主要更新 | 升级注意 |
+|------|---------|---------|
+| 1.3.0 | P03/P04 强制 Multi-Agent 评审、产品经理增强（prd-validator/product-manager）、测试增强（test-assistant/visual-regression）、P08 混合测试模式 | 建议清理旧日志 |
+| 1.2.0 | 自学习闭环系统、自适应 Harness、Agent Team 铁律、CDP 浏览器自动化 | 首次稳定版本 |
+| 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 | 初始稳定版本 |
+| 1.0.0 | 核心框架：Skills + Hooks + Templates | 初始版本 |
+
+---
+
 ## 解决什么问题？
 
 ### AI Agent 常见行为问题
