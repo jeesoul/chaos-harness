@@ -155,6 +155,7 @@ stakeholder_approved: true/false
 - PRD 文档
 - MVP 范围
 - 用户角色定义
+- 项目扫描结果（前端框架检测）
 
 ### 活动
 
@@ -168,12 +169,25 @@ stakeholder_approved: true/false
    - 核心流程图
    - 异常流程处理
 
-3. **UI 原型**
+3. **UI 生成（ui-generator）**
+   - 加载 `ui-generator` skill（触发词：生成界面、UI生成、生成组件）
+   - 检测前端框架：读取 `package.json` 中的 dependencies，识别 Vue3/React/Vue2
+   - **IL002 前置检查**：必须有项目扫描结果（`.chaos-harness/scan-result.json`）才能生成
+   - 从 PRD 的用户故事中推导页面清单（每个用户故事 → 至少一个页面组件）
+   - 生成每个页面组件的可运行代码，必须符合检测到的前端框架规范
+   - 生成结果必须通过 iron-law-check 铁律检查
+   - 启动 dev server（`npm run dev` 或 `vite`），获取 localhost 端口
+   - 通过 web-access CDP 打开 `http://localhost:{port}` 预览（CDP 前需 `check-deps.mjs` 通过）
+   - **验证成功标准**：CDP 截图页面可见核心 UI 元素（文本、按钮、表单），无控制台报错
+   - 如 dev server 不可用或项目无前端框架，回退到生成静态 HTML 原型
+   - 写入生成日志到 `output/{version}/design/generated-ui-log.md`
+
+4. **原型与规范（可选，无框架项目或需要补充时）**
    - 低保真原型（手绘/Axure）
    - 高保真原型（Figma/Sketch）
    - 设计规范（颜色、字体、组件）
 
-4. **设计评审**
+5. **设计评审**
    - 内部评审
    - 干系人确认
    - 迭代修改
@@ -182,7 +196,10 @@ stakeholder_approved: true/false
 - `output/{version}/design/ia-diagram.md` - 信息架构图
 - `output/{version}/design/user-flow.md` - 用户流程图
 - `output/{version}/design/prototypes/` - 原型文件目录
-- `output/{version}/design/design-system.md` - 设计规范
+  - `{page-name}/` - 每个页面的生成代码（Vue/React 组件）
+  - `index.html` - 静态 HTML 原型（无框架项目回退）
+- `output/{version}/design/design-system.md` - 设计规范（可选）
+- `output/{version}/design/generated-ui-log.md` - UI 生成日志
 
 ### 验证检查点
 - [ ] 核心流程是否覆盖所有用户角色？
@@ -190,10 +207,12 @@ stakeholder_approved: true/false
 - [ ] 设计是否符合品牌规范？
 - [ ] 原型是否可交互演示？
 - [ ] 干系人是否签字确认？
+- [ ] 生成的 UI 组件是否通过 CDP 预览验证？
 
 ### 工具集成
-- **ui-ux-pro-max**：UI/UX 设计评审
-- **superpowers-chrome**：浏览器原型预览
+- **ui-generator**：从需求直接生成可运行的前端界面（Step 3）
+- **ui-ux-pro-max**：UI/UX 设计评审（Step 5）
+- **web-access CDP**：浏览器原型预览（验证生成结果，Step 3 验证环节）
 
 ### 记忆写入
 ```yaml
@@ -204,6 +223,12 @@ screens_count: {count}
 user_flows: [流程列表]
 design_review_passed: true/false
 revision_count: {count}
+# ui-generator 新增字段
+ui_generated: true/false
+generated_framework: Vue3/React/Vue2/none
+generated_components: [组件名称列表]
+cdp_preview_passed: true/false
+cdp_preview_url: http://localhost:{port}
 ```
 
 ***
