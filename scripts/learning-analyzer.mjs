@@ -167,6 +167,10 @@ const reportContent = reportLines.join('\n');
 const reportPath = join(GLOBAL_DATA_DIR, 'analysis-report.md');
 writeFileSync(reportPath, reportContent, 'utf-8');
 
+// 同时写入机器可读的建议 JSON（供 adaptive-harness 使用）
+const suggestionsPath = join(GLOBAL_DATA_DIR, 'analysis-suggestions.json');
+writeFileSync(suggestionsPath, JSON.stringify(suggestions, null, 2), 'utf-8');
+
 // 同时尝试写入项目版本目录
 const projectRoot = detectProjectRoot();
 const statePath = join(projectRoot, '.chaos-harness', 'state.json');

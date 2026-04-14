@@ -35,6 +35,9 @@ version: "1.3.0"
 | `~/.claude/harness/learning-log.json` | 学习记录（操作类型、文件路径、上下文） |
 | `~/.claude/harness/workflow-log.json` | 工作流事件 |
 | `~/.claude/harness/analysis-report.md` | 自动生成的学习分析报告 |
+| `~/.claude/harness/analysis-suggestions.json` | 机器可读优化建议 |
+| `~/.claude/harness/adaptive-report.md` | 自适应优化报告 |
+| `~/.claude/harness/iron-laws.yaml` | 自适应强化后的铁律配置 |
 | `~/.claude/harness/last-compact.json` | 压缩前状态快照 |
 
 ## 自学习闭环
@@ -50,13 +53,18 @@ Stop → laziness-detect → laziness-log.json
 
 SessionStart → 自动分析(learning-log ≥ 5 或 iron-law ≥ 3) → analysis-report.md
                                                     ↓
-                              harness-generator --adaptive → 铁律优化
+                              analysis-suggestions.json (机器可读)
+                                                    ↓
+                              adaptive-harness.mjs → iron-laws.yaml (自动强化)
+                                                    ↓
+                              adaptive-report.md (优化报告)
 ```
 
 **自动触发条件**：
 - learning-log ≥ 5 条 → 自动运行 learning-analyzer
 - iron-law-log ≥ 3 条 → 自动运行 learning-analyzer
-- 分析报告自动写入全局和项目版本目录
+- analysis-suggestions.json 有建议 → 自动运行 adaptive-harness
+- 分析报告和优化报告自动写入全局和项目版本目录
 
 ## 铁律与钩子映射
 

@@ -134,6 +134,20 @@ if (shouldAnalyze) {
   hookPrint('</CHAOS_HARNESS_LEARNING_ANALYSIS>');
 }
 
+// ---- 自适应 Harness 优化 ----
+const ADAPTIVE_SCRIPT = join(PROJECT_ROOT, 'scripts', 'adaptive-harness.mjs');
+const SUGGESTIONS_PATH = join(GLOBAL_DATA_DIR, 'analysis-suggestions.json');
+if (existsSync(ADAPTIVE_SCRIPT) && existsSync(SUGGESTIONS_PATH)) {
+  const suggestions = readJson(SUGGESTIONS_PATH, []);
+  if (suggestions.length > 0) {
+    const result = spawnSync('node', [ADAPTIVE_SCRIPT], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 5000,
+    });
+    if (result.stdout) hookPrint(result.stdout.toString());
+  }
+}
+
 // ---- 插件版本检查（快速，不阻塞） ----
 const pluginSyncScript = join(PROJECT_ROOT, 'scripts', 'plugin-sync.mjs');
 if (existsSync(pluginSyncScript)) {

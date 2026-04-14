@@ -92,51 +92,44 @@ laziness_patterns:
 
 **核心闭环：从历史学习自动优化 Harness 配置**
 
+**已实现**：`scripts/adaptive-harness.mjs` — 读取 `analysis-suggestions.json` 并自动应用优化建议。
+
 当用户请求 `--adaptive` 或 `自适应生成 Harness` 时：
 
-1. 检查 `output/{version}/analysis-report.md` 是否存在，存在则读取优化建议
-2. 如果不存在，检查 `~/.claude/harness/learning-log.json` 记录数量
-3. learning-log ≥ 5 条时，提示用户先运行 learning-analyzer
+```bash
+# 手动触发
+node scripts/adaptive-harness.mjs
 
-自适应闭环：learning-log.json → learning-analyzer → analysis-report → harness-generator --adaptive → 应用优化 → 新行为
+# 预览模式（不修改文件）
+node scripts/adaptive-harness.mjs --dry-run
+```
+
+**session-start hook 已内置自动触发**：当 analysis-suggestions.json 存在且包含建议时，自动运行 adaptive-harness。
+
+自适应闭环：
+```
+learning-log.json → learning-analyzer → analysis-report.md
+    → analysis-suggestions.json (机器可读)
+    → adaptive-harness.mjs → iron-laws.yaml (自动强化)
+    → 新行为
+```
 
 **自适应规则应用**：
 
 | 优先级 | 应用规则 |
 |--------|---------|
-| 高优先级 | 自动新增铁律到 iron-laws.yaml |
-| 高优先级 | 自动强化 hook 检查脚本 |
-| 中优先级 | 提示用户确认后应用 |
-| 待观察 | 仅记录，不自动应用 |
+| 高优先级 | 自动新增/强化铁律到 `~/.claude/harness/iron-laws.yaml` |
+| 中优先级 | 提示用户确认（记录到 adaptive-report.md 待确认区） |
+| 低优先级 | 仅记录到观察区，不自动应用 |
 
-**自适应生成示例**：
+**自适应输出文件**：
 
-```yaml
-identity:
-  name: "项目名称"
-  type: java-spring
-  adaptive: true
-  based_on_analysis: "output/v0.1/analysis-report.md"
-
-iron_laws:
-  - id: IL001
-    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
-
-  # 自适应新增
-  - id: IL-C003
-    rule: "NO COMPLETION WITHOUT TEST OUTPUT"
-    adaptive_added: true
-    reason: "IL003 违规 50% 都是'完成无验证'"
-```
-
-**自适应触发条件**：
-
-| 条件 | 触发 |
+| 文件 | 说明 |
 |------|------|
-| learning-log ≥ 5 条 | 提示用户运行 learning-analyzer |
-| analysis-report 存在 | 自动读取建议 |
-| analysis-report 建议高优先级 | 自动应用 |
-| 用户请求 `--adaptive` | 强制进入自适应模式 |
+| `~/.claude/harness/adaptive-report.md` | 优化报告（已应用/待确认/观察记录） |
+| `~/.claude/harness/iron-laws.yaml` | 自适应强化后的铁律配置 |
+| `~/.claude/harness/analysis-suggestions.json` | 机器可读建议（learning-analyzer 生成） |
+| `output/{version}/adaptive-report.md` | 项目版本目录副本 |
 
 ## 输出要求
 
@@ -145,7 +138,7 @@ iron_laws:
 3. **必须** 包含防绕过规则
 4. **必须** 包含偷懒模式检测配置
 5. **应该** 根据项目类型选择合适模板
-6. **自适应模式** 必须读取并应用 analysis-report 建议
+6. **自适应模式** 必须读取并应用 analysis-suggestions.json 建议
 
 ## References 索引
 
@@ -153,6 +146,10 @@ iron_laws:
 |------|---------|
 | `shared/state-helpers.md` | 需要状态管理函数时 |
 | `output/{version}/scan-result.json` | 读取扫描结果选择模板时 |
-| `output/{version}/analysis-report.md` | 自适应模式读取优化建议时 |
-| `~/.claude/harness/learning-log.json` | 自适应模式检查学习记录数时 |
+| `output/{version}/analysis-report.md` | 人类阅读分析报告时 |
+| `~/.claude/harness/analysis-suggestions.json` | 自适应模式读取机器可读建议时 |
+| `~/.claude/harness/iron-laws.yaml` | 查看自适应铁律配置时 |
+| `~/.claude/harness/adaptive-report.md` | 查看自适应优化报告时 |
+| `scripts/adaptive-harness.mjs` | 手动触发自适应优化时 |
+| `scripts/learning-analyzer.mjs` | 手动触发分析时 |
 | `templates/` | 读取 Harness 模板文件时 |
