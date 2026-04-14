@@ -1,6 +1,6 @@
 ---
 name: plugin-manager
-description: "查看插件和铁律配置。触发词：插件管理、配置插件、添加铁律、自定义铁律"
+description: "查看插件和铁律配置，管理外部插件更新。触发词：插件管理、配置插件、添加铁律、自定义铁律、更新插件、检查更新"
 license: MIT
 version: "1.3.0"
 ---
@@ -12,6 +12,24 @@ version: "1.3.0"
 **插件不是独立运行的工具，而是 Harness 约束下的参与者。**
 
 所有插件必须接受铁律约束、在版本目录下工作、提供验证证据。
+
+## 外部插件同步
+
+内置外部插件（如 web-access）通过 `plugin-sync.mjs` 管理版本同步：
+
+```bash
+# 检查所有插件更新
+node scripts/plugin-sync.mjs
+
+# 检查特定插件
+node scripts/plugin-sync.mjs web-access
+
+# 自动同步更新
+node scripts/plugin-sync.mjs web-access --sync
+```
+
+同步流程：检查 GitHub 最新版本 → 版本对比 → 浅克隆 → 覆盖 SKILL.md/scripts/references。
+本地修改的 SKILL.md（如铁律集成部分）会被覆盖，需重新适配。
 
 ## 插件配置
 
@@ -66,6 +84,8 @@ custom_iron_laws:
 | "查看插件列表" | 列出已安装插件 |
 | "添加铁律: xxx" | 添加到 iron-laws.yaml |
 | "查看自定义铁律" | 读取 iron-laws.yaml |
+| "检查插件更新" | 运行 plugin-sync.mjs 检查 |
+| "更新 web-access" | 运行 plugin-sync.mjs web-access --sync |
 
 ## References 索引
 

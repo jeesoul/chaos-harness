@@ -134,4 +134,25 @@ if (shouldAnalyze) {
   hookPrint('</CHAOS_HARNESS_LEARNING_ANALYSIS>');
 }
 
+// ---- 插件版本检查（快速，不阻塞） ----
+const pluginSyncScript = join(PROJECT_ROOT, 'scripts', 'plugin-sync.mjs');
+if (existsSync(pluginSyncScript)) {
+  const result = spawnSync('node', [pluginSyncScript], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 8000,
+  });
+  if (result.stdout) {
+    const output = result.stdout.toString();
+    if (output.includes('🔄') || output.includes('可更新')) {
+      hookPrint('');
+      hookPrint('<CHAOS_HARNESS_PLUGIN_UPDATE>');
+      const updateLines = output.split('\n').filter(l => l.includes('🔄'));
+      for (const line of updateLines) hookPrint(line);
+      hookPrint('运行以下命令同步更新:');
+      hookPrint('   node scripts/plugin-sync.mjs web-access --sync');
+      hookPrint('</CHAOS_HARNESS_PLUGIN_UPDATE>');
+    }
+  }
+}
+
 process.exit(0);
