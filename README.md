@@ -1,7 +1,7 @@
 # Chaos Harness
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.0-blue.svg">
+  <img src="https://img.shields.io/badge/version-1.3.0--%E5%AD%94%E6%98%8E-blue.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
 </p>
 
@@ -82,7 +82,7 @@ claude plugins install chaos-harness@chaos-harness
 
 | 版本 | 主要更新 |
 |------|---------|
-| 1.3.0 | P03/P04 强制 Multi-Agent 评审、产品经理增强、测试增强（Playwright+CDP 混合模式）、22 个 Skill、MCP 彻底移除 |
+| 1.3.0 孔明 | P03/P04 强制 Multi-Agent 评审、产品经理增强、测试增强（Playwright+CDP 混合模式）、22 个 Skill、MCP 彻底移除 |
 | 1.2.0 | 自学习闭环、自适应 Harness、Agent Team 铁律、CDP 浏览器自动化 |
 | 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 |
 | 1.0.0 | 核心框架：Skills + Hooks + Templates |

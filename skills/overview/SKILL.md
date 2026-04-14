@@ -7,6 +7,7 @@ version: "1.3.0"
 
 # Chaos Harness v1.3.0 孔明
 
+> 运筹帷幄，决胜千里；以智御局，以律治心。
 > **Chaos demands order. Harness provides it.**
 
 ## 核心铁律（不可协商）
