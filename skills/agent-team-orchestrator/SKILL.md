@@ -40,6 +40,22 @@ version: "1.3.0"
 | P03 设计评审 | product_manager, user_advocate, designer | 3 | 需求覆盖、用户体验、设计规范 |
 | P04 技术评审 | architect, security_expert, senior_dev | 3 | 架构合理性、安全、实现可行性 |
 
+### 超频模式（紧急任务 — P0 最高优先级）
+
+| 问题类型 | 团队配置 | 最少 Agent 数 | 目标 |
+|---------|---------|-------------|------|
+| 代码缺陷 | diagnoser, context-reader, hypothesis-generator | 3 | 3 分钟内定位根因 |
+| 需求变更 | product_analyst, impact_reader, scope_adjuster | 3 | 快速评估影响范围 |
+| 架构修改 | arch_reader, impact_analyst, alternative_explorer | 3 | 最优方案快速决策 |
+| 测试调整 | test_analyst, coverage_reader, case_adjuster | 3 | 紧急调整测试优先级 |
+| 运维事故 | log_analyst, infra_reader, fix_generator | 3 | 最短时间恢复服务 |
+
+**超频模式下 Agent 分配规则**：
+- 主 Agent 不做具体分析，只负责协调和拍板
+- 各 Agent 独立工作，不等待他人结果
+- 分歧时主 Agent 1 分钟内拍板，不展开讨论
+- 总时间目标：14 分钟完成全流程
+
 ## 编排决策框架
 
 不要从"启动几个 Agent"开始推理。从这三个问题开始：
@@ -121,3 +137,4 @@ echo '{"agent_id":"backend-2","pattern":"LP001","context":"5分钟无产出","ti
 | `skills/collaboration-reviewer/SKILL.md` | 需要详细评审流程和汇总报告格式时 |
 | `shared/state-helpers.md` | 需要完整状态管理函数时 |
 | `~/.claude/harness/laziness-log.json` | 查看历史偷懒检测记录时 |
+| `skills/overdrive/SKILL.md` | 超频模式激活，需要紧急任务分配时 |

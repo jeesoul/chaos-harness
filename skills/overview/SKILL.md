@@ -20,7 +20,7 @@ version: "1.3.0"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（22 个）
+## 可用 Skills（23 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
@@ -46,6 +46,7 @@ version: "1.3.0"
 | ui-generator | 生成界面、UI生成 | 从 PRD 生成可运行的前端界面 |
 | adaptive-harness | 自适应优化、应用建议 | 从学习数据自动强化铁律 |
 | web-access | 搜索、网页、CDP、浏览器 | 联网操作与 CDP 浏览器自动化 |
+| overdrive | 紧急、超频、立刻解决 | 最高优先级、所有 Agent 全速运行 |
 
 ## 插件系统
 
