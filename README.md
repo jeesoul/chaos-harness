@@ -83,7 +83,7 @@ claude plugins install chaos-harness@chaos-harness
 
 | 版本 | 主要更新 |
 |------|---------|
-| 1.3.0 孔明 | P03/P04 强制 Multi-Agent 评审、产品经理增强、测试增强（Playwright+CDP 混合模式）、22 个 Skill、MCP 彻底移除 |
+| 1.3.0 孔明 | P03/P04 强制 Multi-Agent 评审、产品经理增强、测试增强（Playwright+CDP 混合模式）、23 个 Skill、overdrive 超频模式、跨平台兼容修复 |
 | 1.2.0 | 自学习闭环、自适应 Harness、Agent Team 铁律、CDP 浏览器自动化 |
 | 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 |
 | 1.0.0 | 核心框架：Skills + Hooks + Templates |
@@ -138,6 +138,7 @@ claude plugins install chaos-harness@chaos-harness
 | PostToolUse | 工具调用后 | 偷懒检测 + 学习记录 + 场景感知 |
 | Stop | 回合结束 | 完成声明分析 + 偷懒检测 |
 | PreCompact | 对话压缩前 | 保存关键上下文 |
+| Overdrive | 全局检测 | 超频模式激活 + 大模型效率指令注入 |
 
 ### 智能场景感知 (Auto Context)
 
@@ -150,6 +151,17 @@ claude plugins install chaos-harness@chaos-harness
 | 写测试文件 | test-assistant |
 | P03 设计完成 | 推荐 Multi-Agent 设计评审 |
 | P04 技术完成 | 推荐 Multi-Agent 技术评审 |
+
+### 超频模式 (Overdrive)
+
+当遇到紧急任务时，一键激活最高优先级处理模式：
+
+- **触发词**：紧急、超频、overdrive、立刻解决、线上问题
+- **适用范围**：bug 修复 / 需求变更 / 架构修改 / 测试调整 / 运维事故
+- **效率保障**：零铺垫、不解释、快速拍板、最小上下文
+- **时间目标**：14 分钟完成定位→决策→执行→验证全流程
+- **Agent 配置**：自动分配 3+ Agent 并行处理，主 Agent 只做协调
+- **铁律策略**：跳过前置扫描，保留底线验证（版本/验证/安全不可跳过）
 
 ### 自适应工作流
 
@@ -197,6 +209,7 @@ claude plugins install chaos-harness@chaos-harness
 | `/chaos-harness:ui-generator` | UI 生成：从 PRD 生成前端界面 |
 | `/chaos-harness:adaptive-harness` | 自适应优化：从学习数据强化铁律 |
 | `/chaos-harness:web-access` | 联网操作：搜索/抓取/CDP 浏览器自动化 |
+| `/chaos-harness:overdrive` | 超频模式：最高优先级紧急任务，所有 Agent 全速运行 |
 
 ### 智能触发（无需记住命令）
 
@@ -217,6 +230,7 @@ claude plugins install chaos-harness@chaos-harness
 | "学习记录"、"自学习" | learning-analyzer |
 | "评审"、"审查" | collaboration-reviewer |
 | "继续"、"恢复" | project-state |
+| "紧急"、"超频"、"立刻解决" | overdrive（最高优先级，直接激活） |
 
 ---
 
@@ -261,6 +275,7 @@ P03/P04 阶段完成后强制 Multi-Agent 评审（IL-TEAM001）。
 | 后端开发 | P07 | java-spring/node 模板 |
 | 测试工程师 | P08 | test-assistant, visual-regression |
 | 运维工程师 | P09 | workflow-supervisor |
+| **所有角色** | **紧急情况** | **overdrive** |
 
 ### Java 后端规范
 
