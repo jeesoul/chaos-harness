@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.mjs\"",
             "async": false
           }
         ]
@@ -18,8 +18,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/iron-law-check\" write",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/iron-law-check.mjs\" write",
             "async": false
+          }
+        ]
+      },
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/overdrive.mjs\"",
+            "async": true
           }
         ]
       }
@@ -30,12 +40,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/learning-update\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/learning-update.mjs\"",
             "async": true
           },
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/workflow-track\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/project-pattern-writer.mjs\"",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/workflow-track.mjs\"",
             "async": true
           }
         ]
@@ -47,13 +62,25 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/stop\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/stop.mjs\"",
             "async": false
           },
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/laziness-detect\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/laziness-detect.mjs\"",
             "async": true
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/pre-compact.mjs\"",
+            "async": false
           }
         ]
       }

@@ -20,60 +20,15 @@ license: MIT
 
 ## 执行规则
 
-**加载此 skill 后，你必须执行以下步骤：**
+加载此 skill 后：
 
-### Step 1: 检测当前阶段
-
-使用 Read 检查 `output/{version}/product-state.yaml`：
-- 存在 → 恢复当前阶段
-- 不存在 → 从 P01 开始新流程
-
-### Step 2: 显示阶段状态
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  产品研发流程状态                                            │
-├─────────────────────────────────────────────────────────────┤
-│  版本: {version}                                             │
-│  当前阶段: {stage}                                           │
-│  完成度: {percentage}%                                       │
-│  待处理: {pending items}                                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Step 3: 执行当前阶段
-
-根据阶段执行对应流程（见 10 阶段定义）
-
-### Step 4: 阶段验证与记忆
-
-每个阶段完成后：
-1. 执行自验证检查点
-2. 写入阶段记忆到 `output/{version}/memory/{stage}-memory.md`
-3. 更新 `product-state.yaml`
-4. 触发学习记录
+1. **检测当前阶段** — 读取 `output/{version}/product-state.yaml`，存在则恢复，不存在则从 P01 开始
+2. **执行当前阶段** — 根据阶段编号执行对应流程（见 10 阶段定义）
+3. **阶段完成后** — 执行自验证 → 写入阶段记忆 → 更新 product-state.yaml → 触发学习记录
 
 ## 10 阶段研发流程
 
-```dot
-digraph product_lifecycle {
-    rankdir=LR;
-    
-    P01 [label="P01\n需求收集", shape=box, style=filled, fillcolor="#E3F2FD"];
-    P02 [label="P02\n需求分析", shape=box, style=filled, fillcolor="#E3F2FD"];
-    P03 [label="P03\n原型设计", shape=box, style=filled, fillcolor="#E8F5E9"];
-    P04 [label="P04\n技术方案", shape=box, style=filled, fillcolor="#E8F5E9"];
-    P05 [label="P05\n开发规划", shape=box, style=filled, fillcolor="#FFF3E0"];
-    P06 [label="P06\n前端开发", shape=box, style=filled, fillcolor="#FFF3E0"];
-    P07 [label="P07\n后端开发", shape=box, style=filled, fillcolor="#FFF3E0"];
-    P08 [label="P08\n集成测试", shape=box, style=filled, fillcolor="#FCE4EC"];
-    P09 [label="P09\n验收交付", shape=box, style=filled, fillcolor="#F3E5F5"];
-    P10 [label="P10\n迭代优化", shape=box, style=filled, fillcolor="#E0E0E0"];
-    
-    P01 -> P02 -> P03 -> P04 -> P05 -> P06 -> P07 -> P08 -> P09 -> P10;
-    P10 -> P01 [label="下一迭代", style=dashed];
-}
-```
+P01 需求收集 → P02 需求分析 → P03 原型设计 → P04 技术方案 → P05 开发规划 → P06 前端开发 → P07 后端开发 → P08 集成测试 → P09 验收交付 → P10 迭代优化 → （回到 P01 下一迭代）
 
 ***
 
@@ -200,6 +155,7 @@ stakeholder_approved: true/false
 - PRD 文档
 - MVP 范围
 - 用户角色定义
+- 项目扫描结果（前端框架检测）
 
 ### 活动
 
@@ -213,21 +169,51 @@ stakeholder_approved: true/false
    - 核心流程图
    - 异常流程处理
 
-3. **UI 原型**
+3. **UI 生成（ui-generator）**
+   - 加载 `ui-generator` skill（触发词：生成界面、UI生成、生成组件）
+   - 检测前端框架：读取 `package.json` 中的 dependencies，识别 Vue3/React/Vue2
+   - **IL002 前置检查**：必须有项目扫描结果（`.chaos-harness/scan-result.json`）才能生成
+   - 从 PRD 的用户故事中推导页面清单（每个用户故事 → 至少一个页面组件）
+   - 生成每个页面组件的可运行代码，必须符合检测到的前端框架规范
+   - 生成结果必须通过 iron-law-check 铁律检查
+   - 启动 dev server（`npm run dev` 或 `vite`），获取 localhost 端口
+   - 通过 web-access CDP 打开 `http://localhost:{port}` 预览（CDP 前需 `check-deps.mjs` 通过）
+   - **验证成功标准**：CDP 截图页面可见核心 UI 元素（文本、按钮、表单），无控制台报错
+   - 如 dev server 不可用或项目无前端框架，回退到生成静态 HTML 原型
+   - 写入生成日志到 `output/{version}/design/generated-ui-log.md`
+
+4. **原型与规范（可选，无框架项目或需要补充时）**
    - 低保真原型（手绘/Axure）
    - 高保真原型（Figma/Sketch）
    - 设计规范（颜色、字体、组件）
 
-4. **设计评审**
-   - 内部评审
-   - 干系人确认
-   - 迭代修改
+5. **设计评审（强制 Multi-Agent）**
+
+   **IL-TEAM001: 评审必须多 Agent，不得单 Agent 自检**
+
+   设计产出物（信息架构 + 交互流程 + 生成的 UI 组件）完成后，必须启动 multi-agent 评审：
+
+   - **product_manager**: 需求覆盖率、用户故事完整性、PRD 可追溯性
+   - **user_advocate**: 用户体验、可访问性、交互合理性
+   - **designer** 或 **architect**: 设计规范一致性、技术可行性
+
+   **评审通过标准**：
+   - 所有 Agent 评分 ≥ 7
+   - 无高风险项
+   - 用户确认接受
+
+   **评审不通过** → 退回 Step 3（UI 生成）修改 → 重新评审
+
+   **自动触发**：设计产出物生成后，auto-context 自动检测到并推荐启动 Agent Team，用户确认后执行。
 
 ### 输出
 - `output/{version}/design/ia-diagram.md` - 信息架构图
 - `output/{version}/design/user-flow.md` - 用户流程图
 - `output/{version}/design/prototypes/` - 原型文件目录
-- `output/{version}/design/design-system.md` - 设计规范
+  - `{page-name}/` - 每个页面的生成代码（Vue/React 组件）
+  - `index.html` - 静态 HTML 原型（无框架项目回退）
+- `output/{version}/design/design-system.md` - 设计规范（可选）
+- `output/{version}/design/generated-ui-log.md` - UI 生成日志
 
 ### 验证检查点
 - [ ] 核心流程是否覆盖所有用户角色？
@@ -235,10 +221,13 @@ stakeholder_approved: true/false
 - [ ] 设计是否符合品牌规范？
 - [ ] 原型是否可交互演示？
 - [ ] 干系人是否签字确认？
+- [ ] 生成的 UI 组件是否通过 CDP 预览验证？
+- [ ] **Multi-Agent 设计评审是否通过？**（IL-TEAM001）
 
 ### 工具集成
-- **ui-ux-pro-max**：UI/UX 设计评审
-- **superpowers-chrome**：浏览器原型预览
+- **ui-generator**：从需求直接生成可运行的前端界面（Step 3）
+- **ui-ux-pro-max**：UI/UX 设计评审（Step 5）
+- **web-access CDP**：浏览器原型预览（验证生成结果，Step 3 验证环节）
 
 ### 记忆写入
 ```yaml
@@ -249,6 +238,17 @@ screens_count: {count}
 user_flows: [流程列表]
 design_review_passed: true/false
 revision_count: {count}
+# ui-generator 新增字段
+ui_generated: true/false
+generated_framework: Vue3/React/Vue2/none
+generated_components: [组件名称列表]
+cdp_preview_passed: true/false
+cdp_preview_url: http://localhost:{port}
+# multi-agent 评审字段
+design_review_agents: [agent角色列表]
+design_review_score: 平均分
+design_review_passed: true/false
+design_review_risks: [风险项]
 ```
 
 ***
@@ -280,7 +280,26 @@ revision_count: {count}
    - 索引设计
    - 数据迁移方案
 
-4. **技术风险评估**
+4. **技术评审（强制 Multi-Agent）**
+
+   **IL-TEAM001: 评审必须多 Agent，不得单 Agent 自检**
+
+   技术产出物（架构文档 + API 设计 + 数据库设计）完成后，必须启动 multi-agent 评审：
+
+   - **architect**: 架构合理性、可扩展性、模块边界
+   - **security_expert**: 安全风险、数据泄露、权限漏洞
+   - **senior_dev**: 实现可行性、技术债务、性能隐患
+
+   **评审通过标准**：
+   - 所有 Agent 评分 ≥ 7
+   - 无高风险项
+   - 用户确认接受
+
+   **评审不通过** → 退回对应步骤修改 → 重新评审
+
+   **自动触发**：技术产出物生成后，auto-context 自动检测到并推荐启动 Agent Team，用户确认后执行。
+
+5. **技术风险评估**
    - 性能瓶颈
    - 安全风险
    - 依赖风险
@@ -297,6 +316,7 @@ revision_count: {count}
 - [ ] 数据库设计是否满足第三范式？
 - [ ] 是否有性能测试方案？
 - [ ] 安全方案是否完整？
+- [ ] **Multi-Agent 技术评审是否通过？**（IL-TEAM001）
 
 ### 铁律检查
 | 铁律 | 检查项 |
@@ -316,6 +336,11 @@ tech_stack:
   database: {tech}
 api_count: {count}
 tech_review_passed: true/false
+# multi-agent 评审字段
+tech_review_agents: [agent角色列表]
+tech_review_score: 平均分
+tech_review_passed: true/false
+tech_review_risks: [风险项]
 ```
 
 ***
@@ -562,46 +587,69 @@ db_migrations: [migration list]
 - 前端代码
 - 后端代码
 - 测试用例
+- PRD 用户故事（用于推导 E2E 场景）
 
 ### 活动
 
-1. **E2E 测试**
-   - 用户场景测试
-   - 关键路径测试
-   - 异常场景测试
+1. **E2E 测试（混合模式：webapp-testing + web-access）**
+
+   **webapp-testing（Playwright）**：执行结构化、可重复的自动化测试用例
+   - 用户场景测试（登录 → 操作 → 验证结果）
+   - 关键路径测试（核心业务流程）
+   - 异常流程测试（错误输入、网络异常）
+   - 适合：稳定场景、回归测试、CI/CD 集成
+
+   **web-access（CDP）**：灵活验证、需要登录态/交互的场景
+   - 需要登录态的操作（后台管理、个人中心）
+   - 截图验证（页面渲染正确性）
+   - 动态内容验证（懒加载、实时数据）
+   - 适合：一次性验证、复杂交互、视觉检查
+
+   **组合策略**：
+   - 核心流程用 Playwright 写自动化用例（持久化）
+   - 临时验证用 CDP 快速检查（无需写代码）
+   - 视觉回归用 CDP 截图对比（visual-regression skill）
 
 2. **接口测试**
-   - 接口响应验证
-   - 边界值测试
-   - 并发测试
+   - 接口响应验证（状态码、响应体结构）
+   - 边界值测试（空值、超长、特殊字符）
+   - 并发测试（同时请求、竞态条件）
 
 3. **性能测试**
-   - 负载测试
-   - 压力测试
-   - 性能基准
+   - 负载测试（正常并发）
+   - 压力测试（极限并发）
+   - 性能基准（响应时间基线）
 
 4. **安全测试**
-   - 漏洞扫描
-   - 渗透测试
-   - 权限测试
+   - 漏洞扫描（XSS、CSRF、SQL 注入）
+   - 权限测试（越权访问、角色权限）
+   - 敏感数据验证（密码加密、Token 安全）
 
 5. **兼容性测试**
-   - 浏览器兼容
-   - 设备兼容
-   - 系统兼容
+   - 浏览器兼容（Chrome/Firefox/Safari）
+   - 设备兼容（Desktop/Tablet/Mobile）
+   - 系统兼容（Windows/macOS/Linux）
+
+6. **可视化回归测试（可选，新增）**
+   - 基准截图建立（核心页面多分辨率）
+   - 当前 vs 基准像素对比
+   - 差异区域标注和确认
+   - 使用 visual-regression skill + web-access CDP
 
 ### 输出
 - `output/{version}/test/e2e-report.md` - E2E 测试报告
 - `output/{version}/test/api-test-report.md` - 接口测试报告
 - `output/{version}/test/performance-report.md` - 性能测试报告
 - `output/{version}/test/security-report.md` - 安全测试报告
+- `output/{version}/test/visual-regression-report.md` - 可视化回归报告（可选）
 
 ### 验证检查点
-- [ ] E2E 测试是否通过？
+- [ ] E2E 测试是否通过？（Playwright + CDP 混合验证）
 - [ ] 接口测试覆盖率 ≥ 90%？
 - [ ] 性能是否满足 SLA？
 - [ ] 安全漏洞是否修复？
 - [ ] 是否有回归测试？
+- [ ] **核心页面是否通过视觉回归检查？**（可选）
 
 ### 铁律检查
 | 铁律 | 检查项 |
@@ -611,8 +659,10 @@ db_migrations: [migration list]
 | IL-TEST003 | 安全漏洞必须修复 |
 
 ### 工具集成
-- **webapp-testing**：Playwright 自动化测试
-- **superpowers-chrome**：Chrome DevTools 性能分析
+- **webapp-testing**：Playwright 结构化自动化测试（持久化用例）
+- **web-access CDP**：灵活浏览器操作、登录态验证、截图对比（临时验证）
+- **visual-regression**：可视化回归测试（截图对比）
+- **test-assistant**：测试用例生成、覆盖率检查、回归报告对比
 
 ### 记忆写入
 ```yaml
@@ -625,6 +675,10 @@ api_tests: {count}
 api_passed: {count}
 performance_score: {score}
 security_issues: {count}
+# 可视化回归字段（新增）
+visual_regression_passed: true/false
+visual_baseline_pages: [页面列表]
+visual_diff_pages: [差异页面列表]
 ```
 
 ***
@@ -806,7 +860,7 @@ pending → in_progress → completed
 
 ### 学习记录
 
-每个阶段完成后，使用 `shared/helpers.md#Log-Learning-Entry` 写入：
+每个阶段完成后，使用 `shared/state-helpers.md` 中的方式写入学习记录：
 
 ```json
 {
@@ -881,60 +935,19 @@ pending → in_progress → completed
 
 ## 输出目录结构
 
-```
-output/{version}/
-├── requirements/
-│   ├── pool.md
-│   ├── sources.md
-│   ├── mvp-scope.md
-│   └── risk-assessment.md
-├── docs/
-│   ├── PRD.md
-│   ├── api-docs.md
-│   ├── user-manual.md
-│   └── ops-manual.md
-├── design/
-│   ├── ia-diagram.md
-│   ├── user-flow.md
-│   ├── prototypes/
-│   └── design-system.md
-├── tech/
-│   ├── architecture.md
-│   ├── api-design.md
-│   ├── database-design.md
-│   └── tech-review.md
-├── plan/
-│   ├── task-breakdown.md
-│   ├── milestones.md
-│   ├── resource-allocation.md
-│   └── risk-plan.md
-├── dev/
-│   ├── frontend-log.md
-│   └── backend-log.md
-├── test/
-│   ├── frontend-coverage.md
-│   ├── backend-coverage.md
-│   ├── e2e-report.md
-│   ├── api-test-report.md
-│   ├── performance-report.md
-│   └── security-report.md
-├── release/
-│   ├── checklist.md
-│   ├── rollback-plan.md
-│   └── release-note.md
-├── iteration/
-│   ├── data-analysis.md
-│   ├── user-feedback.md
-│   ├── retrospective.md
-│   └── next-version-plan.md
-├── memory/
-│   ├── P01-memory.yaml
-│   ├── P02-memory.yaml
-│   └── ...
-├── product-state.yaml
-├── VERSION-LOCK
-└── learning-log.json
-```
+| 目录 | 内容 |
+|------|------|
+| `requirements/` | pool.md, sources.md, mvp-scope.md, risk-assessment.md |
+| `docs/` | PRD.md, api-docs.md, user-manual.md, ops-manual.md |
+| `design/` | ia-diagram.md, user-flow.md, prototypes/, design-system.md |
+| `tech/` | architecture.md, api-design.md, database-design.md, tech-review.md |
+| `plan/` | task-breakdown.md, milestones.md, resource-allocation.md, risk-plan.md |
+| `dev/` | frontend-log.md, backend-log.md |
+| `test/` | frontend-coverage.md, backend-coverage.md, e2e-report.md, api-test-report.md, performance-report.md, security-report.md |
+| `release/` | checklist.md, rollback-plan.md, release-note.md |
+| `iteration/` | data-analysis.md, user-feedback.md, retrospective.md, next-version-plan.md |
+| `memory/` | P01-memory.yaml, P02-memory.yaml, ... |
+| 根目录 | product-state.yaml, VERSION-LOCK, learning-log.json |
 
 ***
 
@@ -972,7 +985,7 @@ output/{version}/
 
 ## 效果追踪
 
-使用 `shared/helpers.md#Update-Effectiveness-Log` 写入：
+使用 `shared/state-helpers.md` 中的方式写入效果追踪：
 
 ```markdown
 # output/{version}/effectiveness-log.md
@@ -1002,3 +1015,13 @@ P01-P10执行 → 阶段记忆 → learning-log.json
                 ↓
          规则优化 → 下次迭代
 ```
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `shared/state-helpers.md` | 需要状态管理函数（update_stage_status, log_learning_entry, update_effectiveness_log）时 |
+| `output/{version}/product-state.yaml` | 读取当前产品阶段状态时 |
+| `output/{version}/memory/{stage}-memory.yaml` | 读取历史阶段记忆时 |
+| `~/.claude/harness/learning-log.json` | 读取学习记录进行自学习分析时 |
+| `templates/product-lifecycle/` | 读取 PRD 等模板文件时 |

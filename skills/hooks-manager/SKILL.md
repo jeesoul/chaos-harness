@@ -1,202 +1,106 @@
 ---
 name: hooks-manager
-description: "管理和配置Chaos Harness钩子系统。触发词：钩子、hooks、自纠正、自学习"
+description: "管理和查看 Chaos Harness 钩子状态。触发词：钩子、hooks、自纠正、自学习"
 license: MIT
+version: "1.3.0"
 ---
 
-# Hooks Manager (钩子管理器)
+# Hooks Manager
 
-## 执行规则
+## 核心思维
 
-**加载此 skill 后，根据用户请求执行：**
+**钩子不是装饰，而是铁律的物理执行者。**
 
-### 查看钩子状态
+铁律是规则，钩子是规则变成代码的地方。没有钩子，铁律只是文本。
 
-使用 Read 工具读取：
-- `~/.claude/harness/iron-law-log.json`
-- `~/.claude/harness/laziness-log.json`
-- `~/.claude/harness/learning-log.json`
-- `~/.claude/harness/workflow-log.json`
-
-输出格式：
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Chaos Harness 钩子状态                                      │
-├─────────────────────────────────────────────────────────────┤
-│  铁律违规记录: X 条                                          │
-│  偷懒模式检测: Y 次                                          │
-│  学习记录条目: Z 条                                          │
-│  工作流追踪事件: W 次                                        │
-│                                                             │
-│  最近学习:                                                   │
-│  - [时间] IL001: Version Directory Required                 │
-│  - [时间] IL003: Completion Without Verification            │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 查看学习日志
-
-使用 Read 工具读取 `~/.claude/harness/learning-log.json`
-
-输出格式：
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  学习日志                                                    │
-├─────────────────────────────────────────────────────────────┤
-│  ID     │ 来源   │ 标题                          │ 时间     │
-├─────────────────────────────────────────────────────────────┤
-│  L001   │ IL001  │ Version Directory Required     │ 22:30    │
-│  L002   │ IL003  │ Completion Without Verification│ 22:35    │
-│  L003   │ LP002  │ Fix Without Root Cause        │ 22:40    │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 清理日志
-
-使用 Write 工具重置日志文件：
-
-```bash
-# 清理铁律日志
-Write '[]' to ~/.claude/harness/iron-law-log.json
-
-# 清理偷懒日志
-Write '[]' to ~/.claude/harness/laziness-log.json
-
-# 清理学习日志
-Write '[]' to ~/.claude/harness/learning-log.json
-
-# 清理工作流日志
-Write '[]' to ~/.claude/harness/workflow-log.json
-```
-
-输出确认：
-
-```
-✅ 已清理所有日志文件
-   - iron-law-log.json: 0 条
-   - laziness-log.json: 0 条
-   - learning-log.json: 0 条
-   - workflow-log.json: 0 条
-```
-
-### 查看压缩前存档
-
-使用 Read 工具读取 `~/.claude/harness/compact-archive.json`
-
-输出最近的压缩存档：
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  压缩存档 (最近3条)                                          │
-├─────────────────────────────────────────────────────────────┤
-│  ID: compact-123456                                         │
-│  时间: 2026-04-03T10:30:00Z                                 │
-│  学习条目: 5 条                                              │
-│  违规记录: 2 条                                              │
-│  工作流状态: W08_development                                 │
-│                                                             │
-│  摘要: 完成了扫描器模块开发，测试通过...                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 钩子系统架构
-
-```
-hooks/
-├── hooks.json              # Claude Code钩子配置
-├── run-hook.cmd            # 跨平台polyglot wrapper
-├── session-start           # SessionStart: 注入铁律上下文
-├── iron-law-check          # PreToolUse: 铁律检查
-├── laziness-detect         # PostToolUse: 偷懒检测
-├── learning-update         # PostToolUse: 学习记录
-├── workflow-track          # PreToolUse: 工作流追踪
-├── stop                    # Stop: 完成声明分析
-└── pre-compact             # PreCompact: 上下文保存
-```
-
-## 钩子触发时机
+## 钩子清单
 
 | Hook | 触发时机 | 功能 |
 |------|---------|------|
-| SessionStart | 会话开始/恢复 | 注入铁律上下文 |
-| PreToolUse | 工具调用前 | 铁律检查(IL001/IL005) |
-| PostToolUse | 工具调用后 | 偷懒检测/学习记录 |
-| Stop | 回合结束 | 完成声明分析(IL003) |
-| PreCompact | 对话压缩前 | 保存关键上下文 |
+| session-start | 会话开始 | 铁律注入 + 状态恢复 + **自动学习分析** |
+| iron-law-check | PreToolUse (Write/Edit) | IL001 版本目录 + IL005 敏感配置检查 |
+| learning-update | PostToolUse (Write/Edit) | 记录操作上下文到学习日志 |
+| project-pattern-writer | PostToolUse (Write/Edit) | 自动积累项目经验 |
+| workflow-track | PostToolUse (Write/Edit) | 追踪工作流事件 |
+| stop | 回合结束 | 保存会话状态 |
+| laziness-detect | 回合结束 | 绕过话术识别 |
+| pre-compact | 对话压缩前 | 保存关键上下文快照 |
+| overdrive | PreToolUse (全局) | 超频模式检测 + 最高效率指令注入 |
+
+## 数据文件
+
+| 文件 | 用途 |
+|------|------|
+| `~/.claude/harness/iron-law-log.json` | 铁律违规记录 |
+| `~/.claude/harness/laziness-log.json` | 偷懒模式检测 |
+| `~/.claude/harness/learning-log.json` | 学习记录（操作类型、文件路径、上下文） |
+| `~/.claude/harness/workflow-log.json` | 工作流事件 |
+| `~/.claude/harness/analysis-report.md` | 自动生成的学习分析报告 |
+| `~/.claude/harness/analysis-suggestions.json` | 机器可读优化建议 |
+| `~/.claude/harness/adaptive-report.md` | 自适应优化报告 |
+| `~/.claude/harness/iron-laws.yaml` | 自适应强化后的铁律配置 |
+| `~/.claude/harness/last-compact.json` | 压缩前状态快照 |
+
+## 自学习闭环
+
+数据在钩子之间自动流动：
+
+```
+Write/Edit → iron-law-check (拦截) → iron-law-log.json
+          → learning-update (记录) → learning-log.json
+          → project-pattern-writer (积累) → references/project-patterns/
+
+Stop → laziness-detect → laziness-log.json
+
+SessionStart → 自动分析(learning-log ≥ 5 或 iron-law ≥ 3) → analysis-report.md
+                                                    ↓
+                              analysis-suggestions.json (机器可读)
+                                                    ↓
+                              adaptive-harness.mjs → iron-laws.yaml (自动强化)
+                                                    ↓
+                              adaptive-report.md (优化报告)
+```
+
+**自动触发条件**：
+- learning-log ≥ 5 条 → 自动运行 learning-analyzer
+- iron-law-log ≥ 3 条 → 自动运行 learning-analyzer
+- analysis-suggestions.json 有建议 → 自动运行 adaptive-harness
+- 分析报告和优化报告自动写入全局和项目版本目录
 
 ## 铁律与钩子映射
 
-| 铁律 | 钩子 | 检查 |
-|------|------|------|
-| IL001 | iron-law-check | 版本目录验证 |
-| IL002 | workflow-track | 扫描结果存在 |
-| IL003 | stop | 完成验证证据 |
-| IL004 | iron-law-check | 版本变更同意 |
-| IL005 | iron-law-check | 高风险配置批准 |
+| 铁律 | 钩子 | 检查内容 |
+|------|------|---------|
+| IL001 | iron-law-check | 文档输出到 output/ 必须有版本号 |
+| IL005 | iron-law-check | 敏感文件修改警告 |
+| IL003 | laziness-detect | 完成声明必须有验证证据 |
 
-## 偷懒模式与钩子映射
+## 快捷命令
 
-| 模式 | 钩子 | 检测 |
-|------|------|------|
-| LP001 | stop | 无验证完成声明 |
-| LP002 | laziness-detect | 无根因修复 |
-| LP003 | workflow-track | 超时检测 |
-| LP004 | stop | 跳过测试尝试 |
-| LP005 | iron-law-check | 擅自版本变更 |
-| LP006 | iron-law-check | 自动高风险配置 |
+| 你说 | 动作 |
+|------|------|
+| "查看钩子状态" | 列出所有钩子和日志统计 |
+| "查看学习报告" | 读取 analysis-report.md |
+| "查看学习日志" | 读取 learning-log.json |
+| "查看铁律日志" | 读取 iron-law-log.json |
+| "手动分析" | 运行 learning-analyzer.mjs |
+| "清理日志" | 重置所有日志文件 |
 
-## 数据文件位置
+## 内置 Skill 与 Hook 映射
 
-```
-~/.claude/harness/
-├── iron-law-log.json       # 铁律违规日志
-├── laziness-log.json       # 偷懒模式日志
-├── learning-log.json       # 学习记录日志
-├── workflow-log.json       # 工作流追踪日志
-├── workflow-state.yaml     # 当前工作流状态
-├── compact-archive.json    # 压缩前存档
-└── plugin-log.json         # 插件执行日志
-```
+| Skill | Hook 触发 | 说明 |
+|-------|-----------|------|
+| web-access (CDP 操作) | learning-update | CDP 操作的 curl 命令上下文被记录 |
+| web-access (站点经验) | project-pattern-writer | 新发现的站点模式自动积累 |
 
-## 使用示例
+## References 索引
 
-```
-你: 查看钩子状态
-
-Claude: ┌───────────────────────────────────────────────────────┐
-        │  Chaos Harness 钩子状态                               │
-        ├───────────────────────────────────────────────────────┤
-        │  铁律违规记录: 5 条                                   │
-        │  偷懒模式检测: 3 次                                   │
-        │  学习记录条目: 8 条                                   │
-        │  工作流追踪事件: 15 次                                │
-        │                                                       │
-        │  最近违规:                                            │
-        │  - 22:30 IL001: 版本目录缺失                          │
-        │  - 22:35 IL003: 无验证完成声明                        │
-        └───────────────────────────────────────────────────────┘
-
-你: 查看学习日志
-
-Claude: [显示learning-log.json内容]
-
-你: 清理日志
-
-Claude: ✅ 已清理所有日志文件
-        - iron-law-log.json: 0 条
-        - laziness-log.json: 0 条
-        - learning-log.json: 0 条
-        - workflow-log.json: 0 条
-```
-
-## 管理命令
-
-```
-你: 查看钩子状态
-你: 查看学习日志
-你: 查看压缩存档
-你: 清理日志
-你: 查看违规详情
-```
+| 文件 | 何时加载 |
+|------|---------|
+| `~/.claude/harness/iron-law-log.json` | 查看铁律触发历史时 |
+| `~/.claude/harness/laziness-log.json` | 查看偷懒检测历史时 |
+| `~/.claude/harness/learning-log.json` | 查看学习记录时 |
+| `~/.claude/harness/analysis-report.md` | 查看最近的学习分析报告时 |
+| `~/.claude/harness/workflow-log.json` | 查看工作流事件时 |
+| `~/.claude/harness/last-compact.json` | 查看压缩前状态快照时 |
+| `scripts/learning-analyzer.mjs` | 需要手动触发分析时 |

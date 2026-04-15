@@ -1,304 +1,98 @@
 ---
 name: collaboration-reviewer
-description: "多Agent协作评审系统。**由 agent-team-orchestrator 自动调度**。支持评审阶段的自动启动、多视角评审、Agent 间讨论、结果汇总。触发词：评审、审查、协作、多人讨论"
+description: "多 Agent 协作评审。由 agent-team-orchestrator 调度。触发词：评审、审查、协作"
 license: MIT
+version: "1.3.0"
 ---
 
-
-<EXTREMELY-IMPORTANT>
-**此 skill 只加载一次。**
-加载后不要重复调用 Skill 工具来加载 collaboration-reviewer。
-不要在执行过程中再次触发此 skill。
-</EXTREMELY-IMPORTANT>
-
-<STATE-WRITE-REQUIRED>
-**评审完成后必须写入状态：**
-1. 使用 Write 工具追加到 `output/{version}/review-log.md`
-2. 使用 Edit 工具更新 `.chaos-harness/state.json` 的阶段状态
-3. 使用 Edit 工具追加到 `~/.claude/harness/workflow-log.json`
-
-调用 `shared/state-helpers.md` 中的函数：
-- Log-Review-Complete(version, stage, result)
-- Update-Stage-Status(stage, 'completed')
-
-不写入状态 = 违反 IL003（完成声明需要验证证据）
-</STATE-WRITE-REQUIRED>
-
-<IRON-LAW-ENFORCEMENT>
-**所有评审 Agent 必须在 Chaos Harness 铁律约束下运行。**
-
-协作 Agent 不是"替代"而是"增强"。无论使用什么 Agent：
-- IL001: 所有输出必须在版本目录下
-- IL002: Harness 生成需要扫描结果
-- IL003: 完成声明需要验证证据
-- IL004: 版本变更需要用户确认
-- IL005: 高风险配置修改需要批准
-- IL-TEAM001: 评审必须多 Agent 并行
-- IL-TEAM004: 结果必须汇总给用户确认
-
-评审可以被延后，但铁律不能被绕过。
-</IRON-LAW-ENFORCEMENT>
-
-# 协作评审系统 (Collaboration Reviewer)
+# 评审哲学
 
 ## 核心理念
 
 **评审是强制性的质量门禁，不是可选的建议环节。**
 
-- 自动触发：到达评审阶段 → 自动启动
-- 多视角：至少 2 个 Agent 并行评审
-- 通信讨论：Agent 间讨论争议点
-- 用户确认：最终结果必须由用户确认
+评审的目的不是"找茬"，而是在代码合入前用多个视角发现单个人容易忽略的问题。
 
-***
+评审者进入后不应该从"第一步做什么"开始推理，而是从这三个问题开始：
 
-## 评审阶段配置
+1. **我要从哪个视角看？** — 产品经理看需求和用户体验，架构师看结构和可扩展性，安全专家看漏洞和风险
+2. **什么算通过？** — 评分 ≥ 8、无高风险点、所有 Agent 同意的共识项
+3. **什么算不通过？** — 评分 < 6、存在高风险点、有未解决的争议
 
-| 阶段 | Agent 配置 | 最少 Agent 数 | 共识阈值 |
-|------|-----------|--------------|---------|
-| W02 需求评审 | product_manager, architect, user_advocate | 3 | 60% |
-| W04 架构评审 | architect, security_expert, senior_dev | 3 | 70% |
-| W09 代码审查 | code_reviewer, security_reviewer, perf_reviewer | 3 | 60% |
+## 评审配置
 
-***
+| 阶段 | Agent 配置 | 最少 Agent 数 |
+|------|-----------|--------------|
+| W02 需求评审 | product_manager, architect, user_advocate | 3 |
+| W04 架构评审 | architect, security_expert, senior_dev | 3 |
+| W09 代码审查 | code_reviewer, security_reviewer, perf_reviewer | 3 |
 
-## 评审流程
+## 评审决策框架
 
-### Step 1: 自动启动（无需用户确认）
+**独立评审** — 每个 Agent 从自己的视角输出评审报告（评分、问题、建议）。不要和其他 Agent 商量，独立判断才能发现不同视角的问题。
 
-```
-工作流到达 W04 架构评审
-    ↓
-agent-team-orchestrator 自动:
-├── Spawn Agent-architect
-├── Spawn Agent-security
-├── Spawn Agent-senior-dev
-└── 建立 Agent 间通信通道
-    ↓
-并行执行评审
-```
+**争议处理** — Supervisor 检测到分歧后发起 Agent 间讨论。争议不是坏事，说明有不同视角。讨论的目的是达成共识，不是说服对方。
 
-### Step 2: 并行评审
+**汇总确认** — 共识点、争议点、风险点汇总给用户。用户是最终决策者。
 
-每个 Agent 独立评审，输出报告：
-
+**汇总报告格式**：
 ```markdown
-## 评审报告 - {Agent角色}
-
-### 评分: {1-10}
-
-### 发现的问题
-| 问题 | 严重程度 | 位置 | 建议 |
-|------|---------|------|------|
-| {问题1} | 高/中/低 | {文件:行号} | {修复建议} |
-
-### 关键决策点
-- {决策点}: 建议 {选项}
+## 评审汇总
+- 参与者: {角色列表}
+- 评分: {平均分}
+- 共识点: 所有 Agent 同意的项
+- 争议点: 已讨论解决的项
+- 风险点: 需要用户确认的项（严重程度、位置、建议）
 ```
 
-### Step 3: Agent 间通信讨论
+## 用户确认规则
 
-当检测到 Agent 意见分歧时：
+**必须确认**：
+- 存在高风险点
+- 平均评分 < 6
+- 有未解决的争议
 
-```
-Supervisor 检测到争议:
-├── Agent-architect: 建议使用 Redis 缓存
-├── Agent-senior-dev: 建议使用本地缓存
-└── 争议点: 缓存方案
-
-Supervisor 发起讨论:
-"请各方说明理由，3 分钟内给出结论"
-
-Agent-architect:
-"Redis 支持：
-1. 分布式部署
-2. 数据持久化
-3. 集群扩展"
-
-Agent-senior-dev:
-"本地缓存优势：
-1. 零网络延迟
-2. 简单易维护
-3. 无额外依赖
-
-但对于 Medium 项目，建议结合使用：
-- 本地缓存做热点数据
-- Redis 做分布式共享"
-
-Supervisor 结论:
-"采用组合方案：本地缓存 + Redis"
-```
-
-### Step 4: 汇总结果给用户确认
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  📋 评审汇总报告                                              │
-├─────────────────────────────────────────────────────────────┤
-│  阶段: W04 架构评审                                           │
-│  参与评审: architect, security_expert, senior_dev            │
-│  评审时长: 8 分钟                                             │
-│  平均评分: 7.5/10                                            │
-├─────────────────────────────────────────────────────────────┤
-│  ✅ 共识点 (3)                                               │
-│    1. 架构设计整体合理                                        │
-│    2. 数据库选型正确 (MySQL + Redis)                          │
-│    3. API 设计清晰 (RESTful)                                 │
-├─────────────────────────────────────────────────────────────┤
-│  ⚠️ 争议点 (1) - 已通过讨论解决                                │
-│    1. 缓存方案: 最终采用 本地缓存 + Redis                      │
-│       - architect 建议 Redis ✓                               │
-│       - senior_dev 建议本地缓存 ✓                            │
-│       - 讨论 3 分钟后达成共识                                  │
-├─────────────────────────────────────────────────────────────┤
-│  🚨 风险点 (1) - 需要用户确认处理方案                          │
-│    1. [security_expert] SQL 注入风险                         │
-│       - 位置: UserService.java:45                           │
-│       - 建议: 使用 MyBatis-Plus 参数化查询                     │
-│       - 严重程度: 高                                          │
-└─────────────────────────────────────────────────────────────┘
-
-请选择处理方式:
-[1] ✅ 通过评审，风险点已知晓，后续处理
-[2] 🔄 修复风险点后重新评审
-[3] ❌ 拒绝，需要重新设计
-
-请选择 (1/2/3):
-```
-
-***
-
-## 用户确认机制
-
-### 必须确认的情况
-
-1. **存在高风险点** → 用户必须选择处理方式
-2. **评分低于 6 分** → 用户必须确认是否继续
-3. **存在未解决的争议点** → 用户必须裁决
-
-### 自动通过条件
-
-以下条件**全部满足**时，可自动通过（但仍需通知用户）：
-
-- 平均评分 ≥ 8 分
+**可自动通过**（仍需通知用户）：
+- 平均评分 ≥ 8
 - 无高风险点
 - 无未解决争议
 - 所有 Agent 完成评审
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  ✅ 评审自动通过                                              │
-├─────────────────────────────────────────────────────────────┤
-│  评分: 8.5/10 (≥ 8 分自动通过阈值)                            │
-│  风险点: 无                                                  │
-│  争议点: 无                                                  │
-│                                                              │
-│  已自动通过，进入下一阶段。                                    │
-│  如有异议，可回复 "重新评审"。                                 │
-└─────────────────────────────────────────────────────────────┘
-```
+## 铁律
 
-***
+| ID | 铁律 | 说明 |
+|----|------|------|
+| IL-TEAM001 | 评审必须多 Agent | 最少 2 个 Agent |
+| IL-TEAM004 | 结果必须汇总 | 必须输出汇总报告 |
+| IL003 | 完成需验证 | 所有 Agent 报告齐全 + 用户确认 |
 
-## 铁律检查
+## 超频模式（IL-TEAM004 快速确认）
 
-### IL-TEAM001: 评审必须多 Agent
-
-```
-REVIEW REQUIRES MULTIPLE AGENTS
-```
-
-- 最少 2 个 Agent 参与评审
-- 单 Agent 评审无效，必须补充
-
-### IL-TEAM004: 结果必须汇总
-
-```
-RESULTS REQUIRE USER CONFIRMATION
-```
-
-- 评审结果必须汇总输出
-- 存在风险点时必须用户确认
-- 自动通过必须通知用户
-
-### IL003: 完成声明需要验证证据
-
-评审完成必须：
-- 所有 Agent 输出评审报告
-- 争议点已讨论解决
-- 风险点已标记处理方案
-- 用户确认（或符合自动通过条件）
-
-***
-
-## 评审日志
-
-每次评审完成后，必须记录到状态文件：
-
-使用 `shared/state-helpers.md` 中的函数：
+超频模式下的汇总报告精简为：
 
 ```markdown
-评审完成后:
-
-1. Log-Review-Complete(version, stage, result)
-   → 写入 output/{version}/review-log.md
-   → 更新 .chaos-harness/state.json 的阶段状态
-
-2. Update-Stage-Status(stage, 'completed')
-   → 更新工作流状态
+## 超频评审结果
+- 共识: {一句话}
+- 风险: {无/有 — 具体风险}
+- 建议: {通过/不通过}
 ```
 
-**示例调用**：
-```markdown
-W04 架构评审完成后:
+**与正常模式的区别**：
+- 正常模式：详细评分 + 问题列表 + 争议点 + 风险点
+- 超频模式：共识一句话 + 风险一句话 + 通过/不通过
 
-调用: Log-Review-Complete('v0.1', 'W04', {
-  agents: ['architect-1', 'security-1', 'senior-dev-1'],
-  score: 7.5,
-  controversies: 1,
-  risks: 1,
-  user_confirmed: true
-})
+**原则**：IL-TEAM004 不取消，但输出格式精简，不省略确认环节。
+
+## 状态记录
+
+```bash
+echo '{"stage":"W04","score":7.5,"agents":3,"risks":1,"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' | \
+  jq -s '.' >> output/*/review-log.md 2>/dev/null || true
 ```
 
-**记录格式示例**：
+## References 索引
 
-```markdown
-## 评审记录 - {阶段}
-
-### 时间: {timestamp}
-
-### 参与者
-| Agent | 角色 | 状态 | 耗时 |
-|-------|------|------|------|
-| architect | 架构评审 | ✅ | 5min |
-| security_expert | 安全评审 | ✅ | 7min |
-| senior_dev | 可行性评审 | ✅ | 4min |
-
-### 结果
-- 评分: 7.5/10
-- 共识点: 3
-- 争议点: 1 (已解决)
-- 风险点: 1 (待处理)
-
-### 用户确认: ✅ 通过
-```
-
-***
-
-## 与 agent-team-orchestrator 的关系
-
-```
-workflow-supervisor
-    ↓ 检测到达评审阶段
-agent-team-orchestrator
-    ↓ Spawn Agent Team
-collaboration-reviewer
-    ↓ 执行评审逻辑
-    ↓ Agent 间通信讨论
-    ↓ 汇总结果
-用户确认
-    ↓
-workflow-supervisor
-    ↓ 进入下一阶段
-```
+| 文件 | 何时加载 |
+|------|---------|
+| `skills/agent-team-orchestrator/SKILL.md` | 需要了解编排机制和 spawn 流程时 |
+| `shared/state-helpers.md` | 需要完整状态管理函数时 |

@@ -10,6 +10,16 @@ license: MIT
 
 此 skill 在以下情况下**自动激活**，无需用户手动调用：
 
+### 紧急模式检测（最高优先级）
+
+| 触发条件 | 动作 |
+|---------|------|
+| 用户说 "紧急"/"超频"/"overdrive"/"立刻解决" | 直接加载 overdrive skill |
+| 用户说 "线上问题"/"生产事故"/"P0" | 直接加载 overdrive skill |
+| 用户连续发送短促指令（"改一下"/"马上"/"快点"） | 推荐 overdrive |
+
+**超频模式优先级高于所有其他推荐** — 检测到紧急语义时，立即跳过其他推荐，直接激活 overdrive。
+
 ### 文件操作感知
 
 | 操作 | 文件类型 | 自动推荐 |
@@ -37,7 +47,7 @@ license: MIT
 场景: 写 API 文档
 检测: 输出路径包含 "api"
 关联: IL-TECH002 (API 版本管理)
-推荐: templates/product-lifecycle/api-design.md
+推荐: templates/product-lifecycle/harness.yaml（API 设计阶段）
 
 场景: 数据库变更
 检测: *.sql, migration 文件夹
@@ -50,6 +60,23 @@ license: MIT
 检测: coverage report < 80%
 关联: IL-TEST001 (E2E 测试覆盖)
 警告: "测试覆盖率低于 80%，建议增加测试"
+
+场景: P03 设计完成
+检测: P03-memory.yaml 存在 + ui_generated=true
+关联:
+  - IL-TEAM001 (评审必须多 Agent)
+推荐: agent-team-orchestrator
+团队配置: product_manager + user_advocate + designer
+触发: 说 "启动设计评审" 或点击推荐
+
+场景: P04 技术完成
+检测: tech/architecture.md + tech/api-design.md 存在
+关联:
+  - IL-TEAM001 (评审必须多 Agent)
+  - IL-TECH001 (技术选型对比)
+推荐: agent-team-orchestrator
+团队配置: architect + security_expert + senior_dev
+触发: 说 "启动技术评审" 或点击推荐
 
 场景: 版本目录缺失
 检测: output/ 下无 vX.Y 目录
@@ -67,7 +94,8 @@ license: MIT
 <HARNESS_RECOMMEND>
 📌 **自动推荐:** 检测到 Vue 3 项目，已加载 Vue3 模板铁律
 
-**触发命令:** `/chaos-harness:vue3-template`
+**关联铁律:** IL-VUE001, IL-VUE003（Props 只读、Ref.value）
+**模板参考:** `templates/vue3/harness.yaml`
 </HARNESS_RECOMMEND>
 ```
 
@@ -139,21 +167,7 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 
 ## 与其他 Skills 的联动
 
-```
-context-aware-trigger (Hook)
-        ↓
-    检测场景
-        ↓
-┌───────┴───────┐
-↓               ↓
-推荐 Skill   激活铁律
-↓               ↓
-用户确认    自动执行
-↓               ↓
-└───────┬───────┘
-        ↓
-    learning-update (记录)
-```
+场景感知触发流程：Hook 检测场景 → 推荐 Skill / 激活铁律 → 用户确认后加载 → 记录到 learning-update。
 
 ***
 
@@ -161,7 +175,8 @@ context-aware-trigger (Hook)
 
 | 场景 | 触发条件 | 推荐内容 |
 |------|---------|---------|
-| 新项目首次运行 | 无 VERSION-LOCK | version-locker |
+| **紧急任务** | 用户说 "紧急"/"overdrive"/"立刻" | **overdrive（最高优先级，直接加载）** |
+| 新项目首次运行 | 无 VERSION-LOCK | version-locker → auto-toolkit-installer |
 | 前端开发 | *.vue, *.jsx, *.tsx | 对应模板铁律 |
 | 后端开发 | *.java, *.py, *.go | 对应模板铁律 |
 | API 设计 | *api*.md | IL-TECH002 |
@@ -170,7 +185,18 @@ context-aware-trigger (Hook)
 | 文档输出 | output/*.md (无版本) | IL001 |
 | 敏感配置 | .env, *secret* | IL005 |
 | PRD 编写 | *PRD*, *需求* | product-lifecycle |
+| PRD 编辑中 | 编辑 *PRD*.md | prd-validator（实时检查） |
 | 原型设计 | *prototype*, *design* | product-lifecycle P03 |
+| P03 阶段 + PRD 就绪 | state.json current_stage=P02→P03 | 直接加载 ui-generator |
+| **P03 设计完成** | **P03-memory.yaml + ui_generated=true** | **agent-team-orchestrator (product_manager + user_advocate + designer)** |
+| **P04 技术完成** | **tech/architecture.md + tech/api-design.md 存在** | **agent-team-orchestrator (architect + security_expert + senior_dev)** |
+| 需求文件创建 | *需求*, *访谈*, *调研* | product-manager (P01 流程) |
+| 竞品分析讨论 | 内容包含 "竞品"/"对手" | product-manager (竞品分析模块) |
+| MVP/优先级讨论 | 内容包含 "优先级"/"MVP"/"重要" | product-manager (Kano 分析) |
+| 测试文件创建 | *.test.*, *.spec.* | test-assistant (覆盖率检查) |
+| E2E/集成测试讨论 | 内容包含 "E2E"/"集成测试"/"端到端" | test-assistant + web-access |
+| 截图/视觉检查讨论 | 内容包含 "截图"/"视觉"/"UI 对比" | visual-regression + web-access |
+| P08 阶段开始 | current_stage=P08 | test-assistant + webapp-testing + web-access |
 
 ## 工作流阶段自动触发
 
@@ -188,6 +214,26 @@ context-aware-trigger (Hook)
 | W07 Agent分配 | agent-team-orchestrator | 自动拆分任务，分配开发 Agent |
 | W08 开发实现 | agent-team-orchestrator | 并行开发 Agent + Supervisor 监控 |
 | W09 代码审查 | agent-team-orchestrator | code_reviewer + security_reviewer + perf_reviewer |
+
+以下产品设计阶段完成后，**推荐**启动 Multi-Agent 评审：
+
+| 产品阶段 | 推荐触发 | Agent Team 配置 | 评审维度 |
+|---------|---------|----------------|---------|
+| P03 设计完成 | agent-team-orchestrator | product_manager + user_advocate + designer | 需求覆盖、用户体验、设计规范 |
+| P04 技术完成 | agent-team-orchestrator | architect + security_expert + senior_dev | 架构合理性、安全、可行性 |
+| **P08 测试就绪** | **agent-team-orchestrator** | **qa_engineer + security_expert + perf_engineer** | **E2E 覆盖、安全漏洞、性能基线** |
+
+### P03 原型设计阶段 — 直接加载
+
+当检测到 P03 阶段且有 PRD 时，**主动提示并直接加载 ui-generator**：
+
+```
+检测到 P03 原型设计阶段 + PRD 已就绪
+→ 自动提示: "检测到你在原型设计阶段，PRD 已就绪。可以说'生成界面'启动 UI 生成"
+→ 如用户确认，直接加载 ui-generator skill
+```
+
+这是 auto-context 唯一的例外规则 — 因为 P03 + PRD = 明确的可执行状态，减少交互步骤。
 
 **推荐机制（非强制）**：
 ```
@@ -216,7 +262,7 @@ custom_triggers:
   - name: "GraphQL API"
     pattern: "*.graphql"
     recommend:
-      skill: "api-design"
+      skill: "product-lifecycle"
       iron_laws:
         - IL-TECH002
       message: "检测到 GraphQL schema，建议遵循 API 版本管理"
@@ -253,3 +299,12 @@ custom_triggers:
   }
 ]
 ```
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `.chaos-harness/state.json` | 读取项目当前状态和工作流阶段时 |
+| `~/.claude/harness/trigger-log.json` | 查看自动触发历史时 |
+| `.claude/harness/auto-context.yaml` | 读取用户自定义触发规则时 |
+| `CLAUDE.md` | 查看项目级铁律和角色配置时 |

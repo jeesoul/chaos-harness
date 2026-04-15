@@ -1,6 +1,6 @@
 #!/bin/sh
-# laziness-detect - Detect laziness patterns at end_turn
-# Analyzes conversation for bypass attempts and laziness patterns
+# laziness-detect - Stop hook 检测偷懒模式
+# 分析对话输出，检测绕过尝试和偷懒行为
 
 # Disable MSYS2 path conversion to prevent Git Bash crash on Windows
 export MSYS_NO_PATHCONV=1
@@ -8,23 +8,36 @@ export MSYS2_ARG_CONV_EXCL="*"
 
 DATA_DIR="$HOME/.claude/harness"
 LAZINESS_LOG="$DATA_DIR/laziness-log.json"
+IRON_LAW_LOG="$DATA_DIR/iron-law-log.json"
 mkdir -p "$DATA_DIR"
 
-# Initialize log if missing
 [ ! -f "$LAZINESS_LOG" ] && printf '[]\n' > "$LAZINESS_LOG"
+[ ! -f "$IRON_LAW_LOG" ] && printf '[]\n' > "$IRON_LAW_LOG"
 
-# Laziness pattern keywords to detect
-LAZINESS_KEYWORDS="简单修复|跳过测试|就这一次|快速处理|simple fix|skip test|just this once|quick fix"
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# Check if grep is available
-if command -v grep >/dev/null 2>&1; then
-    # Pattern detection logic would be enhanced by Claude's context
-    # This hook provides the framework for detection
-    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# 偷懒模式关键词
+LAZINESS_KEYWORDS="简单修复|跳过测试|就这一次|快速处理|simple fix|skip test|just this once|quick fix|特殊情况|too simple|no need to test|trivial fix"
 
-    # Log end_turn event for later analysis
-    if command -v jq >/dev/null 2>&1; then
-        printf '%s\n' "$(cat "$LAZINESS_LOG")" | jq --arg ts "$TIMESTAMP" --arg event "end_turn_check" '. += [{"event": $event, "timestamp": $ts, "patterns_checked": true}]' > "$LAZINESS_LOG"
+# 记录本轮检测事件
+if command -v jq >/dev/null 2>&1; then
+    printf '%s\n' "$(cat "$LAZINESS_LOG")" | jq \
+        --arg ts "$TIMESTAMP" \
+        --arg event "end_turn_check" \
+        --arg keywords "$LAZINESS_KEYWORDS" \
+        '. += [{"event": $event, "timestamp": $ts, "patterns_checked": true, "keywords": $keywords}]' \
+        > "$LAZINESS_LOG"
+
+    # 统计本轮铁律触发
+    IRON_COUNT=$(jq 'length' "$IRON_LAW_LOG" 2>/dev/null || echo 0)
+    LAZY_COUNT=$(jq 'length' "$LAZINESS_LOG" 2>/dev/null || echo 0)
+
+    # 如果检测到多次触发，输出提醒
+    if [ "$LAZY_COUNT" -gt 3 ]; then
+        printf '\n<HARNESS_LAZINESS_ALERT>\n'
+        printf '⚠️ 累计偷懒检测: %d 次\n' "$LAZY_COUNT"
+        printf '建议: 使用 /chaos-harness:learning-analyzer 分析行为模式\n'
+        printf '</HARNESS_LAZINESS_ALERT>\n'
     fi
 fi
 

@@ -218,3 +218,11 @@ public interface XxxMapper extends BaseMapper<XxxEntity> {
 ***
 
 **⚠️ 特别提醒：main 方法也是 public 方法，必须有 Javadoc！检查时不要遗漏任何一个 public 方法！**
+
+## References 索引
+
+| 文件 | 何时加载 |
+|------|---------|
+| `~/.claude/harness/iron-law-log.json` | 查看 Java 铁律违规历史时 |
+| `output/{version}/effectiveness-log.md` | 查看铁律执行效果日志时 |
+| `pom.xml` 或 `build.gradle` | 确认项目使用的 Java 版本和依赖时 |

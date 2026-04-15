@@ -1,306 +1,97 @@
 ---
 name: learning-analyzer
-description: "分析历史学习记录，发现失败模式，生成铁律优化建议。**自动触发**：当 learning-log.json 有 5+ 条记录时，或用户说"分析学习记录"、"优化铁律"、"自学习"。触发词：学习分析、模式发现、铁律优化、自学习、闭环"
+description: "分析历史学习记录，发现失败模式，生成铁律优化建议。触发词：学习分析、模式发现、铁律优化、自学习、闭环"
 license: MIT
+version: "1.3.0"
 ---
 
-<STATE-WRITE-REQUIRED>
-**分析完成后必须写入状态：**
-1. 使用 Write 工具创建/追加 `output/{version}/analysis-report.md`
-2. 使用 Edit 工具更新 `.chaos-harness/state.json` 标记分析已完成
-3. 如果有铁律优化建议，使用 Edit 工具更新 `.chaos-harness/iron-laws.yaml`
+# 学习分析哲学
 
-调用 `shared/state-helpers.md` 中的函数：
-- Update-Effectiveness-Log(version, analysisResult)
+## 核心思维
 
-不写入状态 = 违反 IL003（完成声明需要验证证据）
-</STATE-WRITE-REQUIRED>
+**学习记录不是数据坟墓，而是行为模式的镜子。**
 
-<EXTREMELY-IMPORTANT>
-**此 skill 只加载一次。**
-加载后不要重复调用 Skill 工具来加载 learning-analyzer。
-不要在执行过程中再次触发此 skill。
-</EXTREMELY-IMPORTANT>
+没有分析的学习 = 数据堆积，没有行动的分析 = 纸上谈兵。
 
-# 学习分析器 (Learning Analyzer)
+## 自动分析
 
+**session-start hook 已内置自动分析** — 当学习记录 ≥ 5 条或铁律触发 ≥ 3 次时，自动运行分析脚本，不需要手动触发。
 
-## 铁律
-
-```
-NO LEARNING WITHOUT ANALYSIS
-NO ANALYSIS WITHOUT ACTION
+手动触发命令：
+```bash
+node scripts/learning-analyzer.mjs
 ```
 
-学习记录必须被分析，分析结果必须转化为行动。
+## 分析内容
 
-## 执行步骤
+分析脚本自动读取以下日志并生成报告：
 
-### Step 1: 读取学习日志
+| 数据源 | 分析内容 |
+|--------|---------|
+| `iron-law-log.json` | 铁律触发统计、高频违规上下文 |
+| `laziness-log.json` | 偷懒模式检测统计 |
+| `learning-log.json` | 操作类型分布、文件类型分布 |
 
-使用 Read 工具读取：
-```
-output/{version}/learning-log.json
-```
+## 输出
 
-如果不存在，检查全局路径：
-```
-.claude/harness/learning-log.json
-```
+分析报告自动写入两个位置：
+- 全局：`~/.claude/harness/analysis-report.md`
+- 项目版本目录：`output/{version}/analysis-report.md`（如果 state.json 中有 current_version）
 
-### Step 2: 统计失败模式
-
-分析日志，统计：
-
-| 模式类型 | 统计方法 |
-|----------|----------|
-| 铁律违规频次 | 按 iron_law 字段分组计数 |
-| 失败类型聚类 | 按 type 字段分组 |
-| 上下文模式 | 提取 context 高频关键词 |
-
-输出：
-```markdown
-## 失败模式统计
-
-| 铁律 | 触发次数 | 占比 |
-|------|---------|------|
-| IL003 | 15 | 50% |
-| IL001 | 8 | 27% |
-| IL005 | 5 | 17% |
-| IL002 | 2 | 6% |
-
-## 高频失败上下文
-1. "完成" 但无验证证据 (12次)
-2. 文档放在错误位置 (8次)
-3. 敏感配置未确认 (5次)
-```
-
-### Step 3: 发现重复模式
-
-识别需要关注的模式：
-
-**模式 A - 重复违规：**
-同一铁律在短时间内触发 3+ 次
-
-**模式 B - 新问题：**
-之前未出现的失败类型
-
-**模式 C - 系统性问题：**
-所有失败都与同一上下文相关
-
-### Step 4: 生成优化建议
-
-根据分析结果，生成建议：
+## 报告格式
 
 ```markdown
+# 自学习分析报告
+
+生成时间: ...
+
+## 数据概览
+- 铁律触发记录: N 条
+- 偷懒检测记录: N 条
+- 学习操作记录: N 条
+
+## 铁律触发统计
+- IL003: 15 次 — 典型上下文: 完成声明无验证
+
+## 偷懒模式统计
+- LP001: 5 次
+
+## 操作类型分布
+- Write: 50 次
+
+## 文件类型分布
+- java-code: 30 次
+
 ## 优化建议
-
-### 高优先级
-
-1. **新增铁律 IL-C003**
-   - 规则：NO COMPLETION WITHOUT TEST OUTPUT
-   - 原因：IL003 违规 50% 都是"完成无验证"
-   - 具体：完成声明必须附带测试命令输出
-
-2. **强化 IL001 检查**
-   - 当前：仅在文档生成时检查
-   - 建议：在每次 Write/Edit 时自动检查路径
-
-### 中优先级
-
-3. **改进上下文提示**
-   - 在 session-start hook 中增加版本目录提示
-   - 减少"文档放错位置"错误
-
-### 待观察
-
-4. **敏感配置模式**
-   - IL005 违规较少，当前策略有效
-   - 继续观察
+🔴 [high] iron_law_reinforce: 强化 Hook 拦截规则
+   铁律: IL003 (违规 15 次)
 ```
 
-### Step 5: 用户确认
+## 优化建议优先级
 
-使用 AskUserQuestion 工具：
+| 优先级 | 条件 | 动作 |
+|--------|------|------|
+| high | 同一铁律触发 3+ 次 | 强化 Hook 拦截规则 |
+| medium | 偷懒模式检测 2+ 次 | 新增检测规则 |
+| low | 特定文件类型操作 10+ 次 | 积累项目经验 |
 
-```
-发现 15 条学习记录，分析完成。
-
-主要问题：
-1. IL003 违规占比 50% (完成无验证)
-2. 建议新增铁律 IL-C003 强制测试输出
-
-是否应用建议？
-[ ] 应用全部建议
-[ ] 仅应用高优先级
-[ ] 查看详细分析后决定
-[ ] 暂不应用
-```
-
-### Step 6: 应用优化
-
-如果用户同意，执行：
-
-**新增铁律：**
-使用 Edit 工具更新 `.claude/harness/iron-laws.yaml`
-
-**强化检查：**
-更新 `hooks/iron-law-check` 脚本
-
-**改进提示：**
-更新 `hooks/session-start` 脚本
-
-### Step 7: 记录分析结果
-
-使用 Write 工具创建：
-```
-output/{version}/learning-analysis-{timestamp}.md
-```
-
-内容包括：
-- 分析时间
-- 学习记录数量
-- 发现的模式
-- 生成的建议
-- 用户决定
-- 应用结果
-
-## 分析周期
-
-| 学习记录数 | 分析建议 |
-|-----------|---------|
-| < 5 | 继续积累 |
-| 5-20 | 基础分析 |
-| 20-50 | 深度分析 |
-| 50+ | 专家模式 |
-
-## 自学习闭环
+## 闭环
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        自学习闭环                            │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  铁律检查 → Log-Learning-Entry → learning-log.json          │
-│      ↑                                           │         │
-│      │                                           ↓         │
-│  应用优化 ← 用户确认 ← 发现模式 ← learning-analyzer         │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+行为 → learning-log.json / iron-law-log.json → 自动分析 → analysis-report.md → harness-generator --adaptive → 新行为
 ```
 
-## 与其他 Skill 的协作
+## 与 harness-generator 联动
 
-| Skill | 提供数据 | 接收建议 |
-|-------|---------|---------|
-| iron-law-enforcer | 铁律违规记录 | 新增铁律 |
-| workflow-supervisor | 效果数据 | 流程优化 |
-| harness-generator | 扫描结果 | 模板优化 |
-| hooks-manager | 日志数据 | Hook 改进 |
+`harness-generator --adaptive` 模式自动读取 `analysis-report.md`，根据优化建议调整铁律配置。
 
-## 输出文件
+## References 索引
 
-```
-output/{version}/
-├── learning-log.json          # 学习记录（输入）
-├── learning-analysis-{ts}.md  # 分析报告（输出）
-└── effectiveness-log.md       # 效果追踪（输入）
-```
-
-## 快捷命令
-
-```
-你: 分析学习记录
-你: 发现了什么模式
-你: 优化铁律
-你: 自学习分析
-你: 闭环检查
-```
-
-## 铁律检查
-
-- **IL-AUTO-001**: 学习记录超过 20 条必须触发分析
-- **IL-AUTO-002**: 分析结果必须有明确的行动建议
-- **IL-AUTO-003**: 高优先级建议必须在下一 Session 前处理
-
-## 自动触发机制
-
-### Session 启动检测
-
-session-start hook 会检测 learning-log.json 数量：
-
-```
-IF learning-log 记录数 >= 5 THEN
-    OUTPUT: <CHAOS_HARNESS_LEARNING_TRIGGER>
-    MESSAGE: "检测到学习记录 N 条，建议运行 learning-analyzer"
-END IF
-```
-
-### 自动分析触发条件
-
-| 条件 | 自动动作 |
+| 文件 | 何时加载 |
 |------|---------|
-| learning-log ≥ 5 条 | session-start 提示用户 |
-| learning-log ≥ 20 条 | **强制提示** + IL-AUTO-001 触发 |
-| 用户说"自适应 Harness" | 自动先检查 analysis-report |
-| 用户说"优化铁律" | 立即执行分析 |
-
-### 自动应用规则
-
-**高优先级建议自动应用：**
-
-```
-IF 建议优先级 = 高 AND 用户未明确拒绝 THEN
-    AUTO_APPLY:
-    1. 新增铁律 → .chaos-harness/iron-laws.yaml
-    2. 强化检查 → hooks/iron-law-check
-    3. 记录应用 → output/{version}/applied-optimizations.json
-END IF
-```
-
-**中优先级建议需确认：**
-
-```
-IF 建议优先级 = 中 THEN
-    ASK_USER: "是否应用此建议？"
-    IF 用户确认 THEN AUTO_APPLY END IF
-END IF
-```
-
-## 自学习闭环（完整流程）
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   自学习闭环（自动执行）                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Session 启动 → session-start hook → 检测 learning-log 数量 │
-│       │                                                     │
-│       ↓ ≥ 5 条                                              │
-│                                                             │
-│  提示用户 → 用户调用 learning-analyzer                       │
-│       │                                                     │
-│       ↓                                                     │
-│                                                             │
-│  分析学习记录 → 发现模式 → 生成建议                          │
-│       │                                                     │
-│       ├──────────────────────────────────┐                  │
-│       │                                  │                  │
-│       ↓ 高优先级                         ↓ 中优先级         │
-│                                                             │
-│  自动应用优化                   用户确认后应用               │
-│       │                                  │                  │
-│       ↓                                  ↓                  │
-│                                                             │
-│  harness-generator --adaptive ←─── 读取 analysis-report     │
-│       │                                                     │
-│       ↓                                                     │
-│                                                             │
-│  自适应生成 Harness → 应用优化铁律 → 下次 Session 生效       │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-***
-
-*Learning is the only sustainable competitive advantage.*
+| `~/.claude/harness/learning-log.json` | 需要读取学习记录进行分析时 |
+| `~/.claude/harness/laziness-log.json` | 需要读取偷懒检测记录时 |
+| `~/.claude/harness/iron-law-log.json` | 需要读取铁律触发记录时 |
+| `~/.claude/harness/analysis-report.md` | 需要查看最近的分析报告时 |
+| `scripts/learning-analyzer.mjs` | 需要手动触发分析时 |
+| `skills/plugin-manager/SKILL.md` | 需要应用铁律优化建议时 |
