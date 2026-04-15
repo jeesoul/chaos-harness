@@ -37,7 +37,7 @@ license: MIT
 场景: 写 API 文档
 检测: 输出路径包含 "api"
 关联: IL-TECH002 (API 版本管理)
-推荐: templates/product-lifecycle/api-design.md
+推荐: templates/product-lifecycle/harness.yaml（API 设计阶段）
 
 场景: 数据库变更
 检测: *.sql, migration 文件夹
@@ -84,7 +84,8 @@ license: MIT
 <HARNESS_RECOMMEND>
 📌 **自动推荐:** 检测到 Vue 3 项目，已加载 Vue3 模板铁律
 
-**触发命令:** `/chaos-harness:vue3-template`
+**关联铁律:** IL-VUE001, IL-VUE003（Props 只读、Ref.value）
+**模板参考:** `templates/vue3/harness.yaml`
 </HARNESS_RECOMMEND>
 ```
 
@@ -164,7 +165,7 @@ output/ 存在但无 vX.Y/ → 推荐 version-locker
 
 | 场景 | 触发条件 | 推荐内容 |
 |------|---------|---------|
-| 新项目首次运行 | 无 VERSION-LOCK | version-locker |
+| 新项目首次运行 | 无 VERSION-LOCK | version-locker → auto-toolkit-installer |
 | 前端开发 | *.vue, *.jsx, *.tsx | 对应模板铁律 |
 | 后端开发 | *.java, *.py, *.go | 对应模板铁律 |
 | API 设计 | *api*.md | IL-TECH002 |
@@ -250,7 +251,7 @@ custom_triggers:
   - name: "GraphQL API"
     pattern: "*.graphql"
     recommend:
-      skill: "api-design"
+      skill: "product-lifecycle"
       iron_laws:
         - IL-TECH002
       message: "检测到 GraphQL schema，建议遵循 API 版本管理"

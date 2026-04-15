@@ -860,7 +860,7 @@ pending → in_progress → completed
 
 ### 学习记录
 
-每个阶段完成后，使用 `shared/helpers.md#Log-Learning-Entry` 写入：
+每个阶段完成后，使用 `shared/state-helpers.md` 中的方式写入学习记录：
 
 ```json
 {
@@ -985,7 +985,7 @@ pending → in_progress → completed
 
 ## 效果追踪
 
-使用 `shared/helpers.md#Update-Effectiveness-Log` 写入：
+使用 `shared/state-helpers.md` 中的方式写入效果追踪：
 
 ```markdown
 # output/{version}/effectiveness-log.md

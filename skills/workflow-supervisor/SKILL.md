@@ -120,5 +120,5 @@ echo '{"event":"stage_complete","stage":"W01","timestamp":"'"$(date -u +%Y-%m-%d
 | 文件 | 何时加载 |
 |------|---------|
 | `shared/state-helpers.md` | 需要完整状态管理函数（complete_stage, resume_session, get_current_stage）时 |
-| `shared/helpers.md` | 需要通用操作指引时 |
+| `shared/helpers.md` | 需要铁律检查、版本锁定检查、偷懒检测规则时 |
 | `~/.claude/harness/workflow-log.json` | 查看历史工作流事件时 |
