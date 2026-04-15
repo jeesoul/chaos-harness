@@ -128,6 +128,7 @@ claude plugins install chaos-harness@chaos-harness
 | LP004 | 尝试跳过测试 | 阻断 + 强制测试 |
 | LP005 | 擅自更改版本号 | 阻断 + 恢复原版 |
 | LP006 | 自动处理高风险配置 | 阻断 + 用户审批 |
+| LP007 | Team 阶段主 Agent 代劳 | 阻断 + 强制重新分配 |
 
 ### 钩子生态 (Hook System)
 

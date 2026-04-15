@@ -31,6 +31,34 @@ const lazinessKeywords = [
   '特殊情况', 'too simple', 'no need to test', 'trivial fix',
 ];
 
+// ---- LP007: Team 阶段主 Agent 代劳检测 ----
+// 检测主 Agent 在 Team 阶段（W02/W04/W07/W08/W09）自己干活而不 spawn 子 Agent
+const teamStageKeywords = ['并行', '多agent', '协作', '团队', '评审阶段', 'agent team'];
+const teamWorkKeywords = ['我来写', '我来改', '我来做', '直接修改', '我来实现', 'let me', 'i will'];
+
+// 简单启发式检测：如果同时出现 Team 阶段词和主 Agent 亲自干活词，标记 LP007
+const allText = JSON.stringify(readJson(LAZINESS_LOG) || []);
+const hasTeamStage = teamStageKeywords.some(k => allText.includes(k));
+const hasMainAgentDoing = teamWorkKeywords.some(k => allText.includes(k));
+
+if (hasTeamStage && hasMainAgentDoing) {
+  appendLog(LAZINESS_LOG, {
+    pattern: 'LP007',
+    context: 'Team 阶段检测到主 Agent 代劳（检测到并行意图 + 亲自干活表述）',
+    severity: 'critical',
+    timestamp: ts,
+    detected_by: 'laziness-detect',
+  });
+
+  appendLog(IRON_LAW_LOG, {
+    iron_law: 'IL-TEAM005',
+    context: 'LP007 触发：主 Agent 在 Team 阶段代劳，禁止单线程退化',
+    action: 'warn',
+    timestamp: ts,
+    detected_by: 'laziness-detect',
+  });
+}
+
 // 记录本轮检测
 appendLog(LAZINESS_LOG, {
   event: 'end_turn_check',

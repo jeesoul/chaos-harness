@@ -80,6 +80,7 @@ plugins:
 | LP004 | 试图跳过测试 | critical |
 | LP005 | 擅自更改版本号 | critical |
 | LP006 | 自动处理高风险配置 | critical |
+| LP007 | Team 阶段主 Agent 代劳 | critical |
 
 ## References 索引
 
