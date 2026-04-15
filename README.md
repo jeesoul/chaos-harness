@@ -311,21 +311,6 @@ P03/P04 阶段完成后强制 Multi-Agent 评审（IL-TEAM001）。
 
 ---
 
-## 技术栈模板
-
-| 模板 | 技术栈 |
-|------|--------|
-| java-spring | Java 17/21 + Spring Boot 3.x |
-| java-spring-legacy | JDK 8 + Spring Boot 2.x |
-| vue2 | Vue 2.x + Options API + Vuex |
-| vue3 | Vue 3.x + Composition API + Pinia |
-| react | React 18+ + Hooks + TypeScript |
-| node-express | Node.js Express |
-| python-django | Python Django |
-| generic | 通用项目 |
-
----
-
 ## 许可证
 
 [MIT](LICENSE) — 开源免费
