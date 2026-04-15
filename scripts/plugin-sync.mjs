@@ -9,7 +9,13 @@
  *   node scripts/plugin-sync.mjs web-access --sync # 同步（合并上游变更）
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  rmSync,
+  cpSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
@@ -29,21 +35,29 @@ function extractVersion(skillPath) {
   } catch { return null; }
 }
 
-function getRemoteVersion(owner, repo) {
+async function httpGetText(url, headers = {}, timeoutMs = 5000) {
+  // Node.js 18+ 内置 fetch，跨平台兼容，替代 curl
+  try {
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+    return res.ok ? res.text() : null;
+  } catch { return null; }
+}
+
+async function getRemoteVersion(owner, repo) {
   // 方式1: 读取远程 SKILL.md 的 version 字段（raw.githubusercontent.com）
   const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/main/SKILL.md`;
-  const result = spawnSync('curl', ['-s', '--max-time', '5', rawUrl], { encoding: 'utf-8' });
-  if (result.stdout) {
-    const match = result.stdout.match(/version:\s*["']([^"']+)["']/);
+  const rawContent = await httpGetText(rawUrl);
+  if (rawContent) {
+    const match = rawContent.match(/version:\s*["']([^"']+)["']/);
     if (match) return match[1];
   }
 
   // 方式2: 通过 GitHub API releases
   const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
-  const apiResult = spawnSync('curl', ['-s', '--max-time', '5', '-H', 'Accept: application/vnd.github+json', apiUrl], { encoding: 'utf-8' });
-  if (apiResult.stdout) {
+  const apiContent = await httpGetText(apiUrl, { Accept: 'application/vnd.github+json' });
+  if (apiContent) {
     try {
-      const data = JSON.parse(apiResult.stdout);
+      const data = JSON.parse(apiContent);
       if (data.tag_name) return data.tag_name.replace(/^v/, '');
     } catch { /* ignore */ }
   }
@@ -55,7 +69,6 @@ function getRemoteVersion(owner, repo) {
     if (fetchResult.status === 0) {
       const logResult = spawnSync('git', ['-C', skillDir, 'log', '--oneline', 'HEAD..origin/main', '-1'], { encoding: 'utf-8' });
       if (logResult.stdout.trim()) {
-        // 有新提交，尝试读取远程 SKILL.md
         const showResult = spawnSync('git', ['-C', skillDir, 'show', 'origin/main:SKILL.md'], { encoding: 'utf-8', timeout: 5000 });
         if (showResult.stdout) {
           const match = showResult.stdout.match(/version:\s*["']([^"']+)["']/);
@@ -84,7 +97,8 @@ function syncPlugin(skillName, owner, repo) {
   const skillDir = join(SKILLS_DIR, skillName);
   const tmpDir = join(PROJECT_ROOT, '.tmp-plugin-sync');
 
-  if (existsSync(tmpDir)) spawnSync('rm', ['-rf', tmpDir]);
+  // fs.rmSync 跨平台替代 rm -rf
+  if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
 
   const cloneResult = spawnSync('git', ['clone', '--depth', '1', `https://github.com/${owner}/${repo}.git`, tmpDir], {
     encoding: 'utf-8',
@@ -100,8 +114,9 @@ function syncPlugin(skillName, owner, repo) {
     const srcDir = join(tmpDir, dir);
     const dstDir = join(skillDir, dir);
     if (existsSync(srcDir)) {
-      spawnSync('rm', ['-rf', dstDir]);
-      spawnSync('cp', ['-r', srcDir, dstDir]);
+      // fs.rmSync + fs.cpSync 跨平台替代 rm -rf && cp -r
+      if (existsSync(dstDir)) rmSync(dstDir, { recursive: true, force: true });
+      cpSync(srcDir, dstDir, { recursive: true });
       console.log(`  → ${dir}/ 已同步`);
     }
   }
@@ -113,7 +128,7 @@ function syncPlugin(skillName, owner, repo) {
     writeFileSync(dstVer, readFileSync(srcVer, 'utf-8'), 'utf-8');
   }
 
-  spawnSync('rm', ['-rf', tmpDir]);
+  rmSync(tmpDir, { recursive: true, force: true });
   return true;
 }
 
@@ -144,7 +159,7 @@ async function main() {
     }
 
     const localVersion = extractVersion(skillMd);
-    const remoteVersion = getRemoteVersion(owner, repo);
+    const remoteVersion = await getRemoteVersion(owner, repo);
     const status = compareVersions(localVersion, remoteVersion);
 
     if (status === 'outdated') hasOutdated = true;
