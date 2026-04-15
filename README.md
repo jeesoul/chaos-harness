@@ -83,7 +83,7 @@ claude plugins install chaos-harness@chaos-harness
 
 | 版本 | 主要更新 |
 |------|---------|
-| 1.3.0 孔明 | P03/P04 强制 Multi-Agent 评审、产品经理增强、测试增强（Playwright+CDP 混合模式）、23 个 Skill、overdrive 超频模式、跨平台兼容修复 |
+| 1.3.0 孔明 | overdrive 超频模式（14 分钟全流程紧急处理）、P03/P04 强制 Multi-Agent 评审、LP007 Team 退化检测、产品经理增强、测试增强（Playwright+CDP 混合模式）、23 个 Skill、跨平台兼容修复（纯 Node.js API） |
 | 1.2.0 | 自学习闭环、自适应 Harness、Agent Team 铁律、CDP 浏览器自动化 |
 | 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 |
 | 1.0.0 | 核心框架：Skills + Hooks + Templates |
@@ -99,6 +99,8 @@ claude plugins install chaos-harness@chaos-harness
 | 绕过约束规则 | "就这一次" | 10+ 绕过话术识别 + 驳回 |
 | 版本混乱 | 文档散落各目录 | IL001：强制版本目录 |
 | 敏感配置误操作 | 直接修改数据库/密钥 | IL005：审批机制拦截 |
+| 紧急任务低效 | Agent 说"我看看" | overdrive：所有 Agent 全速运行，14 分钟全流程 |
+| 多 Agent 退化 | 子 Agent 不干活，主 Agent 代劳 | LP007：强制重新分配，禁止单线程 |
 
 ---
 
@@ -134,11 +136,11 @@ claude plugins install chaos-harness@chaos-harness
 
 | Hook | 触发时机 | 功能 |
 |------|----------|------|
-| SessionStart | 会话开始 | 注入铁律 + 恢复状态 + 智能推荐 |
-| PreToolUse | 工具调用前 | 铁律预检 |
+| SessionStart | 会话开始 | 注入铁律 + 恢复状态 + 智能推荐 + 学习分析 |
+| PreToolUse | 工具调用前 | 铁律预检 + 超频模式检测 |
 | PostToolUse | 工具调用后 | 偷懒检测 + 学习记录 + 场景感知 |
 | Stop | 回合结束 | 完成声明分析 + 偷懒检测 |
-| PreCompact | 对话压缩前 | 保存关键上下文 |
+| PreCompact | 对话压缩前 | 保存关键上下文 + Team 退化检测 |
 | Overdrive | 全局检测 | 超频模式激活 + 大模型效率指令注入 |
 
 ### 智能场景感知 (Auto Context)
@@ -162,6 +164,7 @@ claude plugins install chaos-harness@chaos-harness
 - **效率保障**：零铺垫、不解释、快速拍板、最小上下文
 - **时间目标**：14 分钟完成定位→决策→执行→验证全流程
 - **Agent 配置**：自动分配 3+ Agent 并行处理，主 Agent 只做协调
+- **监督加速**：空闲阈值减半（1/2/3/5 分钟快速响应）
 - **铁律策略**：跳过前置扫描，保留底线验证（版本/验证/安全不可跳过）
 
 ### 自适应工作流
@@ -190,6 +193,7 @@ claude plugins install chaos-harness@chaos-harness
 | 命令 | 功能 |
 |------|------|
 | `/chaos-harness:overview` | 系统概览：铁律状态、学习进度、项目统计 |
+| `/chaos-harness:overdrive` | 超频模式：最高优先级紧急任务，所有 Agent 全速运行 |
 | `/chaos-harness:project-scanner` | 项目扫描：类型检测、技术栈分析 |
 | `/chaos-harness:version-locker` | 版本管理：锁定、创建、变更追踪 |
 | `/chaos-harness:harness-generator` | 约束生成：基于扫描数据生成专属 Harness |
@@ -210,12 +214,12 @@ claude plugins install chaos-harness@chaos-harness
 | `/chaos-harness:ui-generator` | UI 生成：从 PRD 生成前端界面 |
 | `/chaos-harness:adaptive-harness` | 自适应优化：从学习数据强化铁律 |
 | `/chaos-harness:web-access` | 联网操作：搜索/抓取/CDP 浏览器自动化 |
-| `/chaos-harness:overdrive` | 超频模式：最高优先级紧急任务，所有 Agent 全速运行 |
 
 ### 智能触发（无需记住命令）
 
 | 你说... | 自动推荐 |
 |--------|---------|
+| "紧急"、"超频"、"立刻解决" | **overdrive**（最高优先级，直接激活） |
 | "需求"、"PRD"、"原型" | product-lifecycle |
 | "PRD检查"、"PRD质量" | prd-validator |
 | "需求分析"、"竞品分析"、"Kano" | product-manager |
@@ -231,7 +235,6 @@ claude plugins install chaos-harness@chaos-harness
 | "学习记录"、"自学习" | learning-analyzer |
 | "评审"、"审查" | collaboration-reviewer |
 | "继续"、"恢复" | project-state |
-| "紧急"、"超频"、"立刻解决" | overdrive（最高优先级，直接激活） |
 
 ---
 
@@ -272,20 +275,11 @@ P03/P04 阶段完成后强制 Multi-Agent 评审（IL-TEAM001）。
 | 售前工程师 | P01, P02, P03 | product-lifecycle |
 | 解决方案架构师 | P04, P05 | harness-generator |
 | UI 设计师 | P03 | product-lifecycle, ui-generator |
-| 前端开发 | P06 | vue3/react 模板 |
-| 后端开发 | P07 | java-spring/node 模板 |
+| 前端开发 | P06 | 对应模板铁律 |
+| 后端开发 | P07 | 对应模板铁律 |
 | 测试工程师 | P08 | test-assistant, visual-regression |
 | 运维工程师 | P09 | workflow-supervisor |
 | **所有角色** | **紧急情况** | **overdrive** |
-
-### Java 后端规范
-
-| 铁律 | 规则 |
-|------|------|
-| IL-JAVA001 | NO CODE WITHOUT CHECKSTYLE — UTF-8, ≤125 字符/行, 4 空格缩进, 完整 Javadoc |
-| IL-JAVA002 | NO CONTROLLER WITHOUT VO — 返回 R<VO>, 禁止 Map/JSONObject |
-| IL-JAVA003 | NO SQL IN JAVA CODE — SQL 全部在 mapper.xml, 禁止注解 |
-| IL-JAVA004 | NO BAD PRACTICES — 禁止 System.exit(), e.printStackTrace() |
 
 ---
 
