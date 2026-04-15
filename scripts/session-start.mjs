@@ -229,4 +229,17 @@ if (existsSync(pluginSyncScript)) {
   }
 }
 
+// ---- 超频模式状态恢复 ----
+const OVERDRIVE_STATE = join(GLOBAL_DATA_DIR, 'overdrive-state.json');
+if (existsSync(OVERDRIVE_STATE)) {
+  const odState = readJson(OVERDRIVE_STATE);
+  if (odState && odState.active) {
+    hookPrint('');
+    hookPrint('<HARNESS_OVERDRIVE_RESUME>');
+    hookPrint('⚡ 超频模式持续激活中（自 ' + odState.activated_at + '）');
+    hookPrint('说 "退出超频" 或 "overdrive off" 关闭');
+    hookPrint('</HARNESS_OVERDRIVE_RESUME>');
+  }
+}
+
 process.exit(0);

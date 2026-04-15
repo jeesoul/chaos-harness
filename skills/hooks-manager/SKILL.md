@@ -25,6 +25,7 @@ version: "1.3.0"
 | stop | 回合结束 | 保存会话状态 |
 | laziness-detect | 回合结束 | 绕过话术识别 |
 | pre-compact | 对话压缩前 | 保存关键上下文快照 |
+| overdrive | PreToolUse (全局) | 超频模式检测 + 最高效率指令注入 |
 
 ## 数据文件
 
