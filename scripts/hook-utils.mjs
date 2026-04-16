@@ -15,6 +15,43 @@ const __dirname = dirname(__filename);
 
 export const GLOBAL_DATA_DIR = join(homedir(), '.claude', 'harness');
 
+// ---- 插件根目录检测（解决 CLAUDE_PLUGIN_ROOT 路径解析错误） ----
+
+/**
+ * 可靠的插件根目录检测。
+ *
+ * 问题：某些 Windows 环境下 CLAUDE_PLUGIN_ROOT 会被错误解析为
+ * 如 C:\c\Users\xydong18\chaos-harness-main\ 而不是 C:\Users\xydong18\chaos-harness-main\
+ *
+ * 解决策略：
+ *   1. 优先使用 CLAUDE_PLUGIN_ROOT（如果路径存在）
+ *   2. 否则基于当前脚本 __dirname 向上查找 plugin.json
+ *   3. 兜底返回 __dirname 的父目录
+ */
+export function detectPluginRoot() {
+  const envRoot = process.env.CLAUDE_PLUGIN_ROOT;
+
+  // 1. 环境变量有效 — 路径确实存在
+  if (envRoot && existsSync(envRoot)) {
+    return envRoot;
+  }
+
+  // 2. 基于 __dirname 向上查找 .claude-plugin/plugin.json
+  let dir = __dirname;
+  for (let depth = 0; depth < 10; depth++) {
+    if (existsSync(join(dir, '.claude-plugin', 'plugin.json')) ||
+        existsSync(join(dir, '.claude-plugin', 'marketplace.json'))) {
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+
+  // 3. 兜底：scripts 目录的父目录
+  return dirname(__dirname);
+}
+
 // ---- 文件操作 ----
 
 /** 确保目录存在 */
