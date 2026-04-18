@@ -1,0 +1,73 @@
+name: default
+version: "1.0"
+description: "默认工作流"
+
+stages:
+  - id: W01_requirements
+    name: "需求分析"
+    artifacts:
+      - id: prd
+        type: document
+        template: templates/prd.md
+        required: true
+        validation:
+          - type: word_count
+            min: 500
+          - type: section_check
+            sections: [overview, scope, requirements, acceptance_criteria]
+    dependencies: []
+    iron_laws: [IL001]
+    multi_agent_required: false
+
+  - id: W03_architecture
+    name: "架构设计"
+    artifacts:
+      - id: design_doc
+        type: document
+        template: templates/design.md
+        required: true
+        validation:
+          - type: section_check
+            sections: [overview, architecture, components, data_flow]
+    dependencies: [W01_requirements]
+    iron_laws: [IL001, IL002]
+    multi_agent_required: true
+
+  - id: W08_development
+    name: "开发实现"
+    artifacts:
+      - id: implementation
+        type: code
+        required: true
+        validation:
+          - type: test_coverage
+            min: 80
+          - type: lint_check
+    dependencies: [W03_architecture]
+    iron_laws: [IL001, IL003, IL005]
+    multi_agent_required: true
+
+transitions:
+  - from: W01_requirements
+    to: W03_architecture
+    conditions:
+      - artifact_complete: prd
+      - review_passed: true
+
+  - from: W03_architecture
+    to: W08_development
+    conditions:
+      - artifact_complete: design_doc
+      - review_passed: true
+      - iron_law_check: true
+
+validation_rules:
+  - id: version_check
+    description: "所有工件必须在版本目录下"
+    check: "file_path.startsWith('output/' + version)"
+    severity: critical
+
+  - id: test_coverage
+    description: "测试覆盖率必须达到 80%"
+    check: "coverage >= 0.8"
+    severity: warning
