@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // instinct-utils.mjs — 直觉系统 CRUD 工具库
-import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, cpSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,7 +19,7 @@ export const INSTINCT_TYPES = {
 };
 
 // 混合演进策略配置
-export const EVOLUTION_CONFIG = {
+const EVOLUTION_CONFIG = {
   [INSTINCT_TYPES.IRON_LAW_VIOLATION]: {
     suggestThreshold: 0.5,
     confirmThreshold: 0.7,
