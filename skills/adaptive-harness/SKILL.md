@@ -55,6 +55,44 @@ node scripts/adaptive-harness.mjs --dry-run # 预览不修改
 | "查看优化报告" | 读取 adaptive-report.md |
 | "查看铁律配置" | 读取 iron-laws.yaml |
 
+## 混合演进策略
+
+### 铁律相关直觉 → 必须确认
+
+当检测到铁律违规模式且置信度 >= 0.7 时：
+1. 向用户展示违规模式和建议
+2. 等待用户确认是否应用
+3. 用户确认后更新配置
+
+### 工作流优化直觉 → 自动应用
+
+当检测到工作流优化模式且置信度 >= 0.7 时：
+1. 自动应用优化建议
+2. 记录到 adaptive-report.md
+3. 用户可随时回滚
+
+### 演进决策树
+
+```
+新直觉
+  │
+  ├─ type: iron_law_violation
+  │   ├─ confidence < 0.5 → 记录观察
+  │   ├─ 0.5 ≤ confidence < 0.7 → 建议（待确认）
+  │   ├─ 0.7 ≤ confidence < 0.9 → 强制确认
+  │   └─ confidence ≥ 0.9 → 自动阻断
+  │
+  ├─ type: workflow_optimization
+  │   ├─ confidence < 0.5 → 记录观察
+  │   ├─ 0.5 ≤ confidence < 0.7 → 建议（待确认）
+  │   └─ confidence ≥ 0.7 → 自动应用
+  │
+  └─ type: code_pattern
+      ├─ confidence < 0.6 → 记录观察
+      ├─ 0.6 ≤ confidence < 0.8 → 建议（待确认）
+      └─ confidence ≥ 0.8 → 自动应用
+```
+
 ## References 索引
 
 | 文件 | 何时加载 |
