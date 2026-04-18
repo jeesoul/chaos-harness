@@ -1,8 +1,8 @@
 ---
 name: learning-analyzer
-description: "分析历史学习记录，发现失败模式，生成铁律优化建议。触发词：学习分析、模式发现、铁律优化、自学习、闭环"
+description: "分析历史学习记录和直觉数据，发现失败模式，生成铁律优化建议。触发词：学习分析、模式发现、铁律优化、自学习、闭环、直觉"
 license: MIT
-version: "1.3.0"
+version: "1.3.1"
 ---
 
 # 学习分析哲学
@@ -31,6 +31,7 @@ node scripts/learning-analyzer.mjs
 | `iron-law-log.json` | 铁律触发统计、高频违规上下文 |
 | `laziness-log.json` | 偷懒模式检测统计 |
 | `learning-log.json` | 操作类型分布、文件类型分布 |
+| `instincts/instincts.json` | 直觉系统分析（置信度分布、聚类、高置信度模式） |
 
 ## 输出
 
@@ -95,3 +96,5 @@ node scripts/learning-analyzer.mjs
 | `~/.claude/harness/analysis-report.md` | 需要查看最近的分析报告时 |
 | `scripts/learning-analyzer.mjs` | 需要手动触发分析时 |
 | `skills/plugin-manager/SKILL.md` | 需要应用铁律优化建议时 |
+| `instincts/instincts.json` | 需要读取直觉数据时 |
+| `scripts/instinct-utils.mjs` | 需要操作直觉数据时 |

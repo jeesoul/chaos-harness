@@ -18,6 +18,7 @@ import {
 
 import { join } from 'node:path';
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { getAllInstincts, clusterInstincts } from './instinct-utils.mjs';
 
 ensureDir(GLOBAL_DATA_DIR);
 
@@ -108,6 +109,31 @@ for (const { type, count } of systemicIssues) {
   });
 }
 
+// ---- 新增：分析直觉数据 ----
+
+function analyzeInstincts() {
+  try {
+    const instincts = getAllInstincts();
+    const clusters = clusterInstincts();
+    const byType = {};
+    for (const instinct of instincts) {
+      if (!byType[instinct.type]) byType[instinct.type] = [];
+      byType[instinct.type].push(instinct);
+    }
+    return {
+      total: instincts.length,
+      byType,
+      clusters,
+      highConfidence: instincts.filter(i => i.confidence >= 0.7),
+      needsAttention: instincts.filter(i => i.confidence < 0.5 && i.occurrences > 5)
+    };
+  } catch (e) {
+    return { total: 0, byType: {}, clusters: [], highConfidence: [], needsAttention: [], error: e.message };
+  }
+}
+
+const instinctAnalysis = analyzeInstincts();
+
 // ---- 输出报告 ----
 
 const reportLines = [
@@ -121,9 +147,33 @@ const reportLines = [
   `- 偷懒检测记录: ${lazyLogs.length} 条`,
   `- 学习操作记录: ${learnLogs.length} 条`,
   ``,
-  `## 铁律触发统计`,
+  `## 直觉系统分析`,
+  ``,
+  `- 总直觉数: ${instinctAnalysis.total}`,
+  `- 高置信度直觉 (≥0.7): ${instinctAnalysis.highConfidence.length}`,
+  `- 需要关注的直觉 (<0.5 且出现>5次): ${instinctAnalysis.needsAttention.length}`,
+  `- 活跃聚类: ${instinctAnalysis.clusters.length}`,
   ``,
 ];
+
+// 按类型输出直觉详情
+for (const [type, instincts] of Object.entries(instinctAnalysis.byType)) {
+  reportLines.push(`### ${type} (${instincts.length} 条)`, '');
+  for (const inst of instincts.sort((a, b) => b.confidence - a.confidence)) {
+    reportLines.push(`- **${inst.id}** [${inst.confidence.toFixed(2)}] ${inst.pattern} — 出现 ${inst.occurrences} 次`);
+  }
+  reportLines.push('');
+}
+
+for (const cluster of instinctAnalysis.clusters) {
+  reportLines.push(`- **${cluster.id}**: ${cluster.theme} (置信度: ${cluster.confidence}, 建议: ${cluster.recommendation})`);
+}
+
+if (instinctAnalysis.clusters.length === 0) {
+  reportLines.push('暂无聚类，继续观测中。');
+}
+
+reportLines.push('', '## 铁律触发统计', '');
 
 for (const [law, count] of Object.entries(ironLawCounts).sort((a, b) => b[1] - a[1])) {
   const contexts = ironLawContexts[law] || [];
@@ -187,6 +237,7 @@ hookPrint('');
 hookPrint('<CHAOS_HARNESS_ANALYSIS>');
 hookPrint('📊 自学习分析完成');
 hookPrint(`   铁律触发: ${ironLogs.length} 条 | 偷懒检测: ${lazyLogs.length} 条 | 学习记录: ${learnLogs.length} 条`);
+hookPrint(`   直觉系统: ${instinctAnalysis.total} 条 | 高置信度: ${instinctAnalysis.highConfidence.length} 条 | 聚类: ${instinctAnalysis.clusters.length} 个`);
 hookPrint(`   优化建议: ${suggestions.length} 条`);
 if (repeatViolations.length > 0) {
   hookPrint(`   ⚠️ 重复违规: ${repeatViolations.map(v => `${v.law}(${v.count}次)`).join(', ')}`);
