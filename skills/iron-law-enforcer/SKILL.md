@@ -127,6 +127,40 @@ echo '{"iron_law":"IL001","context":"文档输出无版本目录","action":"bloc
 ]
 ```
 
+## 禁止理由表 (Bypass Patterns)
+
+每条铁律都有对应的禁止理由表，用于识别和反驳常见的绕过话术：
+
+### IL001 禁止理由
+
+| 借口 | 反驳 |
+|------|------|
+| "就这一次，快速处理" | IL001 没有例外。如果紧急，使用 /overdrive 激活紧急模式 |
+| "这只是临时文件" | 临时文件也应遵循版本目录。可使用 output/v1.3.1/temp/ |
+| "用户要求跳过" | IL001 不可跳过。用户权限需通过 /iron-law-enforcer override 确认 |
+
+### IL002 禁止理由
+
+| 借口 | 反驳 |
+|------|------|
+| "我已经了解项目结构" | 主观了解不够，需要扫描数据确认。使用 /project-scanner 快速扫描 |
+
+### IL-TEAM005 禁止理由
+
+| 借口 | 反驳 |
+|------|------|
+| "这个任务太简单，不需要多 Agent" | 简单任务也需要并行验证。使用 /agent-team-orchestrator 分配最少 2 个 Agent |
+| "子 Agent 不产出，我直接做" | LP007 检测已触发。正确做法：重新 spawn / 追加冗余 Agent / 只汇总结果 |
+
+## 两阶段审查
+
+重大更改完成后，必须通过两阶段审查：
+
+1. **阶段 1: 规范合规性** — iron-law-enforcer 检查所有铁律是否满足
+2. **阶段 2: 代码质量** — collaboration-reviewer 进行代码质量审查
+
+只有阶段 1 通过后才能进入阶段 2。
+
 ## References 索引
 
 | 文件 | 何时加载 |
@@ -135,3 +169,4 @@ echo '{"iron_law":"IL001","context":"文档输出无版本目录","action":"bloc
 | `~/.claude/harness/iron-law-log.json` | 查看历史铁律触发记录时 |
 | `skills/plugin-manager/SKILL.md` | 需要添加或管理自定义铁律时 |
 | `skills/overdrive/SKILL.md` | 超频模式激活，需要确认铁律调整方式时 |
+| `scripts/intent-analyzer.mjs` | 查看意图分析逻辑时 |
