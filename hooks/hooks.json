@@ -30,6 +30,11 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/overdrive.mjs\"",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/intent-analyzer.mjs\"",
+            "async": true
           }
         ]
       }
