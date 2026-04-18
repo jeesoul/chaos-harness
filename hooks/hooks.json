@@ -64,6 +64,16 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/eval-collector.mjs\"",
+            "async": true
+          }
+        ]
       }
     ],
     "Stop": [
