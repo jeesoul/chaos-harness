@@ -20,7 +20,7 @@ version: "1.3.1"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（26 个）
+## 可用 Skills（27 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
@@ -50,6 +50,7 @@ version: "1.3.1"
 | instinct-system | 直觉、本能、置信度、instinct | 持续学习系统 2.0（原子本能 + 置信度演进） |
 | eval-harness | 评测、pass@k、回归、能力、评分器、eval | 评测驱动开发（pass@k + 能力/回归 + 三种评分器） |
 | iterative-retrieval | 迭代检索、上下文优化、检索循环、iterative | 4 阶段检索循环（DISPATCH/EVALUATE/REFINE/LOOP） |
+| schema-workflow | 工作流、Schema、依赖图、阶段 | Schema-Driven 工作流（YAML 定义 + 依赖图 + 自定义验证） |
 
 ## 持续学习系统 2.0
 
@@ -70,6 +71,15 @@ version: "1.3.1"
 | 评分器 | 无 | 代码 + 模型 + 人工 |
 | 存储 | 无 | 本地 evals/ + 可选云端 |
 | 自动追踪 | 无 | eval-collector Hook |
+
+## Schema-Driven 工作流系统
+
+| 特性 | v1.3.0 | v1.3.1 |
+|------|--------|--------|
+| 工作流定义 | 硬编码 12 阶段 | YAML Schema + 依赖图 |
+| 阶段管理 | 固定流程 | 动态解析 + 验证 |
+| 自定义 | 无 | schemas/custom/ 目录 |
+| 模板 | 无 | default + product-lifecycle |
 
 ## 插件系统
 
