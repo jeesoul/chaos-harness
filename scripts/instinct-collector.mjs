@@ -4,7 +4,7 @@
 // 100% 确定性观测，记录行为模式
 
 import { readFileSync, existsSync, appendFileSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { createInstinct, updateInstinct, getInstinctsByType, INSTINCT_TYPES } from './instinct-utils.mjs';
 
@@ -66,7 +66,7 @@ function detectIronLawViolations() {
       condition: () => {
         if (toolName === 'Write' || toolName === 'Edit') {
           const filePath = extractFilePath(toolInput);
-          if (filePath && !filePath.includes('output/v') && !filePath.includes('.chaos-harness') && !filePath.includes('instincts/') && !filePath.includes('evals/') && !filePath.includes('schemas/')) {
+          if (filePath && !filePath.includes('output/v') && !filePath.includes('.chaos-harness') && !filePath.includes('instincts/') && !filePath.includes('evals/') && !filePath.includes('schemas/') && !filePath.includes('skills/') && !filePath.includes('scripts/') && !filePath.includes('commands/') && !filePath.includes('hooks/') && !filePath.includes('templates/')) {
             return { file_pattern: filePath, violation: 'IL001' };
           }
         }
@@ -132,8 +132,9 @@ function detectCodePatterns() {
   if (toolName === 'Write') {
     const filePath = extractFilePath(toolInput);
     if (filePath) {
-      const ext = filePath.split('.').pop();
-      const dir = filePath.split('/').slice(0, -1).join('/');
+      const normalizedPath = filePath.replace(/\\/g, '/');
+      const ext = normalizedPath.split('.').pop();
+      const dir = normalizedPath.split('/').slice(0, -1).join('/');
       const existing = getInstinctsByType(INSTINCT_TYPES.CODE_PATTERN, 0).find(i =>
         i.context.file_pattern === `*.${ext}` && i.status === 'active'
       );
