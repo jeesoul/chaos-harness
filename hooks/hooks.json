@@ -54,6 +54,16 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/instinct-collector.mjs\"",
+            "async": true
+          }
+        ]
       }
     ],
     "Stop": [

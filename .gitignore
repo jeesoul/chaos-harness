@@ -38,3 +38,8 @@ skills/web-access/references/site-patterns/*.md
 
 # 开发用 package.json 备份，不提交
 package.dev.json
+
+# Instinct system local data
+instincts/observations.jsonl
+instincts/*.bak
+instincts/clusters/*.json
