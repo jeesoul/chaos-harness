@@ -20,7 +20,7 @@ version: "1.3.1"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（24 个）
+## 可用 Skills（26 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
@@ -48,6 +48,8 @@ version: "1.3.1"
 | web-access | 搜索、网页、CDP、浏览器 | 联网操作与 CDP 浏览器自动化 |
 | overdrive | 紧急、超频、立刻解决 | 最高优先级、所有 Agent 全速运行 |
 | instinct-system | 直觉、本能、置信度、instinct | 持续学习系统 2.0（原子本能 + 置信度演进） |
+| eval-harness | 评测、pass@k、回归、能力、评分器、eval | 评测驱动开发（pass@k + 能力/回归 + 三种评分器） |
+| iterative-retrieval | 迭代检索、上下文优化、检索循环、iterative | 4 阶段检索循环（DISPATCH/EVALUATE/REFINE/LOOP） |
 
 ## 持续学习系统 2.0
 
@@ -58,6 +60,16 @@ version: "1.3.1"
 | 置信度 | 无 | 0.3-0.9 加权评分 |
 | 演进 | 直接到技能 | 本能 → 聚类 → 技能/命令/Agent |
 | 分享 | 无 | 导出/导入本能 |
+
+## 评测驱动开发
+
+| 特性 | v1.3.0 | v1.3.1 |
+|------|--------|--------|
+| 评测类型 | 无 | 能力 + 回归 |
+| 指标 | 无 | pass@1 / pass@3 / pass^3 |
+| 评分器 | 无 | 代码 + 模型 + 人工 |
+| 存储 | 无 | 本地 evals/ + 可选云端 |
+| 自动追踪 | 无 | eval-collector Hook |
 
 ## 插件系统
 
