@@ -20,7 +20,7 @@ version: "1.3.1"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（27 个）
+## 可用 Skills（29 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
@@ -51,6 +51,8 @@ version: "1.3.1"
 | eval-harness | 评测、pass@k、回归、能力、评分器、eval | 评测驱动开发（pass@k + 能力/回归 + 三种评分器） |
 | iterative-retrieval | 迭代检索、上下文优化、检索循环、iterative | 4 阶段检索循环（DISPATCH/EVALUATE/REFINE/LOOP） |
 | schema-workflow | 工作流、Schema、依赖图、阶段 | Schema-Driven 工作流（YAML 定义 + 依赖图 + 自定义验证） |
+| defense-in-depth | 深度防御、多层验证、defense | 4 层验证框架（入口→业务→环境→调试） |
+| strategic-compact | 压缩、上下文优化、strategic、compact | 逻辑边界压缩 + 工具调用计数阈值检测 |
 
 ## 持续学习系统 2.0
 
@@ -80,6 +82,16 @@ version: "1.3.1"
 | 阶段管理 | 固定流程 | 动态解析 + 验证 |
 | 自定义 | 无 | schemas/custom/ 目录 |
 | 模板 | 无 | default + product-lifecycle |
+
+## 约束增强系统
+
+| 特性 | v1.3.0 | v1.3.1 |
+|------|--------|--------|
+| 铁律预警 | 事后检查 | PreToolUse 主动预警 |
+| 禁止理由表 | 无 | 每条铁律对应反驳话术 |
+| 审查机制 | 单一 | 两阶段（规范→质量） |
+| 多层验证 | 无 | 4 层防御框架 |
+| 上下文压缩 | 随机自动 | 逻辑边界 + 调用计数阈值 |
 
 ## 插件系统
 
