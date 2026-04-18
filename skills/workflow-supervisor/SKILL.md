@@ -96,6 +96,44 @@ version: "1.3.0"
 | 跳过必经阶段 | Large 项目请求跳过 | 拒绝 |
 | 长时间无进度 | 无进度更新 | LP003 |
 
+## Schema-Driven 工作流支持
+
+### 从 Schema 加载工作流
+
+```bash
+# 激活默认工作流
+/schema-workflow activate default
+
+# 激活产品生命周期工作流
+/schema-workflow activate product-lifecycle
+```
+
+### 依赖图可视化
+
+```
+当前阶段: W03_architecture
+  ↓
+  已完成: W01_requirements
+  进行中: W03_architecture
+  待执行: W08_development
+```
+
+### 阶段转换
+
+阶段转换自动检查：
+1. 依赖阶段是否完成
+2. 工件是否通过验证
+3. 铁律是否满足
+4. 是否需要多 Agent 评审
+
+### 与 workflow-supervisor 集成
+
+workflow-supervisor 现在支持两种模式：
+1. **内置模式**: 使用预定义的 12 阶段工作流
+2. **Schema 模式**: 从 YAML Schema 动态加载工作流
+
+当激活 Schema 后，workflow-supervisor 自动切换到 Schema 模式。
+
 ## 状态记录
 
 阶段完成或状态变更时执行：
@@ -122,3 +160,6 @@ echo '{"event":"stage_complete","stage":"W01","timestamp":"'"$(date -u +%Y-%m-%d
 | `shared/state-helpers.md` | 需要完整状态管理函数（complete_stage, resume_session, get_current_stage）时 |
 | `shared/helpers.md` | 需要铁律检查、版本锁定检查、偷懒检测规则时 |
 | `~/.claude/harness/workflow-log.json` | 查看历史工作流事件时 |
+| `schemas/default.yaml` | 使用默认 Schema 工作流时 |
+| `schemas/product-lifecycle.yaml` | 使用产品生命周期工作流时 |
+| `scripts/schema-utils.mjs` | 需要操作 Schema 时 |
