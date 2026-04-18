@@ -2,10 +2,10 @@
 name: overview
 description: "Chaos Harness 系统概览。当用户明确询问 chaos-harness 功能时使用。"
 license: MIT
-version: "1.3.0"
+version: "1.3.1"
 ---
 
-# Chaos Harness v1.3.0 孔明
+# Chaos Harness v1.3.1 孔明Pro
 
 > 运筹帷幄，决胜千里；以智御局，以律治心。
 > **Chaos demands order. Harness provides it.**
@@ -20,7 +20,7 @@ version: "1.3.0"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（23 个）
+## 可用 Skills（24 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
@@ -47,6 +47,17 @@ version: "1.3.0"
 | adaptive-harness | 自适应优化、应用建议 | 从学习数据自动强化铁律 |
 | web-access | 搜索、网页、CDP、浏览器 | 联网操作与 CDP 浏览器自动化 |
 | overdrive | 紧急、超频、立刻解决 | 最高优先级、所有 Agent 全速运行 |
+| instinct-system | 直觉、本能、置信度、instinct | 持续学习系统 2.0（原子本能 + 置信度演进） |
+
+## 持续学习系统 2.0
+
+| 特性 | v1.3.0 | v1.3.1 |
+|------|--------|--------|
+| 观测方式 | Stop 钩子 | PostToolUse 钩子（100% 确定性） |
+| 学习单元 | 完整技能 | 原子本能 |
+| 置信度 | 无 | 0.3-0.9 加权评分 |
+| 演进 | 直接到技能 | 本能 → 聚类 → 技能/命令/Agent |
+| 分享 | 无 | 导出/导入本能 |
 
 ## 插件系统
 
