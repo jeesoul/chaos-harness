@@ -2,7 +2,7 @@
 name: agent-team-orchestrator
 description: "Agent Team 编排器。在评审、开发阶段自动触发。触发词：并行开发、多agent、团队协作、分配任务"
 license: MIT
-version: "1.3.0"
+version: "1.3.1"
 ---
 
 # 编排哲学
@@ -179,6 +179,68 @@ echo '{"stage":"W04","agents":3,"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"
 echo '{"agent_id":"backend-2","pattern":"LP001","context":"5分钟无产出","timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' | \
   jq -s '.' >> ~/.claude/harness/laziness-log.json 2>/dev/null || true
 ```
+
+## 与迭代检索模式集成
+
+当 Agent Team 需要检索代码库上下文时，使用 iterative-retrieval 4 阶段循环：
+
+### 多 Agent 并行检索
+
+```
+检索 Agent（Haiku） → 候选文件列表
+评估 Agent（Sonnet） → 相关性评分 + 缺失上下文
+精炼 Agent（Sonnet） → 更新搜索标准
+```
+
+### 检索任务分配
+
+在子 Agent prompt 中增加检索指令：
+
+```
+## 检索策略
+使用 iterative-retrieval 4 阶段循环：
+1. DISPATCH: 广泛搜索相关文件和模式
+2. EVALUATE: 评估每个文件的相关性（高/中/低/无）
+3. REFINE: 基于高相关性文件更新搜索关键词
+4. LOOP: 最多 3 次循环，或找到 5+ 高相关性文件
+```
+
+## 与本能系统集成
+
+每次 Agent Team 执行后，将经验模式写入 instinct-system：
+
+```bash
+# 记录协调模式
+echo '{"type":"agent_coordination","pattern":"并行检索成功","confidence":0.5,"timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' \
+  >> instincts/observations.jsonl 2>/dev/null || true
+```
+
+当检测到以下模式时自动记录：
+- 成功的并行执行模式 → confidence +0.05
+- Agent 无响应重分配成功 → 记录重分配策略
+- 检索循环命中高相关性文件 → 记录检索关键词
+
+## 与 Schema 工作流集成
+
+当在 Schema 工作流模式下：
+
+| 阶段 | Agent 配置 |
+|------|-----------|
+| W01/P01 | 单 Agent（无需并行） |
+| W03/P04 | 2-3 Agent（架构分析并行） |
+| W08/P08 | 2+ Agent（前后端/测试并行） |
+
+通过 `schema-utils.mjs list` 查看可用 Schema，通过 `resolve` 查看执行顺序。
+
+## 与战略压缩集成
+
+当工具调用计数达到阈值时：
+
+| 阈值 | Agent 行为 |
+|------|-----------|
+| 50 次 | 压缩子 Agent 上下文，只传递必要信息 |
+| 100 次 | 主 Agent 保存状态快照，重新分配简化任务 |
+| 150 次 | 触发 PreCompact，保存关键决策后重启 |
 
 ## References 索引
 
