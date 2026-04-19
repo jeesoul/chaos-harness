@@ -3,3 +3,11 @@
 *.md text eol=lf
 skills/**/SKILL.md text eol=lf
 commands/*.md text eol=lf
+
+# Scripts and tests use LF
+*.mjs text eol=lf
+*.js text eol=lf
+
+# Windows batch files use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
