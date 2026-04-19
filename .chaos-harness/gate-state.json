@@ -10,7 +10,7 @@
       "output": "D:\\claudeCodeSpace\\java\\万物入侵\\.claude\\worktrees\\v1.4.0\\.chaos-harness\\gates\\problem.md",
       "outputChecksum": "d3315a8727a14a07",
       "reviewer": "auto",
-      "reviewedAt": "2026-04-19T14:48:55.980Z",
+      "reviewedAt": "2026-04-19T15:04:37.723Z",
       "attempts": 1,
       "lastError": null
     },
@@ -84,16 +84,16 @@
       "gateId": 0,
       "gate": "problem",
       "reviewer": "auto",
-      "timestamp": "2026-04-19T14:48:55.980Z"
+      "timestamp": "2026-04-19T15:04:37.724Z"
     },
     {
       "event": "gate_advance",
       "from": 0,
       "to": 1,
       "reviewer": "auto",
-      "timestamp": "2026-04-19T14:48:56.035Z"
+      "timestamp": "2026-04-19T15:04:37.778Z"
     }
   ],
-  "createdAt": "2026-04-19T14:48:55.924Z",
-  "updatedAt": "2026-04-19T14:48:56.035Z"
+  "createdAt": "2026-04-19T15:04:37.667Z",
+  "updatedAt": "2026-04-19T15:04:37.779Z"
 }

@@ -2,24 +2,21 @@
 /**
  * orchestrator — Chaos Harness v1.4.0 Plugin Dispatcher Core
  *
- * The brain of chaos-harness. Integrates capabilities from:
- *   - superpowers (subagent-driven development, parallel agents)
- *   - openspec (change proposal, spec-driven workflow)
- *   - everything-claude-code (agent configs, hooks, rules)
- *   - chaos-harness itself (gate validation, iron laws, recovery)
+ * Integrates integration adapters at import time:
+ *   - integrations/superpowers/adapter.mjs (subagent dispatch, model selection)
+ *   - integrations/openspec/adapter.mjs (change proposal, apply, gate mapping)
+ *   - integrations/everything/adapter.mjs (agent configs, rules, hooks, contexts)
+ *   - integrations/registry.mjs (unified component discovery, best-path routing)
  *
- * Responsibilities:
- *   1. Detect installed plugins/projects
- *   2. Plan optimal execution path based on user input + available components
- *   3. Manage Gate state machine (delegates to gate-machine.mjs)
- *   4. Auto-recover on failure (delegates to gate-recovery.mjs)
- *   5. Emit unified status output
+ * When adapters are imported, they become first-class citizens in the
+ * orchestration flow — detected → planned → dispatched automatically.
  *
  * Usage:
  *   node scripts/orchestrator.mjs orchestrate "user input here"
  *   node scripts/orchestrator.mjs detect
  *   node scripts/orchestrator.mjs report
  *   node scripts/orchestrator.mjs status
+ *   node scripts/orchestrator.mjs plan "user input"
  *   node scripts/orchestrator.mjs recover
  */
 
@@ -29,235 +26,115 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
-  statSync,
 } from 'node:fs';
-import { join, dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
-import { homedir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { execSync, spawnSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = dirname(__dirname);
 const SCRIPTS_DIR = join(PROJECT_ROOT, 'scripts');
+const INTEGRATIONS_DIR = join(PROJECT_ROOT, 'integrations');
 const STATE_FILE = join(PROJECT_ROOT, '.chaos-harness', 'orchestrator-state.json');
 
 // ============================================================
-// Constants
+// Integration Adapter Imports — auto-detected at load time
 // ============================================================
 
 /**
- * Plugin definitions — how to detect each component and what
- * capabilities it exposes.
+ * Try to import an integration adapter. Returns null if the file
+ * doesn't exist (e.g., user cloned chaos-harness without integrations).
  */
-const PLUGIN_REGISTRY = {
-  superpowers: {
-    name: 'superpowers',
-    label: 'Superpowers — Agent Workflow System',
-    detectPaths: [
-      // Claude Code plugin installation
-      join(homedir(), '.claude', 'plugins', 'installed', 'superpowers'),
-      join(homedir(), '.claude', 'plugins', 'installed', 'superpowers-chrome'),
-      // Local project detection
-      'skills/superpowers',
-      'skills/superpowers-chrome',
-      // Global npm
-      join(homedir(), '.config', 'superpowers'),
-      join(homedir(), '.superpowers'),
-    ],
-    detectDirs: ['superpowers'], // directory name pattern
-    capabilities: [
-      'subagent-driven-development',
-      'parallel-agent-dispatch',
-      'systematic-debugging',
-      'verification-before-completion',
-      'worktree-management',
-      'test-driven-development',
-      'code-review',
-      'brainstorming',
-      'skill-writing',
-      'plan-writing',
-      'plan-execution',
-    ],
-    priority: 1, // higher = checked first for execution planning
-  },
-  openspec: {
-    name: 'openspec',
-    label: 'OpenSpec — Spec-Driven Development',
-    detectPaths: [
-      join(homedir(), '.claude', 'plugins', 'installed', 'openspec'),
-      join(homedir(), '.claude', 'plugins', 'installed', 'openspec-superpowers-flow'),
-      'skills/openspec',
-      'openspec',
-      '.openspec',
-      join(homedir(), '.config', 'openspec'),
-    ],
-    detectDirs: ['openspec'],
-    capabilities: [
-      'change-proposal',
-      'spec-validation',
-      'opsx-propose',
-      'spec-driven-workflow',
-    ],
-    priority: 2,
-  },
-  'everything-claude-code': {
-    name: 'everything-claude-code',
-    label: 'Everything Claude Code — Agent Config Hub',
-    detectPaths: [
-      join(homedir(), '.claude', 'plugins', 'installed', 'everything-claude-code'),
-      'skills/everything',
-      'everything-claude-code',
-      '.everything',
-      join(homedir(), '.config', 'everything-claude-code'),
-    ],
-    detectDirs: ['everything'],
-    capabilities: [
-      'agent-config-loading',
-      'hook-injection',
-      'rule-enforcement',
-      'context-enrichment',
-    ],
-    priority: 3,
-  },
-  'chaos-harness': {
-    name: 'chaos-harness',
-    label: 'Chaos Harness — Deterministic Constraint Framework',
-    detectPaths: [
-      PROJECT_ROOT,
-    ],
-    detectDirs: ['chaos-harness', '.chaos-harness'],
-    capabilities: [
-      'gate-validation',
-      'iron-law-enforcement',
-      'phase-guard',
-      'recovery-engine',
-      'laziness-detection',
-      'overdrive-mode',
-      'auto-context',
-      'workflow-supervision',
-      'plugin-management',
-      'state-management',
-    ],
-    priority: 0, // always present (we are the harness)
-  },
-};
+function loadAdapter(name) {
+  const adapterPath = join(INTEGRATIONS_DIR, name, 'adapter.mjs');
+  if (!existsSync(adapterPath)) {
+    return null;
+  }
+  try {
+    return import(pathToFileURL(adapterPath).href);
+  } catch {
+    return null;
+  }
+}
+
+function loadRegistry() {
+  const registryPath = join(INTEGRATIONS_DIR, 'registry.mjs');
+  if (!existsSync(registryPath)) {
+    return null;
+  }
+  try {
+    return import(pathToFileURL(registryPath).href);
+  } catch {
+    return null;
+  }
+}
 
 // ============================================================
 // Marker Output
 // ============================================================
 
-/**
- * Emit a <HARNESS_ORCHESTRATOR> marker to stderr.
- * Claude Code hooks and downstream scripts read this.
- */
 function emitMarker(data) {
   const payload = typeof data === 'string' ? data : JSON.stringify(data);
   console.error(`<HARNESS_ORCHESTRATOR>${payload}</HARNESS_ORCHESTRATOR>`);
 }
 
 // ============================================================
-// Component Detection
+// Component Detection — via registry + adapters
 // ============================================================
 
-/**
- * Scan for a single plugin by checking its registered paths.
- * Returns { detected: boolean, path: string|null }
- */
-function detectPlugin(pluginDef) {
-  // 1. Check explicit paths
-  for (const p of pluginDef.detectPaths) {
-    if (existsSync(p)) {
-      return { detected: true, path: resolve(p), method: 'explicit-path' };
-    }
-  }
-
-  // 2. Scan common plugin locations for directory name matches
-  const scanLocations = [
-    join(homedir(), '.claude', 'plugins', 'installed'),
-    join(PROJECT_ROOT, 'skills'),
-    PROJECT_ROOT,
-  ];
-
-  for (const location of scanLocations) {
-    if (!existsSync(location)) continue;
-    try {
-      const entries = readdirSync(location, { withFileTypes: true });
-      for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        for (const pattern of pluginDef.detectDirs) {
-          if (entry.name.includes(pattern)) {
-            return { detected: true, path: resolve(location, entry.name), method: 'directory-scan' };
-          }
-        }
-      }
-    } catch {
-      // permission error or not a directory — skip
-    }
-  }
-
-  // 3. Check if the plugin is referenced in Claude settings
-  const settingsPaths = [
-    join(PROJECT_ROOT, '.claude', 'settings.json'),
-    join(PROJECT_ROOT, '.claude', 'settings.local.json'),
-    join(homedir(), '.claude', 'settings.json'),
-  ];
-
-  for (const sp of settingsPaths) {
-    if (!existsSync(sp)) continue;
-    try {
-      const content = readFileSync(sp, 'utf8');
-      if (content.includes(pluginDef.name)) {
-        return { detected: true, path: sp, method: 'settings-reference' };
-      }
-    } catch { /* skip */ }
-  }
-
-  return { detected: false, path: null, method: null };
-}
-
-/**
- * Detect all installed components.
- * Returns a map of pluginName -> { detected, path, method, capabilities }
- */
 function detectComponents(projectRoot = PROJECT_ROOT) {
+  const registry = loadRegistry();
+
+  // Prefer registry's scanAll if available
+  if (registry && typeof registry.scanAll === 'function') {
+    try {
+      return registry.scanAll(projectRoot);
+    } catch {
+      // Fall through to manual detection
+    }
+  }
+
+  // Manual detection via individual adapters
   const results = {};
+  const adapters = [
+    { name: 'superpowers', key: 'superpowers' },
+    { name: 'openspec', key: 'openspec' },
+    { name: 'everything', key: 'everything' },
+  ];
 
-  for (const [key, def] of Object.entries(PLUGIN_REGISTRY)) {
-    const detection = detectPlugin(def);
-    results[key] = {
-      name: def.name,
-      label: def.label,
-      detected: detection.detected,
-      path: detection.path,
-      detectionMethod: detection.method,
-      capabilities: detection.detected ? def.capabilities : [],
-      priority: def.priority,
-    };
+  for (const adapter of adapters) {
+    const mod = loadAdapter(adapter.name);
+    if (mod && typeof mod.detect === 'function') {
+      try {
+        const info = mod.detect(projectRoot);
+        const caps = typeof mod.getCapabilities === 'function' ? mod.getCapabilities(projectRoot) : [];
+        results[adapter.key] = {
+          detected: info?.detected ?? false,
+          path: info?.path || null,
+          version: info?.version || null,
+          source: info?.source || null,
+          capabilities: caps?.capabilities || caps || [],
+        };
+        continue;
+      } catch { /* fall through */ }
+    }
+    results[adapter.key] = { detected: false, path: null, version: null, source: null, capabilities: [] };
   }
 
-  // Also scan for additional skills directories in the project
-  const skillsDir = join(projectRoot, 'skills');
-  if (existsSync(skillsDir)) {
-    try {
-      const skillDirs = readdirSync(skillsDir, { withFileTypes: true })
-        .filter(e => e.isDirectory())
-        .map(e => e.name);
+  // chaos-harness is always present
+  results['chaos-harness'] = {
+    detected: true,
+    path: PROJECT_ROOT,
+    version: '1.4.0',
+    source: 'self',
+    capabilities: [
+      'gate-validation', 'iron-law-enforcement', 'phase-guard',
+      'recovery-engine', 'laziness-detection', 'overdrive-mode',
+      'state-management',
+    ],
+  };
 
-      results['chaos-harness'].skillCount = skillDirs.length;
-      results['chaos-harness'].skills = skillDirs;
-    } catch { /* skip */ }
-  }
-
-  // Detect available scripts
-  if (existsSync(SCRIPTS_DIR)) {
-    try {
-      const scripts = readdirSync(SCRIPTS_DIR)
-        .filter(f => f.endsWith('.mjs') || f.endsWith('.sh') || f.endsWith('.bat'));
-      results['chaos-harness'].scriptCount = scripts.length;
-      results['chaos-harness'].scripts = scripts;
-    } catch { /* skip */ }
-  }
-
+  results.scannedAt = new Date().toISOString();
   return results;
 }
 
@@ -265,110 +142,79 @@ function detectComponents(projectRoot = PROJECT_ROOT) {
 // Execution Planning
 // ============================================================
 
-/**
- * Given user input and detected components, determine the optimal
- * execution path. Returns a structured plan.
- */
-function planExecution(input, components) {
-  const detected = Object.values(components).filter(c => c.detected);
+function planExecution(input, components, projectRoot = PROJECT_ROOT) {
+  const detected = Object.entries(components).filter(([k, v]) => k !== 'scannedAt' && v?.detected);
   const plan = {
     input,
     inputSummary: summarizeInput(input),
     timestamp: new Date().toISOString(),
-    availableComponents: detected.map(c => c.name),
+    availableComponents: detected.map(([k]) => k),
     steps: [],
     executionMode: 'sequential',
     warnings: [],
   };
 
-  // Determine execution mode based on available components
-  const hasSuperpowers = !!components.superpowers?.detected;
-  const hasOpenSpec = !!components.openspec?.detected;
-  const hasEverything = !!components['everything-claude-code']?.detected;
-  const hasHarness = !!components['chaos-harness']?.detected;
+  const has = (key) => components[key]?.detected;
 
-  // If superpowers + multiple agents available → parallel mode
-  if (hasSuperpowers && hasHarness) {
+  // Determine execution mode
+  if (has('superpowers') && has('chaos-harness')) {
     plan.executionMode = 'parallel-agent';
+  } else if (has('openspec') && has('chaos-harness')) {
+    plan.executionMode = 'spec-driven';
   }
 
-  // ---- Step 1: Input Analysis (chaos-harness always) ----
-  if (hasHarness) {
-    plan.steps.push({
-      phase: 'input-analysis',
-      component: 'chaos-harness',
-      action: 'intent-classification',
-      script: 'intent-analyzer.mjs',
-      description: 'Analyze user intent and classify request type',
-      required: true,
-    });
-
-    plan.steps.push({
-      phase: 'iron-law-check',
-      component: 'chaos-harness',
-      action: 'constraint-validation',
-      script: 'iron-law-check.mjs',
-      description: 'Validate request against iron laws',
-      required: true,
-    });
-
+  // Step 1: chaos-harness always runs (Gate init + iron laws)
+  if (has('chaos-harness')) {
     plan.steps.push({
       phase: 'gate-initialization',
       component: 'chaos-harness',
       action: 'gate-init',
       script: 'gate-machine.mjs',
-      description: 'Initialize or resume Gate state machine',
+      description: 'Initialize Gate state machine',
       required: true,
     });
   }
 
-  // ---- Step 2: Spec / Proposal (openspec) ----
-  if (hasOpenSpec) {
+  // Step 2: OpenSpec change proposal (if available and intent is create/modify)
+  const intent = plan.inputSummary;
+  if (has('openspec') && (intent.isCreate || intent.isModify)) {
     plan.steps.push({
       phase: 'change-proposal',
       component: 'openspec',
-      action: 'opsx-propose',
-      description: 'Generate change proposal via OpenSpec workflow',
+      action: 'propose',
+      script: null, // handled by adapter
+      description: 'Generate change proposal via OpenSpec',
       required: false,
-      dependsOn: 'input-analysis',
     });
   }
 
-  // ---- Step 3: Task Decomposition (superpowers) ----
-  if (hasSuperpowers) {
+  // Step 3: Superpowers subagent dispatch (if available and intent is create/modify/test)
+  if (has('superpowers') && (intent.isCreate || intent.isModify || intent.isTest)) {
     plan.steps.push({
       phase: 'task-decomposition',
       component: 'superpowers',
       action: 'subagent-driven-development',
+      script: null, // handled by adapter
       description: 'Decompose task into subagent-driven subtasks',
       required: false,
-      dependsOn: hasOpenSpec ? 'change-proposal' : 'input-analysis',
-    });
-
-    plan.steps.push({
-      phase: 'parallel-execution',
-      component: 'superpowers',
-      action: 'dispatch-parallel-agents',
-      description: 'Dispatch parallel agents for independent subtasks',
-      required: false,
-      dependsOn: 'task-decomposition',
+      dependsOn: has('openspec') ? 'change-proposal' : 'gate-initialization',
     });
   }
 
-  // ---- Step 4: Context Enrichment (everything) ----
-  if (hasEverything) {
+  // Step 4: Everything agent/rule injection (if available)
+  if (has('everything')) {
     plan.steps.push({
-      phase: 'context-loading',
-      component: 'everything-claude-code',
-      action: 'load-agent-configs',
-      description: 'Load agent configurations, hooks, and rules',
+      phase: 'context-enrichment',
+      component: 'everything',
+      action: 'recommend-agent',
+      script: null, // handled by adapter
+      description: 'Load agent configs, rules, and recommend best agent',
       required: false,
-      dependsOn: 'input-analysis',
     });
   }
 
-  // ---- Step 5: Gate Validation (chaos-harness) ----
-  if (hasHarness) {
+  // Step 5: Gate verification (chaos-harness always)
+  if (has('chaos-harness')) {
     plan.steps.push({
       phase: 'gate-verification',
       component: 'chaos-harness',
@@ -376,7 +222,6 @@ function planExecution(input, components) {
       script: 'gate-machine.mjs',
       description: 'Verify Gate outputs meet requirements',
       required: true,
-      dependsOn: hasSuperpowers ? 'parallel-execution' : 'input-analysis',
     });
 
     plan.steps.push({
@@ -390,53 +235,31 @@ function planExecution(input, components) {
     });
   }
 
-  // ---- Warnings ----
-  if (!hasSuperpowers && !hasOpenSpec && !hasEverything) {
+  // Warnings
+  if (!has('superpowers') && !has('openspec') && !has('everything')) {
     plan.warnings.push(
       'Only chaos-harness detected. No external plugins found for enhanced workflow. ' +
       'Consider installing superpowers for subagent-driven development.'
     );
   }
 
-  if (!hasHarness) {
-    plan.warnings.push('chaos-harness not detected. Gate validation will be unavailable.');
-  }
-
   return plan;
 }
 
-/**
- * Summarize user input into a classification.
- */
 function summarizeInput(input) {
   if (!input || input.length < 2) {
-    return { type: 'empty', length: input?.length || 0 };
+    return { type: 'empty', isCreate: false, isModify: false, isBug: false, isReview: false, isTest: false, length: input?.length || 0 };
   }
-
   const lower = input.toLowerCase();
-  const type = classifyIntent(lower);
-
   return {
-    type,
+    isCreate: /创建|新建|写一个|做|开发|搭建|实现|create|build|develop|implement/i.test(lower),
+    isModify: /修改|改|替换|换|重构|迁移|refactor|migrate|update/i.test(lower),
+    isBug: /bug|错误|报错|修复|修|fix|error|fail/i.test(lower),
+    isReview: /评审|审查|检查|review|audit/i.test(lower),
+    isTest: /测试|test|用例|覆盖率|coverage/i.test(lower),
     length: input.length,
     keywords: extractKeywords(lower),
   };
-}
-
-function classifyIntent(lower) {
-  if (/create|build|develop|implement|write|make|add|design|architect/i.test(lower)) {
-    if (/bug|fix|error|fail|broken/i.test(lower)) return 'bug-fix';
-    if (/test|spec|e2e|coverage/i.test(lower)) return 'testing';
-    if (/deploy|release|publish|ci|cd/i.test(lower)) return 'deployment';
-    if (/ui|frontend|page|component|style/i.test(lower)) return 'ui-development';
-    if (/api|endpoint|server|backend|database/i.test(lower)) return 'backend-development';
-    return 'feature-development';
-  }
-  if (/review|audit|inspect|check|analyze/i.test(lower)) return 'review';
-  if (/refactor|migrate|upgrade|update|improve/i.test(lower)) return 'refactoring';
-  if (/explain|how|what|why|help/i.test(lower)) return 'question';
-  if (/plan|design|spec|proposal|proposal/i.test(lower)) return 'planning';
-  return 'general';
 }
 
 function extractKeywords(lower) {
@@ -447,10 +270,7 @@ function extractKeywords(lower) {
     /\b(test|e2e|coverage)\b/gi,
     /\b(deploy|release|publish)\b/gi,
     /\b(refactor|migrate)\b/gi,
-    /\b(ui|frontend|frontend)\b/gi,
-    /\b(api|backend|database)\b/gi,
   ];
-
   const found = [];
   for (const pattern of keywordPatterns) {
     const matches = lower.match(pattern);
@@ -460,50 +280,158 @@ function extractKeywords(lower) {
 }
 
 // ============================================================
-// Orchestration — Execute the Plan
+// Orchestration — Execute the Plan via Adapters
 // ============================================================
 
 /**
- * Main orchestration function: detect → plan → execute → report.
- * This is the entry point for `orchestrator.mjs orchestrate "input"`.
+ * Execute a single step by calling the corresponding adapter.
+ * Uses spawnSync for adapter scripts (avoids async import issues).
+ *
+ * CLI conventions per adapter:
+ *   superpowers: detect | capabilities | dispatch <taskDesc> [root]
+ *   openspec:    detect | capabilities | propose "<idea>" [root]
+ *   everything:  auto-run on invoke (no sub-commands), reads projectRoot as argv[1]
  */
+function executeStep(step, projectRoot) {
+  if (step.script) {
+    // Local chaos-harness script
+    const scriptPath = join(SCRIPTS_DIR, step.script);
+    if (!existsSync(scriptPath)) {
+      return { step: step.phase, status: 'skipped', message: `Script not found: ${step.script}` };
+    }
+    try {
+      const result = spawnSync('node', [scriptPath], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 30000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      return {
+        step: step.phase,
+        status: result.status === 0 ? 'completed' : 'failed',
+        output: result.stdout?.trim() || null,
+        error: result.stderr?.trim() || null,
+      };
+    } catch (err) {
+      return { step: step.phase, status: 'failed', error: err.message?.slice(0, 500) };
+    }
+  }
+
+  // Adapter-based step — call via spawnSync
+  if (step.component === 'openspec') {
+    const adapterPath = join(INTEGRATIONS_DIR, 'openspec', 'adapter.mjs');
+    if (!existsSync(adapterPath)) {
+      return { step: step.phase, status: 'skipped', message: 'openspec adapter not found' };
+    }
+    // CLI: propose "<idea>" [root]
+    const idea = step.description || step.input || 'unknown';
+    try {
+      const result = spawnSync('node', [adapterPath, step.action, idea, projectRoot], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 60000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      return {
+        step: step.phase,
+        status: result.status === 0 ? 'completed' : 'skipped',
+        output: result.stdout?.trim()?.slice(0, 2000) || null,
+      };
+    } catch (err) {
+      return { step: step.phase, status: 'skipped', message: err.message?.slice(0, 200) };
+    }
+  }
+
+  if (step.component === 'superpowers') {
+    const adapterPath = join(INTEGRATIONS_DIR, 'superpowers', 'adapter.mjs');
+    if (!existsSync(adapterPath)) {
+      return { step: step.phase, status: 'skipped', message: 'superpowers adapter not found' };
+    }
+    // CLI: dispatch <taskDesc> [root]
+    const taskDesc = step.description || step.input || 'unknown';
+    try {
+      const result = spawnSync('node', [adapterPath, step.action, taskDesc, projectRoot], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 30000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      return {
+        step: step.phase,
+        status: result.status === 0 ? 'completed' : 'skipped',
+        output: result.stdout?.trim()?.slice(0, 2000) || null,
+      };
+    } catch (err) {
+      return { step: step.phase, status: 'skipped', message: err.message?.slice(0, 200) };
+    }
+  }
+
+  if (step.component === 'everything') {
+    const adapterPath = join(INTEGRATIONS_DIR, 'everything', 'adapter.mjs');
+    if (!existsSync(adapterPath)) {
+      return { step: step.phase, status: 'skipped', message: 'everything adapter not found' };
+    }
+    // CLI: auto-run on invoke, projectRoot as argv[1]
+    try {
+      const result = spawnSync('node', [adapterPath, projectRoot], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 30000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      return {
+        step: step.phase,
+        status: result.status === 0 ? 'completed' : 'skipped',
+        output: result.stdout?.trim()?.slice(0, 2000) || null,
+      };
+    } catch (err) {
+      return { step: step.phase, status: 'skipped', message: err.message?.slice(0, 200) };
+    }
+  }
+
+  return { step: step.phase, status: 'skipped', message: 'Unknown component' };
+}
+
 function orchestrate(projectRoot, input) {
   const state = readOrchestratorState();
 
-  // Phase 1: Detect
+  // Phase 1: Detect (via adapters + registry)
   const components = detectComponents(projectRoot);
   state.lastDetection = {
     timestamp: new Date().toISOString(),
     components: Object.fromEntries(
-      Object.entries(components).map(([k, v]) => [k, { detected: v.detected, path: v.path }])
+      Object.entries(components)
+        .filter(([k, v]) => k !== 'scannedAt')
+        .map(([k, v]) => [k, { detected: v.detected, path: v.path }])
     ),
   };
 
   // Phase 2: Plan
-  const plan = planExecution(input, components);
+  const plan = planExecution(input, components, projectRoot);
   state.lastPlan = plan;
 
-  // Phase 3: Execute scripts that are available
-  const executionResults = executePlan(projectRoot, plan, components);
+  // Phase 3: Execute via adapters
+  const executionResults = [];
+  for (const step of plan.steps) {
+    const result = executeStep(step, projectRoot);
+    executionResults.push(result);
+  }
   state.lastExecution = executionResults;
 
-  // Phase 4: Recovery check if there were failures
+  // Phase 4: Recovery check
   const failures = executionResults.filter(r => r.status === 'failed');
   if (failures.length > 0) {
-    const recoveryResult = attemptRecovery(projectRoot, components);
-    state.lastRecovery = recoveryResult;
+    state.lastRecovery = attemptRecovery(projectRoot);
   }
 
-  // Persist state
   writeOrchestratorState(state);
 
-  // Emit result
   emitMarker({
     type: 'orchestration_complete',
     mode: plan.executionMode,
-    components: Object.values(components)
-      .filter(c => c.detected)
-      .map(c => c.name),
+    components: Object.entries(components)
+      .filter(([k, v]) => k !== 'scannedAt' && v?.detected)
+      .map(([k]) => k),
     stepsExecuted: executionResults.length,
     stepsFailed: failures.length,
     recoveryNeeded: failures.length > 0,
@@ -513,91 +441,21 @@ function orchestrate(projectRoot, input) {
   return { components, plan, executionResults, state };
 }
 
-/**
- * Execute a plan by running the corresponding scripts.
- */
-function executePlan(projectRoot, plan, components) {
-  const results = [];
-
-  for (const step of plan.steps) {
-    if (!step.script) {
-      // Non-script step (e.g., external plugin action) — record as pending
-      results.push({
-        step: step.phase,
-        component: step.component,
-        action: step.action,
-        status: 'pending-external',
-        message: `Requires ${step.component} integration (not a local script)`,
-      });
-      continue;
-    }
-
-    const scriptPath = join(SCRIPTS_DIR, step.script);
-    if (!existsSync(scriptPath)) {
-      results.push({
-        step: step.phase,
-        component: step.component,
-        action: step.action,
-        status: 'skipped',
-        message: `Script not found: ${scriptPath}`,
-      });
-      continue;
-    }
-
-    try {
-      const output = execSync(`node "${scriptPath}"`, {
-        cwd: projectRoot,
-        encoding: 'utf8',
-        timeout: 30000,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      }).trim();
-
-      results.push({
-        step: step.phase,
-        component: step.component,
-        action: step.action,
-        status: 'completed',
-        output: output || null,
-      });
-    } catch (err) {
-      results.push({
-        step: step.phase,
-        component: step.component,
-        action: step.action,
-        status: 'failed',
-        error: err.message?.slice(0, 500) || String(err),
-        stderr: err.stderr?.toString().slice(0, 500),
-      });
-    }
-  }
-
-  return results;
-}
-
-/**
- * Attempt recovery after execution failures.
- */
-function attemptRecovery(projectRoot, components) {
+function attemptRecovery(projectRoot) {
   const recoveryScript = join(SCRIPTS_DIR, 'gate-recovery.mjs');
-
   if (!existsSync(recoveryScript)) {
     return { status: 'unavailable', message: 'gate-recovery.mjs not found' };
   }
-
   try {
-    const output = execSync(`node "${recoveryScript}" --recover`, {
+    const result = spawnSync('node', [recoveryScript, '--recover'], {
       cwd: projectRoot,
       encoding: 'utf8',
       timeout: 30000,
       stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim();
-
-    return { status: 'completed', output: output || null };
+    });
+    return { status: result.status === 0 ? 'completed' : 'failed', output: result.stdout?.trim() };
   } catch (err) {
-    return {
-      status: 'failed',
-      error: err.message?.slice(0, 500) || String(err),
-    };
+    return { status: 'failed', error: err.message?.slice(0, 500) };
   }
 }
 
@@ -643,48 +501,41 @@ function writeOrchestratorState(state) {
 // Report
 // ============================================================
 
-/**
- * Generate a human-readable report of detected components and capabilities.
- */
-function report(components) {
+function generateReport(components) {
   if (!components) {
     components = detectComponents();
   }
 
-  const detected = Object.values(components).filter(c => c.detected);
-  const undetected = Object.values(components).filter(c => !c.detected);
+  const detected = Object.entries(components)
+    .filter(([k, v]) => k !== 'scannedAt' && v?.detected);
+  const unavailable = Object.entries(components)
+    .filter(([k, v]) => k !== 'scannedAt' && !v?.detected);
 
   const report = {
     timestamp: new Date().toISOString(),
     summary: {
-      total: Object.keys(components).length,
+      total: Object.keys(components).filter(k => k !== 'scannedAt').length,
       detected: detected.length,
-      unavailable: undetected.length,
+      unavailable: unavailable.length,
     },
-    detected: detected.map(c => ({
-      name: c.name,
-      label: c.label,
+    detected: detected.map(([key, c]) => ({
+      name: key,
       path: c.path,
-      capabilities: c.capabilities,
-      capabilityCount: c.capabilities.length,
+      version: c.version || null,
+      source: c.source || null,
+      capabilities: c.capabilities || [],
     })),
-    unavailable: undetected.map(c => c.name),
-    allCapabilities: detected.flatMap(c => c.capabilities),
-    recommendedWorkflow: determineRecommendedWorkflow(detected),
+    unavailable: unavailable.map(([key]) => key),
+    allCapabilities: detected.flatMap(([, c]) => c.capabilities || []),
+    recommendedWorkflow: determineRecommendedWorkflow(detected.map(([k]) => k)),
   };
 
-  emitMarker({
-    type: 'component_report',
-    ...report,
-  });
-
+  emitMarker({ type: 'component_report', ...report });
   return report;
 }
 
-function determineRecommendedWorkflow(detected) {
-  const names = detected.map(c => c.name);
-
-  if (names.includes('superpowers') && names.includes('openspec') && names.includes('chaos-harness')) {
+function determineRecommendedWorkflow(detectedNames) {
+  if (detectedNames.includes('superpowers') && detectedNames.includes('openspec') && detectedNames.includes('chaos-harness')) {
     return {
       mode: 'full-orchestrated',
       description: 'Spec-driven, subagent-executed, gate-validated',
@@ -695,8 +546,7 @@ function determineRecommendedWorkflow(detected) {
       ],
     };
   }
-
-  if (names.includes('superpowers') && names.includes('chaos-harness')) {
+  if (detectedNames.includes('superpowers') && detectedNames.includes('chaos-harness')) {
     return {
       mode: 'agent-driven-gated',
       description: 'Subagent execution with gate validation',
@@ -707,8 +557,7 @@ function determineRecommendedWorkflow(detected) {
       ],
     };
   }
-
-  if (names.includes('openspec') && names.includes('chaos-harness')) {
+  if (detectedNames.includes('openspec') && detectedNames.includes('chaos-harness')) {
     return {
       mode: 'spec-driven-gated',
       description: 'Spec-driven with gate validation',
@@ -719,8 +568,7 @@ function determineRecommendedWorkflow(detected) {
       ],
     };
   }
-
-  if (names.includes('chaos-harness')) {
+  if (detectedNames.includes('chaos-harness')) {
     return {
       mode: 'gate-validated',
       description: 'Gate-validated sequential execution',
@@ -731,7 +579,6 @@ function determineRecommendedWorkflow(detected) {
       ],
     };
   }
-
   return {
     mode: 'manual',
     description: 'No plugins detected. Manual execution only.',
@@ -750,19 +597,20 @@ function main() {
   switch (command) {
     case 'orchestrate':
       if (!input) {
-        emitMarker({ type: 'error', message: 'orchestrate requires user input as argument' });
+        emitMarker({ type: 'error', message: 'orchestrate requires user input' });
         process.exit(1);
       }
       orchestrate(PROJECT_ROOT, input);
       break;
 
-    case 'detect':
+    case 'detect': {
       const components = detectComponents(PROJECT_ROOT);
       emitMarker({ type: 'detection', components });
       break;
+    }
 
     case 'report':
-      report();
+      generateReport();
       break;
 
     case 'status': {
@@ -773,12 +621,11 @@ function main() {
         runCount: state.runCount || 0,
         lastRun: state.updatedAt || null,
         components: Object.fromEntries(
-          Object.entries(components).map(([k, v]) => [k, v.detected])
+          Object.entries(components)
+            .filter(([k, v]) => k !== 'scannedAt')
+            .map(([k, v]) => [k, v.detected])
         ),
-        lastPlan: state.lastPlan ? {
-          mode: state.lastPlan.executionMode,
-          steps: state.lastPlan.steps.length,
-        } : null,
+        lastPlan: state.lastPlan ? { mode: state.lastPlan.executionMode, steps: state.lastPlan.steps.length } : null,
         lastExecution: state.lastExecution ? {
           total: state.lastExecution.length,
           completed: state.lastExecution.filter(r => r.status === 'completed').length,
@@ -789,18 +636,18 @@ function main() {
     }
 
     case 'recover': {
-      const recoveryResult = attemptRecovery(PROJECT_ROOT, detectComponents(PROJECT_ROOT));
+      const recoveryResult = attemptRecovery(PROJECT_ROOT);
       emitMarker({ type: 'recovery', ...recoveryResult });
       break;
     }
 
     case 'plan': {
       if (!input) {
-        emitMarker({ type: 'error', message: 'plan requires user input as argument' });
+        emitMarker({ type: 'error', message: 'plan requires user input' });
         process.exit(1);
       }
       const components = detectComponents(PROJECT_ROOT);
-      const plan = planExecution(input, components);
+      const plan = planExecution(input, components, PROJECT_ROOT);
       emitMarker({ type: 'plan', ...plan });
       break;
     }
@@ -811,22 +658,26 @@ function main() {
         type: 'help',
         version: '1.4.0',
         commands: {
-          'orchestrate <input>': 'Full orchestration cycle: detect → plan → execute → report',
-          'detect': 'Scan for installed plugins and capabilities',
+          'orchestrate <input>': 'Full cycle: detect → plan → execute → report',
+          'detect': 'Scan for installed plugins via adapters',
           'report': 'Generate component capability report',
-          'status': 'Show orchestrator state and last execution results',
+          'status': 'Show orchestrator state and last execution',
           'recover': 'Attempt recovery from last failure',
-          'plan <input>': 'Generate execution plan without running it',
+          'plan <input>': 'Generate execution plan without running',
+        },
+        integrations: {
+          superpowers: existsSync(join(INTEGRATIONS_DIR, 'superpowers', 'adapter.mjs')) ? 'loaded' : 'not found',
+          openspec: existsSync(join(INTEGRATIONS_DIR, 'openspec', 'adapter.mjs')) ? 'loaded' : 'not found',
+          everything: existsSync(join(INTEGRATIONS_DIR, 'everything', 'adapter.mjs')) ? 'loaded' : 'not found',
+          registry: existsSync(join(INTEGRATIONS_DIR, 'registry.mjs')) ? 'loaded' : 'not found',
         },
       });
       break;
   }
 }
 
-// Run if called directly
 if (process.argv[1] && process.argv[1].endsWith('orchestrator.mjs')) {
   main();
 }
 
-// Export for programmatic use
-export { detectComponents, planExecution, orchestrate, report as generateReport };
+export { detectComponents, planExecution, orchestrate, generateReport };

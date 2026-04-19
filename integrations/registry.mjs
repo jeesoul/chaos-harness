@@ -263,34 +263,36 @@ function getBestPath(userInput, projectRoot = PROJECT_ROOT) {
   };
 }
 
-// === CLI ===
-const command = process.argv[2];
-const arg = process.argv.slice(3).join(' ');
-
-switch (command) {
-  case 'scan': {
-    const registry = scanAll(arg || PROJECT_ROOT);
-    console.log(JSON.stringify(registry, null, 2));
-    break;
-  }
-  case 'capabilities': {
-    const caps = getCapabilities(arg || PROJECT_ROOT);
-    console.log(JSON.stringify(caps, null, 2));
-    break;
-  }
-  case 'best-path': {
-    if (!arg) {
-      console.error('Usage: node registry.mjs best-path <user input>');
-      process.exit(1);
-    }
-    const path = getBestPath(arg);
-    console.log(JSON.stringify(path, null, 2));
-    break;
-  }
-  default:
-    console.log('Usage: node integrations/registry.mjs <command> [args]');
-    console.log('Commands: scan, capabilities, best-path');
-    process.exit(1);
-}
-
 export { scanAll, getCapabilities, getBestPath, detectSuperpowers, detectOpenSpec, detectEverything, detectChaosHarness };
+
+// === CLI ===
+if (process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('integrations/registry.mjs')) {
+  const command = process.argv[2];
+  const arg = process.argv.slice(3).join(' ');
+
+  switch (command) {
+    case 'scan': {
+      const registry = scanAll(arg || PROJECT_ROOT);
+      console.log(JSON.stringify(registry, null, 2));
+      break;
+    }
+    case 'capabilities': {
+      const caps = getCapabilities(arg || PROJECT_ROOT);
+      console.log(JSON.stringify(caps, null, 2));
+      break;
+    }
+    case 'best-path': {
+      if (!arg) {
+        console.error('Usage: node registry.mjs best-path <user input>');
+        process.exit(1);
+      }
+      const path = getBestPath(arg);
+      console.log(JSON.stringify(path, null, 2));
+      break;
+    }
+    default:
+      console.log('Usage: node integrations/registry.mjs <command> [args]');
+      console.log('Commands: scan, capabilities, best-path');
+      process.exit(1);
+  }
+}
