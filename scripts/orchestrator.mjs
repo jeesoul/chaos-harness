@@ -347,10 +347,10 @@ function executeStep(step, projectRoot) {
     if (!existsSync(adapterPath)) {
       return { step: step.phase, status: 'skipped', message: 'superpowers adapter not found' };
     }
-    // CLI: dispatch <taskDesc> [root]
+    // CLI: dispatch <root> <taskDesc>
     const taskDesc = step.description || step.input || 'unknown';
     try {
-      const result = spawnSync('node', [adapterPath, step.action, taskDesc, projectRoot], {
+      const result = spawnSync('node', [adapterPath, step.action, projectRoot, taskDesc], {
         cwd: projectRoot,
         encoding: 'utf8',
         timeout: 30000,

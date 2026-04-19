@@ -238,10 +238,23 @@ export function detect(root = PROJECT_ROOT) {
   const version = npmVersion || cliVersion || (detected ? 'local' : 'not-installed');
   const installPath = npmInstallPath || locations.find(l => l.available)?.path || '';
 
+  // Built-in fallback: chaos-harness always provides change proposal capability
+  // via .chaos-harness/gates/ directory even without external openspec
+  const harnessGatesDir = join(root, '.chaos-harness', 'gates');
+  const hasBuiltInProposal = existsSync(harnessGatesDir);
+  if (hasBuiltInProposal && !detected) {
+    locations.push({
+      type: 'built-in-fallback',
+      path: harnessGatesDir,
+      available: true,
+      details: { note: 'Built-in change proposal via chaos-harness gate system' },
+    });
+  }
+
   return {
     name: 'openspec',
-    detected,
-    version,
+    detected: detected || hasBuiltInProposal,
+    version: hasBuiltInProposal && !detected ? 'built-in' : version,
     installPath,
     locations,
     cliAvailable: !!cliVersion,

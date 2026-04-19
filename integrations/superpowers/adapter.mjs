@@ -328,89 +328,150 @@ export function selectModel(allowedModels, taskDescription) {
  */
 export function dispatch(taskDescription, options = {}, root = PROJECT_ROOT) {
   const capabilities = getCapabilities(root);
+  const externalAvailable = capabilities.available;
 
-  if (!capabilities.available) {
-    return {
-      success: false,
-      error: 'superpowers not detected. Run `npm install superpowers` or add skills to your project.',
-      suggestion: 'https://github.com/obra/superpowers',
-    };
-  }
-
-  // 匹配最佳 skill
+  // 匹配最佳 skill — 外部优先，无则用内置 fallback
   let matchedSkill;
-  if (options.skill) {
+  if (options.skill && capabilities.capabilities.length > 0) {
     matchedSkill = capabilities.capabilities.find(c => c.id === `superpowers:${options.skill}`);
-  } else if (options.category) {
+  } else if (options.category && capabilities.capabilities.length > 0) {
     matchedSkill = capabilities.capabilities.find(c => c.category === options.category);
-  } else {
-    // 按关键词匹配
-    const task = taskDescription.toLowerCase();
-    const scored = capabilities.capabilities.map(c => {
-      let score = 0;
-      const id = c.id.toLowerCase();
-      const desc = (c.description || '').toLowerCase();
-      const name = (c.name || '').toLowerCase();
-
-      // 完全匹配加分
-      if (id.includes(task) || task.includes(id.split(':').pop())) score += 10;
-      // 描述关键词匹配
-      const keywords = task.split(/\s+/).filter(w => w.length > 3);
-      for (const kw of keywords) {
-        if (desc.includes(kw)) score += 2;
-        if (name.includes(kw)) score += 3;
-      }
-      return { ...c, score };
-    });
-    scored.sort((a, b) => b.score - a.score);
-    matchedSkill = scored[0];
   }
 
+  // 未匹配到外部 skill，使用内置任务拆解引擎
   if (!matchedSkill) {
-    return {
-      success: false,
-      error: `No matching superpowers skill found for: "${taskDescription}"`,
-      availableCapabilities: capabilities.capabilities.map(c => ({
-        id: c.id,
-        name: c.name,
-        description: c.description,
-      })),
-    };
+    matchedSkill = dispatchBuiltIn(taskDescription, options, root);
   }
 
   // 模型选择
   const model = options.model || selectModel(
-    matchedSkill.models,
+    matchedSkill.models || ['sonnet'],
     `${matchedSkill.id} ${taskDescription}`
   );
 
   // 构建 dispatch 指令
   const dispatchPayload = {
-    skill: matchedSkill.id.split(':').pop(),
+    skill: matchedSkill.id,
     task: taskDescription,
     model,
     category: matchedSkill.category,
     requiresReview: matchedSkill.requiresReview,
+    source: externalAvailable ? 'external-superpowers' : 'built-in-fallback',
     context: {
       projectRoot: root,
       timestamp: new Date().toISOString(),
       ...options.context,
     },
-    // Claude Code Agent tool 调用指令
-    agentInstruction: `Invoke the superpowers skill "${matchedSkill.id.split(':').pop()}" with the following task:
-
-Task: ${taskDescription}
-Model: ${model}
-Project: ${root}
-
-Follow the skill's instructions from ${matchedSkill.skillPath}`,
+    agentInstruction: buildAgentInstruction(matchedSkill, taskDescription, model, root),
   };
 
   return {
     success: true,
     dispatched: dispatchPayload,
-    note: 'To execute, pass agentInstruction to Claude Code Agent tool or run manually.',
+    note: externalAvailable
+      ? 'Using external superpowers skill'
+      : 'Using built-in task decomposition (install superpowers for enhanced subagent dispatch)',
   };
+}
+
+/**
+ * 内置任务拆解引擎 — 当外部 superpowers 不可用时使用
+ * 按任务意图分类，匹配最优处理策略
+ */
+function dispatchBuiltIn(taskDescription, options = {}, root = PROJECT_ROOT) {
+  const task = taskDescription.toLowerCase();
+
+  // 内置策略表
+  const BUILT_IN_STRATEGIES = {
+    'bug-fix': {
+      id: 'built-in:systematic-debugging',
+      name: '系统性调试',
+      description: '内置 Bug 修复流程：复现→定位→修复→验证',
+      category: 'debugging',
+      models: ['sonnet', 'opus'],
+      requiresReview: true,
+      steps: ['reproduce', 'isolate', 'fix', 'verify'],
+    },
+    'feature-create': {
+      id: 'built-in:feature-development',
+      name: '功能开发',
+      description: '内置功能开发流程：设计→实现→测试→提交',
+      category: 'development',
+      models: ['sonnet'],
+      requiresReview: false,
+      steps: ['design', 'implement', 'test', 'commit'],
+    },
+    'refactor': {
+      id: 'built-in:refactoring',
+      name: '重构',
+      description: '内置重构流程：分析→拆分→重构→验证',
+      category: 'development',
+      models: ['sonnet', 'opus'],
+      requiresReview: false,
+      steps: ['analyze', 'split', 'refactor', 'verify'],
+    },
+    'testing': {
+      id: 'built-in:test-development',
+      name: '测试开发',
+      description: '内置测试开发：用例设计→编写→运行→覆盖率检查',
+      category: 'quality',
+      models: ['sonnet', 'haiku'],
+      requiresReview: false,
+      steps: ['design-cases', 'write', 'run', 'coverage-check'],
+    },
+    'review': {
+      id: 'built-in:code-review',
+      name: '代码评审',
+      description: '内置代码评审：规范检查→逻辑检查→安全检查→建议',
+      category: 'review',
+      models: ['sonnet'],
+      requiresReview: false,
+      steps: ['standards', 'logic', 'security', 'suggestions'],
+    },
+    'planning': {
+      id: 'built-in:task-planning',
+      name: '任务规划',
+      description: '内置任务规划：意图分析→步骤拆解→依赖排序',
+      category: 'planning',
+      models: ['sonnet', 'opus'],
+      requiresReview: false,
+      steps: ['analyze', 'decompose', 'order'],
+    },
+  };
+
+  // 意图分类
+  if (/bug|fix|error|fail|broken|修复|错误/.test(task)) return BUILT_IN_STRATEGIES['bug-fix'];
+  if (/create|build|develop|implement|new|add|创建|实现/.test(task)) return BUILT_IN_STRATEGIES['feature-create'];
+  if (/refactor|migrate|restructur|reorganize|重构|迁移/.test(task)) return BUILT_IN_STRATEGIES['refactor'];
+  if (/test|e2e|coverage|spec|测试|用例/.test(task)) return BUILT_IN_STRATEGIES['testing'];
+  if (/review|audit|inspect|评审|审查/.test(task)) return BUILT_IN_STRATEGIES['review'];
+  if (/plan|design|architect|规划|设计/.test(task)) return BUILT_IN_STRATEGIES['planning'];
+
+  // 默认策略
+  return {
+    id: 'built-in:general',
+    name: '通用开发',
+    description: '内置通用开发流程：分析→实现→验证',
+    category: 'development',
+    models: ['sonnet'],
+    requiresReview: false,
+    steps: ['analyze', 'implement', 'verify'],
+  };
+}
+
+/**
+ * 构建 Agent 指令 — 外部 skill 和内置策略统一格式
+ */
+function buildAgentInstruction(skill, taskDescription, model, root) {
+  const steps = skill.steps ? skill.steps.join(' → ') : 'analyze → implement → verify';
+  return `Task: ${taskDescription}
+Category: ${skill.category}
+Model: ${model}
+Project: ${root}
+Strategy: ${skill.name}
+Steps: ${steps}
+
+Follow the built-in ${skill.category} workflow. ${skill.description}`;
 }
 
 // ─── CLI 入口 ──────────────────────────────────────────────────────────────
@@ -453,7 +514,7 @@ function main() {
 }
 
 // CLI mode: run when executed directly
-if (process.argv[1] && process.argv[1].includes('superpowers/adapter')) {
+if (process.argv[1] && /superpowers[\\/]adapter/.test(process.argv[1])) {
   main();
 }
 

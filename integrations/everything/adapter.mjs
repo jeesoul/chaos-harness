@@ -18,6 +18,7 @@
  */
 
 import { readFile, readdir, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
 // ---------------------------------------------------------------------------
@@ -373,16 +374,46 @@ export async function detect(projectRoot) {
 
   const detected = agentNames.length > 0 || ruleNames.length > 0;
 
+  // Built-in fallback: chaos-harness always provides rules and hooks
+  // via its own .chaos-harness/ and skills/ directories
+  const harnessStateFile = join(projectRoot, '.chaos-harness', 'state.json');
+  const hasBuiltInState = existsSync(harnessStateFile);
+  const hasSkillsDir = existsSync(join(projectRoot, 'skills'));
+
+  let builtInAgents = [];
+  let builtInRules = [];
+
+  if (!detected && (hasBuiltInState || hasSkillsDir)) {
+    // Built-in agents from chaos-harness skills
+    if (hasSkillsDir) {
+      try {
+        const skillDirs = readdirSync(join(projectRoot, 'skills'), { withFileTypes: true })
+          .filter(d => d.isDirectory() && existsSync(join(projectRoot, 'skills', d.name, 'SKILL.md')))
+          .map(d => d.name);
+        builtInAgents = skillDirs.map(s => `chaos-harness:${s}`);
+      } catch { /* skip */ }
+    }
+    // Built-in rules from iron laws and gate system
+    builtInRules = [
+      'IL001: version-directory-lock',
+      'IL002: harness-requires-scan',
+      'IL003: no-completion-without-verification',
+      'IL004: no-version-change-without-consent',
+      'IL005: no-high-risk-config-without-approval',
+    ];
+  }
+
   return {
-    detected,
-    agents: agentNames,
-    rules: ruleNames,
+    detected: detected || hasBuiltInState || hasSkillsDir,
+    agents: [...agentNames, ...builtInAgents],
+    rules: [...ruleNames, ...builtInRules],
     contexts: contextNames,
-    hasHooks: hookEvents.length > 0,
-    hookEvents,
-    agentCount: agentNames.length,
-    ruleCount: ruleNames.length,
+    hasHooks: hookEvents.length > 0 || true, // chaos-harness always has hooks
+    hookEvents: hookEvents.length > 0 ? hookEvents : ['SessionStart', 'PreToolUse', 'PostToolUse', 'Stop'],
+    agentCount: agentNames.length + builtInAgents.length,
+    ruleCount: ruleNames.length + builtInRules.length,
     contextCount: contextNames.length,
+    source: detected ? 'external-everything' : 'built-in-fallback',
   };
 }
 
