@@ -1,24 +1,30 @@
 #!/usr/bin/env node
 /**
- * openspec adapter — chaos-harness 对 fission-ai/openspec 的能力桥接
+ * openspec adapter — chaos-harness 对 OpenSpec schema-driven artifact DAG 的能力桥接
  *
- * 检测 OpenSpec 是否安装，输出可调度能力列表，提供 propose/apply/archive 调度。
+ * 检测 OpenSpec 是否安装，提供变更提案(propose)、变更应用(apply)、
+ * 状态查询(status)以及 OpenSpec artifact 到 chaos-harness Gate 状态机的映射。
  *
- * 检测方式：
- *   1. openspec/ 目录是否存在（项目内）
- *   2. @fission-ai/openspec npm 包是否安装
- *   3. openspec CLI 是否全局可用
+ * OpenSpec 核心概念：
+ *   - spec: 项目规格定义，存放在 openspec/specs/
+ *   - change: 变更提案，存放在 openspec/changes/<name>/
+ *   - artifact: 变更产物（proposal.md, design.md, tasks.md 等）
+ *   - DAG: artifact 之间的依赖关系图
+ *
+ * CLI 接口：
+ *   openspec status --json              # 查询当前状态
+ *   openspec instructions <id> --json   # 获取变更指令
+ *   openspec propose <idea>             # 创建变更提案
  *
  * 调用:
  *   node integrations/openspec/adapter.mjs detect [projectRoot]
  *   node integrations/openspec/adapter.mjs capabilities [projectRoot]
+ *   node integrations/openspec/adapter.mjs propose "<idea>" [projectRoot]
+ *   node integrations/openspec/adapter.mjs apply <changeName> [projectRoot]
  *   node integrations/openspec/adapter.mjs status [projectRoot]
- *   node integrations/openspec/adapter.mjs propose <title> [projectRoot]
- *   node integrations/openspec/adapter.mjs apply <spec-id> [projectRoot]
- *   node integrations/openspec/adapter.mjs archive <spec-id> [projectRoot]
  */
 
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'node:child_process';
@@ -26,149 +32,235 @@ import { execSync } from 'node:child_process';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = process.argv[3] || dirname(dirname(__dirname));
 
-// ─── 检测 ──────────────────────────────────────────────────────────────────
+// ─── OpenSpec 目录和文件约定 ──────────────────────────────────────────────
 
-/**
- * 检测 OpenSpec 是否可用
- */
-export function detect(root = PROJECT_ROOT) {
-  const openspecDir = join(root, 'openspec');
-  const cliAvailable = checkCliAvailable();
-  const npmInstalled = checkNpmPackage(root);
+const OPSPEC_DIR = 'openspec';
+const CHANGES_DIR = join(OPSPEC_DIR, 'changes');
+const SPECS_DIR = join(OPSPEC_DIR, 'specs');
 
-  const info = {
-    name: 'openspec',
-    available: false,
-    locations: [],
-    version: 'unknown',
-    specCount: 0,
-    specs: [],
-    proposals: [],
-    archived: [],
-  };
+/** 变更提案的标准 artifact 文件 */
+const ARTIFACT_FILES = {
+  proposal: 'proposal.md',
+  design: 'design.md',
+  tasks: 'tasks.md',
+};
 
-  // 检测 1: openspec/ 目录
-  if (existsSync(openspecDir) && statSync(openspecDir).isDirectory()) {
-    info.locations.push({ type: 'directory', path: openspecDir });
-    info.available = true;
-    scanSpecs(openspecDir, info);
+/** Gate 状态机映射表 */
+const GATE_MAP = {
+  'proposal.md': { gate: 'G0', name: '问题定义', description: '明确问题是什么，为什么需要解决' },
+  'design.md': { gate: 'G1', name: '方案设计', description: '确定怎么解决，技术方案设计' },
+  'tasks.md': { gate: 'G2', name: '任务拆分', description: '拆解为可执行的具体任务' },
+};
+
+// ─── 工具函数 ──────────────────────────────────────────────────────────────
+
+/** 将字符串转为 kebab-case */
+function toKebabCase(str) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .substring(0, 60);
+}
+
+/** 安全执行 shell 命令，返回 stdout 或 null */
+function safeExec(cmd, cwd) {
+  try {
+    return execSync(cmd, { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+  } catch {
+    return null;
   }
+}
 
-  // 检测 2: npm 包
-  if (npmInstalled) {
-    info.locations.push({ type: 'npm-package', path: npmInstalled });
-    if (!info.available) info.available = true;
-    info.version = npmInstalled.version || info.version;
+/** 读取文件内容，不存在返回 null */
+function safeRead(filePath) {
+  try {
+    return readFileSync(filePath, 'utf8');
+  } catch {
+    return null;
   }
+}
 
-  // 检测 3: CLI
-  if (cliAvailable) {
-    info.locations.push({ type: 'cli', command: 'openspec' });
-    if (!info.available) info.available = true;
-    const cliVersion = getCliVersion();
-    if (cliVersion) info.version = cliVersion;
-    // CLI 可以补充 spec 信息
-    if (info.specs.length === 0) {
-      try {
-        const statusJson = getCliStatus(root);
-        if (statusJson) {
-          info.specs = statusJson.specs || [];
-          info.proposals = statusJson.proposals || [];
-          info.archived = statusJson.archived || [];
-          info.specCount = info.specs.length;
-        }
-      } catch { /* CLI status not available */ }
+/** 解析 markdown 中的 task 列表项: - [ ] / - [x] */
+function parseTasks(content) {
+  if (!content) return [];
+  const lines = content.split('\n');
+  const tasks = [];
+  for (const line of lines) {
+    const match = line.match(/^\s*-\s*\[([ xX])\]\s+(.+)$/);
+    if (match) {
+      tasks.push({
+        done: match[1].toLowerCase() === 'x',
+        text: match[2].trim(),
+      });
     }
   }
-
-  return info;
+  return tasks;
 }
 
-/** 检查 openspec CLI 是否可用 */
-function checkCliAvailable() {
-  try {
-    execSync('openspec --version', { stdio: 'pipe', encoding: 'utf8' });
-    return true;
-  } catch {
-    return false;
+/** 解析 tasks.md 中的任务分组（标题 + 任务列表） */
+function parseTaskGroups(content) {
+  if (!content) return [];
+  const groups = [];
+  const lines = content.split('\n');
+  let currentGroup = null;
+
+  for (const line of lines) {
+    const groupMatch = line.match(/^(#{2,4})\s+(.+)$/);
+    const taskMatch = line.match(/^\s*-\s*\[([ xX])\]\s+(.+)$/);
+
+    if (groupMatch) {
+      if (currentGroup) groups.push(currentGroup);
+      currentGroup = {
+        title: groupMatch[2].trim(),
+        level: groupMatch[1].length,
+        tasks: [],
+      };
+    } else if (taskMatch && currentGroup) {
+      currentGroup.tasks.push({
+        done: taskMatch[1].toLowerCase() === 'x',
+        text: taskMatch[2].trim(),
+      });
+    }
   }
+  if (currentGroup) groups.push(currentGroup);
+  return groups;
 }
 
-/** 获取 CLI 版本 */
-function getCliVersion() {
-  try {
-    return execSync('openspec --version', { stdio: 'pipe', encoding: 'utf8' }).trim();
-  } catch {
-    return null;
+/** 确保目录存在 */
+function ensureDir(dirPath) {
+  if (!existsSync(dirPath)) {
+    mkdirSync(dirPath, { recursive: true });
   }
+  return dirPath;
 }
 
-/** 通过 CLI 获取状态 */
-function getCliStatus(root) {
-  try {
-    const json = execSync(`openspec status --json 2>/dev/null || openspec status --json 2>nul`, {
-      cwd: root,
-      stdio: 'pipe',
-      encoding: 'utf8',
-      timeout: 10000,
+// ─── 1. 检测 ───────────────────────────────────────────────────────────────
+
+/**
+ * 检测 OpenSpec 是否已安装并可用
+ *
+ * 检测路径：
+ *   1. openspec/ 项目内目录（本地安装）
+ *   2. @fission-ai/openspec npm 包
+ *   3. .claude/skills/openspec-* skill 文件
+ *   4. openspec CLI 全局安装
+ *
+ * @param {string} root - 项目根目录
+ * @returns {{ detected: boolean, version: string, installPath: string, locations: object[] }}
+ */
+export function detect(root = PROJECT_ROOT) {
+  const locations = [];
+
+  // 检测 1: openspec/ 目录
+  const openspecDir = join(root, OPSPEC_DIR);
+  if (existsSync(openspecDir) && statSync(openspecDir).isDirectory()) {
+    const hasChanges = existsSync(join(openspecDir, 'changes'));
+    const hasSpecs = existsSync(join(openspecDir, 'specs'));
+    const hasSchema = existsSync(join(openspecDir, 'schema.yaml'))
+      || existsSync(join(openspecDir, 'schema.json'));
+
+    locations.push({
+      type: 'project-directory',
+      path: openspecDir,
+      available: true,
+      details: { hasChangesDir: hasChanges, hasSpecsDir: hasSpecs, hasSchema },
     });
-    return JSON.parse(json);
-  } catch {
-    return null;
   }
-}
 
-/** 检查 npm 包是否安装 */
-function checkNpmPackage(root) {
-  const pkgPaths = [
+  // 检测 2: @fission-ai/openspec npm 包
+  const npmPkgPaths = [
     join(root, 'node_modules', '@fission-ai', 'openspec', 'package.json'),
     join(root, 'node_modules', 'openspec', 'package.json'),
   ];
-  for (const p of pkgPaths) {
-    if (existsSync(p)) {
+  let npmVersion = null;
+  let npmInstallPath = '';
+  for (const pkgPath of npmPkgPaths) {
+    if (existsSync(pkgPath)) {
       try {
-        return JSON.parse(readFileSync(p, 'utf8'));
+        const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+        npmVersion = pkg.version || 'unknown';
+        npmInstallPath = dirname(pkgPath);
+        locations.push({
+          type: 'npm-package',
+          path: npmInstallPath,
+          available: true,
+          details: { packageName: pkg.name, version: npmVersion },
+        });
+        break;
       } catch { /* skip */ }
     }
   }
-  return null;
-}
 
-/** 扫描 openspec/ 目录中的 spec 文件 */
-function scanSpecs(openspecDir, info) {
-  const scanDir = (subdir, target) => {
-    const dir = join(openspecDir, subdir);
-    if (!existsSync(dir)) return;
+  // 检测 3: .claude/skills/openspec-* skill 文件
+  const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+  const skillSearchDirs = [
+    join(root, '.claude', 'skills'),
+    join(homeDir, '.claude', 'skills'),
+    join(homeDir, '.config', 'claude', 'skills'),
+  ];
+  const skillFiles = [];
+  for (const skillDir of skillSearchDirs) {
+    if (!existsSync(skillDir)) continue;
     try {
-      const entries = readdirSync(dir);
+      const entries = readdirSync(skillDir);
       for (const entry of entries) {
-        const entryPath = join(dir, entry);
-        if (statSync(entryPath).isDirectory()) {
-          const yamlPath = join(entryPath, 'spec.yaml');
-          const mdPath = join(entryPath, 'spec.md');
-          if (existsSync(yamlPath) || existsSync(mdPath)) {
-            target.push({
-              id: entry,
-              name: entry,
-              path: existsSync(yamlPath) ? yamlPath : mdPath,
-              format: existsSync(yamlPath) ? 'yaml' : 'markdown',
-            });
+        if (entry.startsWith('openspec')) {
+          const skillMd = join(skillDir, entry, 'SKILL.md');
+          if (existsSync(skillMd)) {
+            skillFiles.push({ path: skillMd, name: entry });
           }
         }
       }
-    } catch { /* skip unreadable dirs */ }
-  };
+    } catch { /* skip */ }
+  }
+  if (skillFiles.length > 0) {
+    locations.push({
+      type: 'claude-skills',
+      available: true,
+      details: { skillCount: skillFiles.length, skills: skillFiles.map(s => s.name) },
+    });
+  }
 
-  scanDir('specs', info.specs);
-  scanDir('proposals', info.proposals);
-  scanDir('archived', info.archived);
-  info.specCount = info.specs.length;
+  // 检测 4: openspec CLI 全局安装
+  const cliVersion = safeExec('openspec --version', root);
+  if (cliVersion) {
+    locations.push({
+      type: 'cli',
+      available: true,
+      details: { version: cliVersion, command: 'openspec' },
+    });
+  }
+
+  const detected = locations.some(l => l.available);
+  const version = npmVersion || cliVersion || (detected ? 'local' : 'not-installed');
+  const installPath = npmInstallPath || locations.find(l => l.available)?.path || '';
+
+  return {
+    name: 'openspec',
+    detected,
+    version,
+    installPath,
+    locations,
+    cliAvailable: !!cliVersion,
+    skillCount: skillFiles.length,
+  };
 }
 
-// ─── 能力列表 ──────────────────────────────────────────────────────────────
+// ─── 2. 能力列表 ───────────────────────────────────────────────────────────
 
 /**
- * OpenSpec 核心能力是 propose/apply/archive 三阶段工作流
+ * 返回 OpenSpec 可用能力
+ *
+ * 核心能力：
+ *   - propose: 创建变更提案
+ *   - apply: 实现变更任务
+ *   - archive: 归档已完成的变更
+ *
+ * @param {string} root - 项目根目录
+ * @returns {{ source: string, capabilities: object[], artifactTypes: string[] }}
  */
 export function getCapabilities(root = PROJECT_ROOT) {
   const info = detect(root);
@@ -176,366 +268,797 @@ export function getCapabilities(root = PROJECT_ROOT) {
   const capabilities = [
     {
       id: 'openspec:propose',
-      name: 'Propose',
-      description: '创建新的规格提案 — 定义需求、约束和验收标准',
-      category: 'specification',
-      phase: 'propose',
-      recommendedModel: 'opus',
-      models: ['opus', 'sonnet'],
-      cliCommand: 'openspec propose <title>',
-      requiresReview: true,
-      input: {
-        title: '规格标题',
-        description: '详细描述',
-        requirements: '需求列表',
-        acceptanceCriteria: '验收标准',
-        constraints: '约束条件',
-      },
+      name: '变更提案',
+      description: '创建变更提案，生成 proposal.md、design.md、tasks.md 骨架',
+      category: 'planning',
+      requires: info.detected,
+      artifactTypes: ['proposal.md', 'design.md', 'tasks.md'],
     },
     {
       id: 'openspec:apply',
-      name: 'Apply',
-      description: '执行规格 — 按照已批准的规格实现代码',
-      category: 'implementation',
-      phase: 'apply',
-      recommendedModel: 'sonnet',
-      models: ['sonnet', 'opus'],
-      cliCommand: 'openspec apply <spec-id>',
-      requiresReview: false,
-      input: {
-        specId: '规格 ID',
-        scope: '实现范围（可选）',
-      },
+      name: '变更应用',
+      description: '读取变更任务的 tasks.md，解析任务列表并跟踪执行状态',
+      category: 'execution',
+      requires: info.detected,
+      artifactTypes: ['tasks.md'],
     },
     {
       id: 'openspec:archive',
-      name: 'Archive',
-      description: '归档已完成的规格 — 标记完成并存档',
+      name: '变更归档',
+      description: '将已完成的变更移动到 openspec/changes/archive/ 目录',
       category: 'lifecycle',
-      phase: 'archive',
-      recommendedModel: 'haiku',
-      models: ['haiku', 'sonnet'],
-      cliCommand: 'openspec archive <spec-id>',
-      requiresReview: false,
-      input: {
-        specId: '规格 ID',
-        notes: '归档备注（可选）',
-      },
+      requires: info.detected,
+      artifactTypes: [],
     },
     {
       id: 'openspec:status',
-      name: 'Status',
-      description: '查询所有规格状态 — 查看提案、进行中、已归档',
+      name: '状态查询',
+      description: '查询 openspec/changes/ 目录下所有变更的状态',
       category: 'monitoring',
-      phase: 'query',
-      recommendedModel: 'haiku',
-      models: ['haiku'],
-      cliCommand: 'openspec status --json',
-      requiresReview: false,
-      input: {},
+      requires: info.detected,
+      artifactTypes: [],
     },
     {
-      id: 'openspec:validate',
-      name: 'Validate',
-      description: '验证规格完整性 — 检查格式和引用关系',
-      category: 'quality',
-      phase: 'validate',
-      recommendedModel: 'haiku',
-      models: ['haiku', 'sonnet'],
-      cliCommand: 'openspec validate <spec-id>',
-      requiresReview: false,
-      input: {
-        specId: '规格 ID',
-      },
+      id: 'openspec:mapToGates',
+      name: 'Gate 映射',
+      description: '将 OpenSpec artifact 映射到 chaos-harness Gate 状态机（G0-G2）',
+      category: 'integration',
+      requires: info.detected,
+      artifactTypes: ['proposal.md', 'design.md', 'tasks.md'],
+    },
+    {
+      id: 'openspec:spec',
+      name: '规格管理',
+      description: '读取和管理 openspec/specs/ 目录下的项目规格定义',
+      category: 'specification',
+      requires: info.detected && existsSync(join(root, SPECS_DIR)),
+      artifactTypes: ['spec.md'],
     },
   ];
 
-  // 附加检测到的 spec 信息
-  for (const spec of info.specs) {
+  // 如果 CLI 可用，增加 CLI 相关能力
+  if (info.cliAvailable) {
     capabilities.push({
-      id: `openspec:spec:${spec.id}`,
-      name: `Spec: ${spec.name}`,
-      description: `已有规格: ${spec.id}`,
-      category: 'existing-spec',
-      phase: 'existing',
-      recommendedModel: 'sonnet',
-      models: ['sonnet'],
-      path: spec.path,
-      format: spec.format,
+      id: 'openspec:cli-status',
+      name: 'CLI 状态查询',
+      description: '通过 openspec status --json 获取机器可读的状态信息',
+      category: 'cli',
+      requires: true,
+      artifactTypes: [],
+    });
+    capabilities.push({
+      id: 'openspec:cli-instructions',
+      name: 'CLI 指令获取',
+      description: '通过 openspec instructions <id> --json 获取变更指令',
+      category: 'cli',
+      requires: true,
+      artifactTypes: [],
     });
   }
 
   return {
     source: 'openspec',
     version: info.version,
-    available: info.available,
+    detected: info.detected,
     capabilityCount: capabilities.length,
-    specCount: info.specCount,
     capabilities,
-    specs: info.specs,
-    proposals: info.proposals,
-    archived: info.archived,
+    artifactTypes: ['proposal.md', 'design.md', 'tasks.md'],
+    gateMapping: GATE_MAP,
   };
 }
 
-// ─── 调度函数 ──────────────────────────────────────────────────────────────
+// ─── 3. 提案 ───────────────────────────────────────────────────────────────
 
 /**
- * 调度 OpenSpec propose 流程
+ * 创建变更提案
  *
- * @param {string} title - 规格标题
- * @param {object} details - 规格详情
+ * 流程：
+ *   1. 将 idea 转为 kebab-case 名称
+ *   2. 创建 openspec/changes/<name>/ 目录
+ *   3. 生成 proposal.md、design.md、tasks.md 骨架
+ *   4. 返回变更路径和生成的文件列表
+ *
  * @param {string} root - 项目根目录
- */
-export function propose(title, details = {}, root = PROJECT_ROOT) {
-  const info = detect(root);
-
-  if (!info.available) {
-    return {
-      success: false,
-      error: 'OpenSpec not detected. Create openspec/ directory or install @fission-ai/openspec.',
-      suggestion: 'Run `openspec init` in your project root.',
-    };
-  }
-
-  const cliAvailable = checkCliAvailable();
-
-  const specContent = buildSpecMarkdown(title, details);
-
-  return {
-    success: true,
-    action: 'propose',
-    title,
-    method: cliAvailable ? 'cli' : 'manual',
-    cliCommand: `openspec propose "${title}"`,
-    specContent,
-    instruction: cliAvailable
-      ? `Run: openspec propose "${title}"`
-      : `Create a new spec file in openspec/proposals/${sanitizeFilename(title)}/spec.md with the following content:\n\n${specContent}`,
-  };
-}
-
-/**
- * 调度 OpenSpec apply 流程
- *
- * @param {string} specId - 规格 ID
+ * @param {string} idea - 变更想法（自然语言描述）
  * @param {object} options - 可选参数
- * @param {string} root - 项目根目录
+ *   @param {string} options.name - 自定义变更名称
+ *   @param {string} options.author - 作者
+ *   @param {string} options.priority - 优先级 (high/medium/low)
+ * @returns {{ success: boolean, changeName: string, changePath: string, files: string[] }}
  */
-export function apply(specId, options = {}, root = PROJECT_ROOT) {
-  const info = detect(root);
-
-  if (!info.available) {
+export function propose(root = PROJECT_ROOT, idea, options = {}) {
+  if (!idea || typeof idea !== 'string' || idea.trim().length === 0) {
     return {
       success: false,
-      error: 'OpenSpec not detected.',
+      error: 'idea is required — provide a natural language description of the change',
+      example: 'Add user authentication with OAuth2',
     };
   }
 
-  // 验证 spec 是否存在
-  const specExists = info.specs.some(s => s.id === specId)
-    || info.proposals.some(s => s.id === specId);
+  const changeName = options.name || toKebabCase(idea) || toKebabCase(idea.trim().substring(0, 30)) || 'unnamed-change';
+  const changePath = join(root, CHANGES_DIR, changeName);
 
-  if (!specExists && !checkCliAvailable()) {
+  // 检查是否已存在
+  if (existsSync(changePath)) {
     return {
       success: false,
-      error: `Spec "${specId}" not found in proposals or specs.`,
-      availableSpecs: [
-        ...info.proposals.map(s => s.id),
-        ...info.specs.map(s => s.id),
-      ],
+      error: `Change "${changeName}" already exists at ${changePath}`,
+      suggestion: 'Use a different name or apply to the existing change.',
     };
   }
 
-  const cliAvailable = checkCliAvailable();
+  // 创建目录
+  ensureDir(changePath);
+
+  const author = options.author || 'chaos-harness';
+  const priority = options.priority || 'medium';
+  const timestamp = new Date().toISOString();
+
+  // 生成 proposal.md → G0 问题定义
+  const proposalContent = `# Proposal: ${idea.trim()}
+
+> **Status**: proposed
+> **Author**: ${author}
+> **Created**: ${timestamp}
+> **Priority**: ${priority}
+
+## Problem
+
+<!-- Describe the problem this change addresses. What is broken, missing, or suboptimal? -->
+
+## Proposed Solution
+
+<!-- Describe the high-level approach. Why is this the right solution? -->
+
+## Scope
+
+### In Scope
+
+<!-- What will this change cover? -->
+
+### Out of Scope
+
+<!-- What is explicitly not covered by this change? -->
+
+## Impact
+
+<!-- Which systems, modules, or teams will be affected? -->
+
+## Risks
+
+<!-- What could go wrong? How will we mitigate? -->
+
+## Alternatives Considered
+
+<!-- What other approaches were evaluated and why were they rejected? -->
+`;
+  writeFileSync(join(changePath, ARTIFACT_FILES.proposal), proposalContent, 'utf8');
+
+  // 生成 design.md → G1 方案设计
+  const designContent = `# Design: ${idea.trim()}
+
+> **Status**: draft
+> **Change**: ${changeName}
+> **Last Updated**: ${timestamp}
+
+## Architecture
+
+<!-- Describe the architectural approach. Include diagrams if helpful. -->
+
+## Technical Decisions
+
+| Decision | Rationale | Alternatives |
+|----------|-----------|--------------|
+|          |           |              |
+
+## Data Model
+
+<!-- Describe any data model changes, new tables, schema modifications -->
+
+## API Changes
+
+<!-- Describe any API additions, modifications, or deprecations -->
+
+## Security Considerations
+
+<!-- Describe security implications and mitigations -->
+
+## Performance Impact
+
+<!-- Estimate performance impact and any optimization plans -->
+
+## Testing Strategy
+
+<!-- How will this change be tested? -->
+
+## Rollback Plan
+
+<!-- How to revert this change if needed? -->
+`;
+  writeFileSync(join(changePath, ARTIFACT_FILES.design), designContent, 'utf8');
+
+  // 生成 tasks.md → G2 任务拆分
+  const tasksContent = `# Tasks: ${idea.trim()}
+
+> **Change**: ${changeName}
+> **Last Updated**: ${timestamp}
+
+## Phase 1: Foundation
+
+- [ ] Set up project structure and dependencies
+- [ ] Create initial implementation skeleton
+- [ ] Write unit test scaffolds
+
+## Phase 2: Implementation
+
+- [ ] Implement core functionality
+- [ ] Add error handling and edge cases
+- [ ] Write integration tests
+
+## Phase 3: Verification
+
+- [ ] Run full test suite
+- [ ] Manual testing and review
+- [ ] Update documentation
+
+## Phase 4: Delivery
+
+- [ ] Code review and approval
+- [ ] Merge to target branch
+- [ ] Update changelog
+`;
+  writeFileSync(join(changePath, ARTIFACT_FILES.tasks), tasksContent, 'utf8');
+
+  const files = Object.values(ARTIFACT_FILES).map(f => join(changePath, f));
 
   return {
     success: true,
-    action: 'apply',
-    specId,
-    method: cliAvailable ? 'cli' : 'manual',
-    cliCommand: `openspec apply "${specId}"`,
-    instruction: cliAvailable
-      ? `Run: openspec apply "${specId}"`
-      : `Load the spec from openspec/proposals/${specId}/ and implement according to its requirements.`,
-    options,
+    changeName,
+    changePath,
+    files,
+    note: 'Change proposal created. Fill in the markdown templates with specific details.',
   };
 }
 
+// ─── 4. 应用 ───────────────────────────────────────────────────────────────
+
 /**
- * 调度 OpenSpec archive 流程
+ * 应用变更 — 读取并解析变更任务
  *
- * @param {string} specId - 规格 ID
- * @param {object} options - 可选参数
+ * 流程：
+ *   1. 定位 openspec/changes/<changeName>/ 目录
+ *   2. 读取 tasks.md
+ *   3. 解析任务列表，计算完成状态
+ *   4. 读取 proposal.md 和 design.md 摘要
+ *   5. 返回结构化任务数据
+ *
  * @param {string} root - 项目根目录
+ * @param {string} changeName - 变更名称（kebab-case）
+ * @returns {{ success: boolean, changeName: string, tasks: object[], progress: object }}
  */
-export function archive(specId, options = {}, root = PROJECT_ROOT) {
-  const info = detect(root);
-
-  if (!info.available) {
+export function apply(root = PROJECT_ROOT, changeName) {
+  if (!changeName || typeof changeName !== 'string') {
     return {
       success: false,
-      error: 'OpenSpec not detected.',
+      error: 'changeName is required — provide the kebab-case name of the change',
     };
   }
 
-  const cliAvailable = checkCliAvailable();
+  const changePath = join(root, CHANGES_DIR, changeName);
+
+  if (!existsSync(changePath)) {
+    // 尝试模糊匹配
+    const changesDir = join(root, CHANGES_DIR);
+    if (existsSync(changesDir)) {
+      const allChanges = readdirSync(changesDir).filter(n => {
+        const fullPath = join(changesDir, n);
+        return statSync(fullPath).isDirectory() && n !== 'archive';
+      });
+      const match = allChanges.find(n => n.includes(changeName) || changeName.includes(n));
+      if (match) {
+        return apply(root, match);
+      }
+    }
+    return {
+      success: false,
+      error: `Change "${changeName}" not found at ${changePath}`,
+      availableChanges: listChanges(root),
+    };
+  }
+
+  // 读取 tasks.md
+  const tasksContent = safeRead(join(changePath, ARTIFACT_FILES.tasks));
+  const tasks = parseTasks(tasksContent);
+  const taskGroups = parseTaskGroups(tasksContent);
+
+  // 读取 proposal.md 摘要
+  const proposalContent = safeRead(join(changePath, ARTIFACT_FILES.proposal));
+  const proposalTitle = proposalContent?.match(/^#\s+Proposal:\s+(.+)$/m)?.[1]?.trim() || changeName;
+
+  // 读取 design.md 摘要
+  const designContent = safeRead(join(changePath, ARTIFACT_FILES.design));
+  const designTitle = designContent?.match(/^#\s+Design:\s+(.+)$/m)?.[1]?.trim() || '';
+
+  // 计算进度
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.done).length;
+  const pendingTasks = totalTasks - completedTasks;
+  const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  // 读取每个 artifact 的 Gate 映射状态
+  const gateStatus = {};
+  for (const [artifactFile, gateInfo] of Object.entries(GATE_MAP)) {
+    const artifactPath = join(changePath, artifactFile);
+    const exists = existsSync(artifactPath);
+    const content = exists ? safeRead(artifactPath) : null;
+    gateStatus[gateInfo.gate] = {
+      gate: gateInfo.gate,
+      name: gateInfo.name,
+      description: gateInfo.description,
+      artifactFile,
+      exists,
+      size: content ? content.length : 0,
+      hasContent: exists && content && content.trim().length > 100,
+    };
+  }
 
   return {
     success: true,
-    action: 'archive',
-    specId,
-    method: cliAvailable ? 'cli' : 'manual',
-    cliCommand: `openspec archive "${specId}"`,
-    instruction: cliAvailable
-      ? `Run: openspec archive "${specId}"`
-      : `Move openspec/proposals/${specId}/ to openspec/archived/${specId}/ and update status.`,
-    options,
+    changeName,
+    changePath,
+    proposalTitle,
+    designTitle,
+    tasks,
+    taskGroups,
+    progress: {
+      total: totalTasks,
+      completed: completedTasks,
+      pending: pendingTasks,
+      percentage: progressPct,
+    },
+    gateStatus,
   };
 }
 
+// ─── 5. 状态 ───────────────────────────────────────────────────────────────
+
 /**
- * 通用调度入口 — 根据 action 分发到对应函数
+ * 查询当前变更状态
+ *
+ * 流程：
+ *   1. 扫描 openspec/changes/ 目录
+ *   2. 对每个变更，解析其 artifact 存在情况和任务进度
+ *   3. 如果 CLI 可用，尝试执行 openspec status --json
+ *   4. 返回结构化的状态信息
+ *
+ * @param {string} root - 项目根目录
+ * @returns {{ changes: object[], total: number, active: number, archived: number }}
  */
-export function dispatch(action, params = {}, root = PROJECT_ROOT) {
-  switch (action) {
-    case 'propose':
-      return propose(params.title || 'Untitled', params, root);
-    case 'apply':
-      return apply(params.specId || '', params, root);
-    case 'archive':
-      return archive(params.specId || '', params, root);
-    case 'status':
-      return {
-        success: true,
-        action: 'status',
-        data: detect(root),
-      };
-    default:
-      return {
-        success: false,
-        error: `Unknown OpenSpec action: "${action}". Available: propose, apply, archive, status.`,
-      };
+export function status(root = PROJECT_ROOT) {
+  const changesDir = join(root, CHANGES_DIR);
+  const activeChanges = [];
+  const archivedChanges = [];
+
+  // 扫描活跃变更
+  if (existsSync(changesDir)) {
+    const entries = readdirSync(changesDir);
+    for (const entry of entries) {
+      const entryPath = join(changesDir, entry);
+      if (!statSync(entryPath).isDirectory()) continue;
+
+      if (entry === 'archive') {
+        // 扫描归档变更
+        try {
+          const archivedEntries = readdirSync(entryPath);
+          for (const archived of archivedEntries) {
+            const archivedPath = join(entryPath, archived);
+            if (statSync(archivedPath).isDirectory()) {
+              archivedChanges.push(parseChangeSummary(archivedPath, archived, true));
+            }
+          }
+        } catch { /* skip */ }
+        continue;
+      }
+
+      activeChanges.push(parseChangeSummary(entryPath, entry, false));
+    }
   }
+
+  // 如果 CLI 可用，尝试获取 openspec status --json
+  let cliStatus = null;
+  const info = detect(root);
+  if (info.cliAvailable) {
+    const rawStatus = safeExec('openspec status --json', root);
+    if (rawStatus) {
+      try {
+        cliStatus = JSON.parse(rawStatus);
+      } catch {
+        cliStatus = { raw: rawStatus };
+      }
+    }
+  }
+
+  // 扫描 specs
+  const specs = [];
+  const specsDir = join(root, SPECS_DIR);
+  if (existsSync(specsDir)) {
+    try {
+      const specEntries = readdirSync(specsDir);
+      for (const entry of specEntries) {
+        const specPath = join(specsDir, entry);
+        if (statSync(specPath).isDirectory()) {
+          const specMd = join(specPath, 'spec.md');
+          if (existsSync(specMd)) {
+            specs.push({ name: entry, path: specPath });
+          }
+        }
+      }
+    } catch { /* skip */ }
+  }
+
+  return {
+    source: 'openspec',
+    projectRoot: root,
+    changes: {
+      active: activeChanges,
+      archived: archivedChanges,
+      total: activeChanges.length + archivedChanges.length,
+      activeCount: activeChanges.length,
+      archivedCount: archivedChanges.length,
+    },
+    specs: {
+      count: specs.length,
+      list: specs,
+    },
+    cli: cliStatus,
+    timestamp: new Date().toISOString(),
+  };
 }
 
-// ─── 辅助函数 ──────────────────────────────────────────────────────────────
+/** 解析单个变更的摘要信息 */
+function parseChangeSummary(changePath, name, isArchived) {
+  const proposalContent = safeRead(join(changePath, ARTIFACT_FILES.proposal));
+  const tasksContent = safeRead(join(changePath, ARTIFACT_FILES.tasks));
 
-function buildSpecMarkdown(title, details) {
-  const lines = [
-    `# ${title}`,
-    '',
-    `## Description`,
-    details.description || 'TODO: Add description',
-    '',
-    `## Requirements`,
+  const tasks = parseTasks(tasksContent);
+  const total = tasks.length;
+  const completed = tasks.filter(t => t.done).length;
+  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  // 提取 proposal 中的元数据
+  const status = proposalContent?.match(/> \*\*Status\*\*:\s*(.+)$/m)?.[1]?.trim() || 'unknown';
+  const priority = proposalContent?.match(/> \*\*Priority\*\*:\s*(.+)$/m)?.[1]?.trim() || 'unknown';
+  const author = proposalContent?.match(/> \*\*Author\*\*:\s*(.+)$/m)?.[1]?.trim() || 'unknown';
+
+  // 检查哪些 artifact 存在
+  const artifacts = {};
+  for (const key of Object.keys(ARTIFACT_FILES)) {
+    artifacts[key] = existsSync(join(changePath, ARTIFACT_FILES[key]));
+  }
+
+  return {
+    name,
+    path: changePath,
+    isArchived,
+    status,
+    priority,
+    author,
+    artifacts,
+    progress: {
+      total,
+      completed,
+      pending: total - completed,
+      percentage,
+    },
+    gateMapping: computeGateMapping(artifacts),
+  };
+}
+
+/** 计算 artifact 到 Gate 的映射状态 */
+function computeGateMapping(artifacts) {
+  const gates = {};
+  for (const [artifactFile, gateInfo] of Object.entries(GATE_MAP)) {
+    const artifactKey = Object.keys(ARTIFACT_FILES).find(
+      k => ARTIFACT_FILES[k] === artifactFile
+    );
+    const exists = artifactKey ? (artifacts[artifactKey] || false) : false;
+    gates[gateInfo.gate] = {
+      gate: gateInfo.gate,
+      name: gateInfo.name,
+      passed: exists,
+      artifactFile,
+    };
+  }
+  return gates;
+}
+
+/** 列出所有活跃变更名称 */
+function listChanges(root) {
+  const changesDir = join(root, CHANGES_DIR);
+  if (!existsSync(changesDir)) return [];
+  return readdirSync(changesDir).filter(n => {
+    const fullPath = join(changesDir, n);
+    return statSync(fullPath).isDirectory() && n !== 'archive';
+  });
+}
+
+// ─── 6. Gate 映射 ──────────────────────────────────────────────────────────
+
+/**
+ * 将 OpenSpec artifact 映射到 chaos-harness Gate 状态机
+ *
+ * Gate 状态机：
+ *   G0 — 问题定义（proposal.md）
+ *   G1 — 方案设计（design.md）
+ *   G2 — 任务拆分（tasks.md）
+ *
+ * @param {object} changeArtifacts - 变更 artifact 对象
+ *   @param {string} changeArtifacts.proposal - proposal.md 内容
+ *   @param {string} changeArtifacts.design - design.md 内容
+ *   @param {string} changeArtifacts.tasks - tasks.md 内容
+ * @returns {{ gates: object[], allPassed: boolean, blockedGates: string[], nextGate: string }}
+ */
+export function mapToGates(changeArtifacts) {
+  if (!changeArtifacts || typeof changeArtifacts !== 'object') {
+    return {
+      success: false,
+      error: 'changeArtifacts is required — provide an object with artifact content keys',
+      example: { proposal: '...', design: '...', tasks: '...' },
+    };
+  }
+
+  const gates = [];
+  const blockedGates = [];
+  let nextGate = null;
+
+  for (const [artifactFile, gateInfo] of Object.entries(GATE_MAP)) {
+    // 支持两种 key 方式：文件名或 artifact key
+    let content = changeArtifacts[artifactFile];
+    if (!content) {
+      const artifactKey = Object.keys(ARTIFACT_FILES).find(k => ARTIFACT_FILES[k] === artifactFile);
+      if (artifactKey) content = changeArtifacts[artifactKey];
+    }
+    const hasContent = typeof content === 'string' && content.trim().length > 100;
+    const hasSubstantiveContent = hasContent && !isTemplateOnly(content, artifactFile);
+
+    const gate = {
+      id: gateInfo.gate,
+      name: gateInfo.name,
+      description: gateInfo.description,
+      artifactFile,
+      present: !!content,
+      hasContent,
+      hasSubstantiveContent,
+      passed: hasSubstantiveContent,
+      checks: runGateChecks(content, artifactFile),
+    };
+
+    gates.push(gate);
+
+    if (!gate.passed) {
+      blockedGates.push(gateInfo.gate);
+      if (!nextGate) {
+        nextGate = gateInfo.gate;
+      }
+    }
+  }
+
+  const allPassed = blockedGates.length === 0;
+
+  return {
+    success: true,
+    gates,
+    allPassed,
+    blockedGates,
+    nextGate: allPassed ? null : nextGate,
+    gateSummary: {
+      total: gates.length,
+      passed: gates.filter(g => g.passed).length,
+      blocked: blockedGates.length,
+    },
+  };
+}
+
+/** 检查内容是否只是模板（没有填充实质内容） */
+function isTemplateOnly(content, artifactFile) {
+  if (!content) return true;
+
+  const lines = content.split('\n');
+  const templateSignals = [
+    '<!-- ',
+    'TODO',
+    'Describe ',
+    'Enter ',
+    'Replace ',
+    'Fill in ',
   ];
 
-  if (details.requirements && Array.isArray(details.requirements)) {
-    for (const req of details.requirements) {
-      lines.push(`- ${req}`);
-    }
-  } else {
-    lines.push('- TODO: Add requirements');
-  }
-
-  lines.push('');
-  lines.push('## Acceptance Criteria');
-
-  if (details.acceptanceCriteria && Array.isArray(details.acceptanceCriteria)) {
-    for (const c of details.acceptanceCriteria) {
-      lines.push(`- [ ] ${c}`);
-    }
-  } else {
-    lines.push('- [ ] TODO: Add acceptance criteria');
-  }
-
-  if (details.constraints) {
-    lines.push('');
-    lines.push('## Constraints');
-    if (Array.isArray(details.constraints)) {
-      for (const c of details.constraints) {
-        lines.push(`- ${c}`);
-      }
-    } else {
-      lines.push(details.constraints);
+  let templateLineCount = 0;
+  for (const line of lines) {
+    if (templateSignals.some(s => line.includes(s))) {
+      templateLineCount++;
     }
   }
 
-  return lines.join('\n');
+  const meaningfulLines = lines.filter(l => l.trim().length > 0 && !l.trim().startsWith('#'));
+  if (meaningfulLines.length === 0) return true;
+
+  const templateRatio = templateLineCount / Math.max(meaningfulLines.length, 1);
+  return templateRatio > 0.5;
 }
 
-function sanitizeFilename(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+/** 运行 Gate 级别的检查规则 */
+function runGateChecks(content, artifactFile) {
+  const checks = [];
+
+  if (artifactFile === ARTIFACT_FILES.proposal) {
+    checks.push({
+      name: 'has-problem-section',
+      passed: /##\s*Problem/i.test(content) && content.split('## Problem')[1]?.split('##')[0]?.trim().length > 20,
+      message: 'Problem section must exist and have substantive content',
+    });
+    checks.push({
+      name: 'has-solution-section',
+      passed: /##\s*Proposed Solution/i.test(content) && content.split('## Proposed Solution')[1]?.split('##')[0]?.trim().length > 20,
+      message: 'Proposed Solution section must exist and have substantive content',
+    });
+    checks.push({
+      name: 'has-scope',
+      passed: /##\s*Scope/i.test(content),
+      message: 'Scope section must exist',
+    });
+    checks.push({
+      name: 'has-impact',
+      passed: /##\s*Impact/i.test(content),
+      message: 'Impact section must exist',
+    });
+  } else if (artifactFile === ARTIFACT_FILES.design) {
+    checks.push({
+      name: 'has-architecture',
+      passed: /##\s*Architecture/i.test(content) && content.split('## Architecture')[1]?.split('##')[0]?.trim().length > 20,
+      message: 'Architecture section must exist and have substantive content',
+    });
+    checks.push({
+      name: 'has-decisions',
+      passed: /##\s*Technical Decisions/i.test(content),
+      message: 'Technical Decisions section must exist',
+    });
+    checks.push({
+      name: 'has-testing-strategy',
+      passed: /##\s*Testing Strategy/i.test(content),
+      message: 'Testing Strategy section must exist',
+    });
+    checks.push({
+      name: 'has-rollback-plan',
+      passed: /##\s*Rollback Plan/i.test(content),
+      message: 'Rollback Plan section must exist',
+    });
+  } else if (artifactFile === ARTIFACT_FILES.tasks) {
+    const tasks = parseTasks(content);
+    checks.push({
+      name: 'has-tasks',
+      passed: tasks.length > 0,
+      message: 'Must have at least one task',
+    });
+    checks.push({
+      name: 'has-phases',
+      passed: /##\s*Phase/i.test(content),
+      message: 'Must have task phases',
+    });
+    checks.push({
+      name: 'has-multiple-tasks',
+      passed: tasks.length >= 3,
+      message: 'Should have at least 3 tasks',
+    });
+  }
+
+  return checks;
 }
 
 // ─── CLI 入口 ──────────────────────────────────────────────────────────────
 
 function main() {
   const command = process.argv[2] || 'detect';
-  const root = process.argv[3] || PROJECT_ROOT;
 
   switch (command) {
-    case 'detect':
+    case 'detect': {
+      const root = extractRoot(3);
       console.log(JSON.stringify(detect(root), null, 2));
       break;
+    }
 
-    case 'capabilities':
+    case 'capabilities': {
+      const root = extractRoot(3);
       console.log(JSON.stringify(getCapabilities(root), null, 2));
-      break;
-
-    case 'status': {
-      const status = detect(root);
-      console.log(JSON.stringify({
-        available: status.available,
-        version: status.version,
-        specCount: status.specCount,
-        specs: status.specs,
-        proposals: status.proposals,
-        archived: status.archived,
-      }, null, 2));
       break;
     }
 
     case 'propose': {
-      const title = process.argv[4];
-      if (!title) {
-        console.error('Usage: adapter.mjs propose <title> [projectRoot]');
+      const idea = process.argv[3];
+      if (!idea || idea.startsWith('--')) {
+        console.error('Usage: adapter.mjs propose "<idea>" [--name=X] [--author=X] [--priority=X] [projectRoot]');
         process.exit(1);
       }
-      console.log(JSON.stringify(propose(title, {}, root), null, 2));
+      const options = {};
+      let effectiveRoot = PROJECT_ROOT;
+      for (let i = 4; i < process.argv.length; i++) {
+        const arg = process.argv[i];
+        if (arg.startsWith('--name=')) options.name = arg.split('=')[1];
+        else if (arg.startsWith('--author=')) options.author = arg.split('=')[1];
+        else if (arg.startsWith('--priority=')) options.priority = arg.split('=')[1];
+        else effectiveRoot = arg;
+      }
+      console.log(JSON.stringify(propose(effectiveRoot, idea, options), null, 2));
       break;
     }
 
     case 'apply': {
-      const specId = process.argv[4];
-      if (!specId) {
-        console.error('Usage: adapter.mjs apply <spec-id> [projectRoot]');
+      const changeName = process.argv[3];
+      if (!changeName) {
+        console.error('Usage: adapter.mjs apply <changeName> [projectRoot]');
         process.exit(1);
       }
-      console.log(JSON.stringify(apply(specId, {}, root), null, 2));
+      const root = extractRoot(4);
+      console.log(JSON.stringify(apply(root, changeName), null, 2));
       break;
     }
 
-    case 'archive': {
-      const specId = process.argv[4];
-      if (!specId) {
-        console.error('Usage: adapter.mjs archive <spec-id> [projectRoot]');
+    case 'status': {
+      const root = extractRoot(3);
+      console.log(JSON.stringify(status(root), null, 2));
+      break;
+    }
+
+    case 'map-to-gates': {
+      const artifactFile = process.argv[3];
+      if (artifactFile && existsSync(artifactFile)) {
+        const content = readFileSync(artifactFile, 'utf8');
+        try {
+          const artifacts = JSON.parse(content);
+          console.log(JSON.stringify(mapToGates(artifacts), null, 2));
+        } catch {
+          console.error('Failed to parse artifact JSON file');
+          process.exit(1);
+        }
+      } else {
+        console.error('Usage: adapter.mjs map-to-gates <artifact-json-file>');
+        console.error('  artifact-json-file: JSON file with keys matching artifact filenames');
         process.exit(1);
       }
-      console.log(JSON.stringify(archive(specId, {}, root), null, 2));
       break;
     }
 
     default:
       console.error(`Unknown command: ${command}`);
-      console.error('Usage: adapter.mjs [detect|capabilities|status|propose|apply|archive] [projectRoot]');
+      console.error('Usage: adapter.mjs [detect|capabilities|propose|apply|status|map-to-gates] [projectRoot]');
       process.exit(1);
   }
 }
 
+/** Extract projectRoot from argv at given index, fall back to PROJECT_ROOT */
+function extractRoot(index) {
+  const val = process.argv[index];
+  if (val && !val.startsWith('--')) return val;
+  return PROJECT_ROOT;
+}
+
+// CLI mode: run when executed directly
 if (process.argv[1] && /openspec[\\/]adapter/.test(process.argv[1])) {
   main();
 }
 
-export default { detect, getCapabilities, dispatch, propose, apply, archive };
+// Export for programmatic use
+export default {
+  detect,
+  getCapabilities,
+  propose,
+  apply,
+  status,
+  mapToGates,
+  // Utility exports for testing
+  toKebabCase,
+  parseTasks,
+  parseTaskGroups,
+  isTemplateOnly,
+  runGateChecks,
+};

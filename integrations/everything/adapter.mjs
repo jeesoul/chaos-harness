@@ -1,669 +1,948 @@
-#!/usr/bin/env node
 /**
- * everything adapter — chaos-harness 对 everything-claude-code 的能力桥接
+ * everything-claude-code Integration Adapter
  *
- * 检测 everything-claude-code 是否安装，输出可用的 agents 列表，
- * 提供 agent 调度函数（通过 Claude Code Agent tool）。
+ * Bridges everything-claude-code's 14 Agent definitions, 6 lifecycle Hook types,
+ * 8 Rules, and 3 Context modes into the chaos-harness ecosystem.
  *
- * 支持 agents：
- *   - code-reviewer：代码评审
- *   - security-reviewer：安全审计
- *   - tdd-guide：TDD 指导
- *   - 以及 everything 配置中定义的其他 agents
+ * Usage:
+ *   import * as everything from './integrations/everything/adapter.mjs';
  *
- * 同时加载 rules 和 hooks 配置信息。
+ *   const result = await everything.detect(projectRoot);
+ *   if (result.detected) {
+ *     const agents = await everything.getAgents(projectRoot);
+ *     const recommendation = everything.recommendAgent('fix the build error');
+ *   }
  *
- * 调用:
- *   node integrations/everything/adapter.mjs detect [projectRoot]
- *   node integrations/everything/adapter.mjs capabilities [projectRoot]
- *   node integrations/everything/adapter.mjs dispatch <agent-id> <task> [projectRoot]
- *   node integrations/everything/adapter.mjs rules [projectRoot]
- *   node integrations/everything/adapter.mjs hooks [projectRoot]
+ * @module integrations/everything/adapter
+ * @since v1.4.0
  */
 
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'url';
+import { readFile, readdir, stat } from 'node:fs/promises';
+import { join, extname } from 'node:path';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = process.argv[3] || dirname(dirname(__dirname));
+// ---------------------------------------------------------------------------
+// Constants — everything-claude-code canonical definitions
+// ---------------------------------------------------------------------------
 
-// ─── 已知 Agent 定义 ────────────────────────────────────────────────────────
+/** All 14 canonical agent identifiers */
+const EVERYTHING_AGENTS = Object.freeze([
+  'architecture-analyzer',
+  'build-error-resolver',
+  'code-reviewer',
+  'context-manager',
+  'dependency-auditor',
+  'documentation-writer',
+  'git-worktree-manager',
+  'performance-analyzer',
+  'refactoring-engine',
+  'security-auditor',
+  'session-manager',
+  'tdd-guide',
+  'test-generator',
+  'ui-ux-reviewer',
+]);
 
-const KNOWN_AGENTS = {
-  'code-reviewer': {
-    name: 'Code Reviewer',
-    description: '代码评审 Agent — 检查代码质量、风格、潜在 Bug',
-    category: 'review',
-    recommendedModel: 'sonnet',
-    models: ['sonnet', 'opus'],
-    requiresContext: ['filePaths', 'diff'],
-    triggers: ['review', 'code review', 'pr review', 'check code'],
+/** All 6 lifecycle hook event types */
+const EVERYTHING_HOOK_TYPES = Object.freeze([
+  'pre-session',
+  'post-session',
+  'pre-commit',
+  'post-commit',
+  'pre-build',
+  'post-build',
+]);
+
+/** All 8 canonical rules */
+const EVERYTHING_RULE_NAMES = Object.freeze([
+  'agent-selection',
+  'context-switching',
+  'tool-usage',
+  'output-format',
+  'error-handling',
+  'session-management',
+  'file-conventions',
+  'review-gate',
+]);
+
+/** All 3 context modes */
+const EVERYTHING_CONTEXT_MODES = Object.freeze(['dev', 'review', 'research']);
+
+/**
+ * Keyword-to-agent mapping for the recommendation engine.
+ * Maps user intent keywords to the most appropriate everything agent.
+ */
+const AGENT_KEYWORD_MAP = Object.freeze({
+  'build-error-resolver': [
+    'build', 'error', 'compile', 'fail', 'crash', 'exception', 'stack trace',
+    'diagnose', 'troubleshoot', 'bug', 'fix', 'broken',
+  ],
+  'tdd-guide': [
+    'test', 'tdd', 'unit test', 'integration test', 'jest', 'vitest',
+    'mocha', 'test driven', 'test-first', 'red green',
+  ],
+  'code-reviewer': [
+    'review', 'code review', 'pull request', 'pr', 'merge', 'feedback',
+    'quality', 'lint', 'style',
+  ],
+  'security-auditor': [
+    'security', 'vulnerability', 'cve', 'audit', 'auth', 'token',
+    'encryption', 'xss', 'csrf', 'injection', 'sanitize',
+  ],
+  'performance-analyzer': [
+    'performance', 'slow', 'optimize', 'benchmark', 'profiling', 'memory leak',
+    'cpu', 'bottleneck', 'latency', 'throughput',
+  ],
+  'architecture-analyzer': [
+    'architecture', 'design', 'pattern', 'structure', 'module',
+    'dependency', 'coupling', 'cohesion', 'monolith', 'microservice',
+  ],
+  'refactoring-engine': [
+    'refactor', 'clean up', 'restructure', 'rename', 'extract', 'simplify',
+    'dry', 'duplicate', 'tech debt',
+  ],
+  'documentation-writer': [
+    'document', 'readme', 'doc', 'api doc', 'comment', 'javadoc',
+    'jsdoc', 'changelog', 'guide', 'tutorial',
+  ],
+  'test-generator': [
+    'generate test', 'auto test', 'coverage', 'test case', 'mock',
+    'stub', 'fixture', 'e2e',
+  ],
+  'dependency-auditor': [
+    'dependency', 'package', 'npm', 'install', 'update', 'upgrade',
+    'outdated', 'lockfile', 'version',
+  ],
+  'ui-ux-reviewer': [
+    'ui', 'ux', 'design', 'accessibility', 'responsive', 'a11y',
+    'layout', 'component', 'css', 'style',
+  ],
+  'git-worktree-manager': [
+    'worktree', 'branch', 'pr', 'parallel', 'checkout', 'stash',
+    'rebase', 'merge conflict',
+  ],
+  'context-manager': [
+    'context', 'session', 'state', 'memory', 'preference',
+    'workspace', 'setup',
+  ],
+  'session-manager': [
+    'session', 'conversation', 'history', 'compact', 'summarize',
+    'reset', 'new chat',
+  ],
+});
+
+/**
+ * Mapping from everything agents to chaos-harness skills.
+ * Declares how each everything agent capability can be absorbed as a
+ * sub-capability within the chaos-harness skill ecosystem.
+ */
+const CHAOS_MERGE_MAP = Object.freeze({
+  'architecture-analyzer': {
+    chaosSkill: 'product-lifecycle',
+    subCapability: 'architecture-analysis',
+    compatibility: 'high',
+    reason: 'Product lifecycle skill already covers architecture analysis phase.',
   },
-  'security-reviewer': {
-    name: 'Security Reviewer',
-    description: '安全审计 Agent — 检测漏洞、敏感信息、注入风险',
-    category: 'security',
-    recommendedModel: 'opus',
-    models: ['opus'],
-    requiresContext: ['filePaths', 'scanTarget'],
-    triggers: ['security', 'audit', 'vulnerability', 'secret', 'injection'],
+  'build-error-resolver': {
+    chaosSkill: 'auto-context',
+    subCapability: 'error-detection',
+    compatibility: 'medium',
+    reason: 'auto-context can absorb error context detection as a sub-feature.',
+  },
+  'code-reviewer': {
+    chaosSkill: 'collaboration-reviewer',
+    subCapability: 'code-review',
+    compatibility: 'high',
+    reason: 'Direct mapping — collaboration-reviewer handles code review workflows.',
+  },
+  'context-manager': {
+    chaosSkill: 'project-state',
+    subCapability: 'context-management',
+    compatibility: 'high',
+    reason: 'project-state manages session/project state — natural fit.',
+  },
+  'dependency-auditor': {
+    chaosSkill: 'plugin-manager',
+    subCapability: 'dependency-audit',
+    compatibility: 'medium',
+    reason: 'plugin-manager can extend to cover dependency auditing.',
+  },
+  'documentation-writer': {
+    chaosSkill: 'harness-generator',
+    subCapability: 'documentation',
+    compatibility: 'low',
+    reason: 'harness-generator focuses on config; doc writer is orthogonal but complementary.',
+  },
+  'git-worktree-manager': {
+    chaosSkill: 'agent-team-orchestrator',
+    subCapability: 'worktree-management',
+    compatibility: 'medium',
+    reason: 'Agent orchestration benefits from worktree-based parallel development.',
+  },
+  'performance-analyzer': {
+    chaosSkill: 'overdrive',
+    subCapability: 'performance-analysis',
+    compatibility: 'medium',
+    reason: 'overdrive (performance optimization) can include analysis sub-capability.',
+  },
+  'refactoring-engine': {
+    chaosSkill: 'simplify',
+    subCapability: 'automated-refactoring',
+    compatibility: 'high',
+    reason: 'simplify skill directly overlaps with refactoring engine functionality.',
+  },
+  'security-auditor': {
+    chaosSkill: 'iron-law-enforcer',
+    subCapability: 'security-audit',
+    compatibility: 'medium',
+    reason: 'Iron law enforcer can extend to security constraint checking.',
+  },
+  'session-manager': {
+    chaosSkill: 'project-state',
+    subCapability: 'session-management',
+    compatibility: 'high',
+    reason: 'project-state already handles session lifecycle concepts.',
   },
   'tdd-guide': {
-    name: 'TDD Guide',
-    description: 'TDD 指导 Agent — 测试驱动开发流程引导',
-    category: 'development',
-    recommendedModel: 'sonnet',
-    models: ['sonnet', 'opus'],
-    requiresContext: ['feature', 'testFramework'],
-    triggers: ['tdd', 'test driven', 'write test', 'test first'],
+    chaosSkill: 'test-assistant',
+    subCapability: 'tdd-workflow',
+    compatibility: 'high',
+    reason: 'test-assistant can absorb TDD workflow guidance.',
   },
-  'doc-writer': {
-    name: 'Doc Writer',
-    description: '文档生成 Agent — API 文档、README、注释',
-    category: 'documentation',
-    recommendedModel: 'sonnet',
-    models: ['sonnet', 'haiku'],
-    requiresContext: ['sourceFiles', 'docFormat'],
-    triggers: ['document', 'readme', 'api doc', 'comment', 'javadoc'],
+  'test-generator': {
+    chaosSkill: 'test-assistant',
+    subCapability: 'test-generation',
+    compatibility: 'high',
+    reason: 'test-assistant already covers test case generation.',
   },
-  'refactor-agent': {
-    name: 'Refactor Agent',
-    description: '重构 Agent — 代码结构优化、重复消除',
-    category: 'development',
-    recommendedModel: 'opus',
-    models: ['opus', 'sonnet'],
-    requiresContext: ['targetFiles', 'refactorGoal'],
-    triggers: ['refactor', 'clean up', 'simplify', 'reduce duplication'],
+  'ui-ux-reviewer': {
+    chaosSkill: 'ui-generator',
+    subCapability: 'ui-ux-review',
+    compatibility: 'high',
+    reason: 'ui-generator can extend to include review capabilities.',
   },
-  'performance-auditor': {
-    name: 'Performance Auditor',
-    description: '性能审计 Agent — 检测性能瓶颈和优化机会',
-    category: 'performance',
-    recommendedModel: 'opus',
-    models: ['opus'],
-    requiresContext: ['targetFiles', 'performanceMetric'],
-    triggers: ['performance', 'slow', 'optimize', 'bottleneck'],
-  },
-  'architect': {
-    name: 'Architect',
-    description: '架构师 Agent — 架构设计评审和建议',
-    category: 'architecture',
-    recommendedModel: 'opus',
-    models: ['opus'],
-    requiresContext: ['designDoc', 'constraints'],
-    triggers: ['architect', 'design', 'structure', 'pattern'],
-  },
-  'debugger': {
-    name: 'Debugger',
-    description: '调试 Agent — 系统性 Bug 定位',
-    category: 'debugging',
-    recommendedModel: 'opus',
-    models: ['opus', 'sonnet'],
-    requiresContext: ['error', 'stackTrace', 'reproduction'],
-    triggers: ['debug', 'bug', 'error', 'crash', 'not working'],
-  },
-};
+});
 
-// ─── 检测 ──────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
 
 /**
- * 检测 everything-claude-code 是否安装
+ * Safely read a file, returning null if it does not exist or cannot be read.
+ * @param {string} filePath - Absolute file path.
+ * @returns {Promise<string|null>} File contents or null.
  */
-export function detect(root = PROJECT_ROOT) {
-  const info = {
-    name: 'everything-claude-code',
-    available: false,
-    locations: [],
-    version: 'unknown',
-    agents: [],
-    rules: [],
-    hooks: [],
-  };
-
-  // 检测 1: 项目内的 everything 配置
-  const everythingConfig = findEverythingConfig(root);
-  if (everythingConfig) {
-    info.locations.push({ type: 'config', path: everythingConfig.path });
-    info.available = true;
-    info.version = everythingConfig.version || info.version;
-    parseEverythingConfig(everythingConfig.content, info);
-  }
-
-  // 检测 2: 全局 ~/.claude/ 配置
-  const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-  const globalConfigPath = join(homeDir, '.claude', 'everything.json');
-  if (existsSync(globalConfigPath)) {
-    try {
-      const content = readFileSync(globalConfigPath, 'utf8');
-      info.locations.push({ type: 'global-config', path: globalConfigPath });
-      if (!info.available) info.available = true;
-      parseEverythingConfig(content, info);
-    } catch { /* skip */ }
-  }
-
-  // 检测 3: npm 包
-  const pkgPath = join(root, 'node_modules', 'everything-claude-code', 'package.json');
-  if (existsSync(pkgPath)) {
-    try {
-      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
-      info.locations.push({ type: 'npm-package', path: pkgPath });
-      info.version = pkg.version;
-      if (!info.available) info.available = true;
-    } catch { /* skip */ }
-  }
-
-  // 检测 4: skills 目录下的 everything 相关 skill
-  const skillsDir = join(root, 'skills');
-  if (existsSync(skillsDir)) {
-    try {
-      const entries = readdirSync(skillsDir);
-      for (const entry of entries) {
-        if (entry.startsWith('everything') || entry.includes('everything')) {
-          info.locations.push({ type: 'skill', path: join(skillsDir, entry) });
-          if (!info.available) info.available = true;
-        }
-      }
-    } catch { /* skip */ }
-  }
-
-  // 检测 5: rules 文件
-  const rulesPaths = [
-    join(root, '.claude', 'rules', 'everything.md'),
-    join(root, 'rules', 'everything.md'),
-    join(root, '.claude', 'rules.md'),
-    join(root, 'CLAUDE.md'),
-  ];
-  for (const rp of rulesPaths) {
-    if (existsSync(rp)) {
-      info.rules.push({ path: rp });
-    }
-  }
-
-  // 检测 6: hooks 配置
-  const hooksJsonPath = join(root, 'hooks', 'hooks.json');
-  if (existsSync(hooksJsonPath)) {
-    try {
-      const hooksConfig = JSON.parse(readFileSync(hooksJsonPath, 'utf8'));
-      info.hooks = extractHooksInfo(hooksConfig);
-    } catch { /* skip */ }
-  }
-
-  return info;
-}
-
-/** 查找 everything 配置文件 */
-function findEverythingConfig(root) {
-  const candidates = [
-    join(root, 'everything.json'),
-    join(root, '.claude', 'everything.json'),
-    join(root, '.everything.json'),
-  ];
-  for (const p of candidates) {
-    if (existsSync(p)) {
-      try {
-        return { path: p, content: readFileSync(p, 'utf8') };
-      } catch { /* skip */ }
-    }
-  }
-  return null;
-}
-
-/** 解析 everything 配置 */
-function parseEverythingConfig(content, info) {
+async function safeRead(filePath) {
   try {
-    const config = JSON.parse(content);
-
-    // 提取 agents
-    if (config.agents && Array.isArray(config.agents)) {
-      for (const agent of config.agents) {
-        info.agents.push({
-          id: agent.id || agent.name || 'unknown',
-          name: agent.name || agent.id,
-          description: agent.description || '',
-          model: agent.model || 'sonnet',
-          prompt: agent.prompt || '',
-          tools: agent.tools || undefined,
-        });
-      }
-    }
-
-    // 提取 rules
-    if (config.rules && Array.isArray(config.rules)) {
-      for (const rule of config.rules) {
-        info.rules.push({
-          id: rule.id || 'rule',
-          description: rule.description || rule.pattern || '',
-          pattern: rule.pattern,
-          action: rule.action,
-        });
-      }
-    }
-
-    // 提取 hooks
-    if (config.hooks && Array.isArray(config.hooks)) {
-      for (const hook of config.hooks) {
-        info.hooks.push({
-          event: hook.event || 'unknown',
-          matcher: hook.matcher || '.*',
-          command: hook.command || '',
-          async: hook.async !== false,
-        });
-      }
-    }
-
-    if (config.version) info.version = config.version;
+    return await readFile(filePath, 'utf-8');
   } catch {
-    // JSON 解析失败，尝试从 markdown 格式提取
-    tryExtractFromMarkdown(content, info);
+    return null;
   }
 }
-
-/** 从 markdown 格式尝试提取信息 */
-function tryExtractFromMarkdown(content, info) {
-  // 尝试提取 agent 列表（## Agent 格式）
-  const agentSections = content.match(/##\s+(?:Agent|Agents?)[:\s]*([^\n]*)/gi);
-  if (agentSections) {
-    for (const section of agentSections) {
-      const name = section.replace(/##\s+(?:Agent|Agents?)[:\s]*/i, '').trim();
-      if (name && name.length < 50) {
-        info.agents.push({
-          id: name.toLowerCase().replace(/\s+/g, '-'),
-          name,
-          description: 'Extracted from markdown config',
-          model: 'sonnet',
-        });
-      }
-    }
-  }
-
-  // 如果配置中提到了已知 agent 名称，自动添加
-  for (const [id, def] of Object.entries(KNOWN_AGENTS)) {
-    if (content.toLowerCase().includes(id.replace('-', ' ')) ||
-        content.toLowerCase().includes(id)) {
-      if (!info.agents.some(a => a.id === id)) {
-        info.agents.push({
-          id,
-          name: def.name,
-          description: def.description,
-          model: def.recommendedModel,
-        });
-      }
-    }
-  }
-}
-
-/** 从 hooks.json 提取 hooks 信息 */
-function extractHooksInfo(hooksConfig) {
-  const hooks = [];
-  if (hooksConfig.hooks) {
-    for (const [event, matchers] of Object.entries(hooksConfig.hooks)) {
-      if (Array.isArray(matchers)) {
-        for (const m of matchers) {
-          if (m.hooks && Array.isArray(m.hooks)) {
-            for (const h of m.hooks) {
-              hooks.push({
-                event,
-                matcher: m.matcher || '.*',
-                command: h.command || '',
-                async: h.async !== false,
-              });
-            }
-          }
-        }
-      }
-    }
-  }
-  return hooks;
-}
-
-// ─── 能力列表 ──────────────────────────────────────────────────────────────
 
 /**
- * 输出 everything 可用的 agents 列表
+ * Check if a directory exists.
+ * @param {string} dirPath - Absolute directory path.
+ * @returns {Promise<boolean>}
  */
-export function getCapabilities(root = PROJECT_ROOT) {
-  const info = detect(root);
+async function dirExists(dirPath) {
+  try {
+    const s = await stat(dirPath);
+    return s.isDirectory();
+  } catch {
+    return false;
+  }
+}
 
-  const capabilities = [];
+/**
+ * List files in a directory matching a file extension.
+ * @param {string} dirPath - Absolute directory path.
+ * @param {string} ext - File extension without dot, e.g. 'md' or 'json'.
+ * @returns {Promise<string[]>} Basenames of matching files.
+ */
+async function listFilesByExt(dirPath, ext) {
+  if (!(await dirExists(dirPath))) return [];
+  try {
+    const entries = await readdir(dirPath);
+    return entries.filter((f) => extname(f) === `.${ext}`);
+  } catch {
+    return [];
+  }
+}
 
-  // 从配置中发现的 agents
-  for (const agent of info.agents) {
-    const known = KNOWN_AGENTS[agent.id];
-    capabilities.push({
-      id: `everything:${agent.id}`,
-      name: agent.name,
-      description: agent.description || (known ? known.description : `Everything agent: ${agent.id}`),
-      category: known ? known.category : 'custom',
-      recommendedModel: agent.model || (known ? known.recommendedModel : 'sonnet'),
-      models: known ? known.models : [agent.model || 'sonnet'],
-      requiresReview: false,
-      source: 'everything',
-      tools: agent.tools,
+/**
+ * Parse YAML-like frontmatter from a markdown file.
+ * Supports key: value, key: [array], and multi-line list syntax.
+ * @param {string} content - Raw file content.
+ * @returns {Record<string, string|string[]>} Parsed frontmatter as flat key-value pairs.
+ */
+function parseFrontmatter(content) {
+  const fm = {};
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) return fm;
+  const lines = match[1].split('\n');
+  let currentKey = null;
+  let isList = false;
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    // List continuation (lines starting with - inside a list)
+    if (isList && line.startsWith('- ')) {
+      if (currentKey && Array.isArray(fm[currentKey])) {
+        fm[currentKey].push(line.slice(2).trim());
+      }
+      continue;
+    }
+
+    // Close list mode when we hit a new key
+    isList = false;
+
+    const kvMatch = line.match(/^([\w-]+)\s*:\s*(.*)/);
+    if (!kvMatch) continue;
+
+    const key = kvMatch[1];
+    const value = kvMatch[2].trim();
+
+    if (value.startsWith('[') && value.endsWith(']')) {
+      // Inline array: [a, b, c]
+      fm[key] = value.slice(1, -1).split(',').map((s) => s.trim()).filter(Boolean);
+    } else if (value === '') {
+      // Start of a multi-line list
+      isList = true;
+      fm[key] = [];
+      currentKey = key;
+    } else {
+      // Scalar value — strip surrounding quotes if present
+      fm[key] = value.replace(/^["']|["']$/g, '');
+    }
+  }
+
+  return fm;
+}
+
+// ---------------------------------------------------------------------------
+// Public API — 8 functions
+// ---------------------------------------------------------------------------
+
+/**
+ * 1. detect(projectRoot) — Detect whether an everything-claude-code installation exists.
+ *
+ * Checks for agents/, rules/, and hooks/ directories and their contents.
+ * Returns detection results with file-level detail.
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @returns {Promise<{
+ *   detected: boolean,
+ *   agents: string[],
+ *   rules: string[],
+ *   contexts: string[],
+ *   hasHooks: boolean,
+ *   hookEvents: string[],
+ *   agentCount: number,
+ *   ruleCount: number,
+ *   contextCount: number
+ * }>}
+ */
+export async function detect(projectRoot) {
+  const agentsDir = join(projectRoot, 'agents');
+  const rulesDir = join(projectRoot, 'rules');
+  const hooksDir = join(projectRoot, 'hooks');
+  const contextsDir = join(projectRoot, 'contexts');
+
+  const [agentFiles, ruleFiles, contextFiles, hooksJson] = await Promise.all([
+    listFilesByExt(agentsDir, 'md'),
+    listFilesByExt(rulesDir, 'md'),
+    listFilesByExt(contextsDir, 'md'),
+    safeRead(join(hooksDir, 'hooks.json')),
+  ]);
+
+  const agentNames = agentFiles.map((f) => f.replace(/\.md$/, ''));
+  const ruleNames = ruleFiles.map((f) => f.replace(/\.md$/, ''));
+  const contextNames = contextFiles.map((f) => f.replace(/\.md$/, ''));
+
+  let hookEvents = [];
+  if (hooksJson) {
+    try {
+      const parsed = JSON.parse(hooksJson);
+      hookEvents = Object.keys(parsed).filter((k) => EVERYTHING_HOOK_TYPES.includes(k));
+    } catch {
+      // Malformed hooks.json — treat as no hooks configured
+    }
+  }
+
+  const detected = agentNames.length > 0 || ruleNames.length > 0;
+
+  return {
+    detected,
+    agents: agentNames,
+    rules: ruleNames,
+    contexts: contextNames,
+    hasHooks: hookEvents.length > 0,
+    hookEvents,
+    agentCount: agentNames.length,
+    ruleCount: ruleNames.length,
+    contextCount: contextNames.length,
+  };
+}
+
+/**
+ * 2. getAgents(projectRoot) — List all available Agents with metadata.
+ *
+ * Scans agents/*.md files, parses frontmatter to extract name, description,
+ * tools, model preferences, and trigger conditions.
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @returns {Promise<Array<{
+ *   file: string,
+ *   name: string,
+ *   description: string,
+ *   tools: string[],
+ *   model: string,
+ *   triggers: string[]
+ * }>>}
+ */
+export async function getAgents(projectRoot) {
+  const agentsDir = join(projectRoot, 'agents');
+  const files = await listFilesByExt(agentsDir, 'md');
+  if (files.length === 0) return [];
+
+  const results = await Promise.all(
+    files.map(async (file) => {
+      const content = await safeRead(join(agentsDir, file));
+      if (!content) return null;
+
+      const fm = parseFrontmatter(content);
+      const name = fm.name || file.replace(/\.md$/, '');
+      const description = fm.description || 'No description provided.';
+
+      // Normalize tools: could be string, array, or undefined
+      let tools = [];
+      if (typeof fm.tools === 'string') {
+        tools = [fm.tools];
+      } else if (Array.isArray(fm.tools)) {
+        tools = fm.tools;
+      }
+
+      const model = fm.model || 'default';
+
+      // Extract triggers from frontmatter, or derive from agent keyword map
+      let triggers = [];
+      if (typeof fm.triggers === 'string') {
+        triggers = [fm.triggers];
+      } else if (Array.isArray(fm.triggers)) {
+        triggers = fm.triggers;
+      }
+
+      // If no explicit triggers, derive from the canonical agent keywords
+      if (triggers.length === 0) {
+        const agentId = file.replace(/\.md$/, '');
+        const keywords = AGENT_KEYWORD_MAP[agentId];
+        if (keywords) {
+          triggers = keywords.slice(0, 5);
+        }
+      }
+
+      return {
+        file,
+        name,
+        description,
+        tools,
+        model,
+        triggers,
+      };
+    }),
+  );
+
+  return results.filter(Boolean);
+}
+
+/**
+ * 3. getRules(projectRoot) — List all rules defined in the project.
+ *
+ * Scans rules/*.md files and extracts rule metadata from frontmatter.
+ * Returns rule name, description, and body content (stripped of frontmatter).
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @returns {Promise<Array<{
+ *   file: string,
+ *   name: string,
+ *   description: string,
+ *   content: string
+ * }>>}
+ */
+export async function getRules(projectRoot) {
+  const rulesDir = join(projectRoot, 'rules');
+  const files = await listFilesByExt(rulesDir, 'md');
+  if (files.length === 0) return [];
+
+  const results = await Promise.all(
+    files.map(async (file) => {
+      const content = await safeRead(join(rulesDir, file));
+      if (!content) return null;
+
+      const fm = parseFrontmatter(content);
+      const name = fm.name || file.replace(/\.md$/, '');
+      const description = fm.description || 'No description provided.';
+
+      // Extract content after frontmatter block
+      const firstDash = content.indexOf('---');
+      if (firstDash === 0) {
+        const secondDash = content.indexOf('---', firstDash + 3);
+        const body = secondDash > 0 ? content.slice(secondDash + 3).trim() : '';
+        return { file, name, description, content: body };
+      }
+
+      return { file, name, description, content: content.trim() };
+    }),
+  );
+
+  return results.filter(Boolean);
+}
+
+/**
+ * 4. getHooks(projectRoot) — List all Hook configurations grouped by lifecycle event.
+ *
+ * Reads hooks/hooks.json and parses hook definitions for each lifecycle event.
+ * Supports both string-only and object-style hook entries.
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @returns {Promise<Record<string, Array<{
+ *   command: string,
+ *   description: string,
+ *   enabled: boolean,
+ *   condition?: string
+ * }>>>}
+ */
+export async function getHooks(projectRoot) {
+  const hooksPath = join(projectRoot, 'hooks', 'hooks.json');
+  const raw = await safeRead(hooksPath);
+  if (!raw) return {};
+
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return {};
+  }
+
+  /** @type {Record<string, Array<{command: string, description: string, enabled: boolean, condition?: string}>} */
+  const grouped = {};
+
+  for (const [event, hooks] of Object.entries(parsed)) {
+    if (!EVERYTHING_HOOK_TYPES.includes(event)) continue;
+
+    if (!Array.isArray(hooks)) {
+      grouped[event] = [];
+      continue;
+    }
+
+    grouped[event] = hooks.map((h) => {
+      if (typeof h === 'string') {
+        return {
+          command: h,
+          description: '',
+          enabled: true,
+        };
+      }
+      return {
+        command: h.command || h.cmd || h.script || '',
+        description: h.description || h.desc || '',
+        enabled: h.enabled !== false,
+        condition: h.condition || h.when || undefined,
+      };
     });
   }
 
-  // 如果没有自定义 agents，列出已知的
-  if (capabilities.length === 0) {
-    for (const [id, def] of Object.entries(KNOWN_AGENTS)) {
-      capabilities.push({
-        id: `everything:${id}`,
-        name: def.name,
-        description: def.description,
-        category: def.category,
-        recommendedModel: def.recommendedModel,
-        models: def.models,
-        requiresReview: false,
-        source: 'everything',
-        triggers: def.triggers,
-      });
-    }
-  }
-
-  return {
-    source: 'everything-claude-code',
-    version: info.version,
-    available: info.available,
-    agentCount: capabilities.length,
-    capabilities,
-    rules: info.rules,
-    hooks: info.hooks,
-  };
+  return grouped;
 }
-
-// ─── 模型选择 ──────────────────────────────────────────────────────────────
-
-export function selectModel(agentId, taskDescription) {
-  const known = KNOWN_AGENTS[agentId];
-  if (!known) return 'sonnet';
-
-  const task = (taskDescription || '').toLowerCase();
-  const complexSignals = ['architect', 'security', 'performance', 'systematic', 'deep'];
-  const simpleSignals = ['format', 'lint', 'small', 'quick'];
-
-  if (known.models.includes('opus') && complexSignals.some(s => task.includes(s))) {
-    return 'opus';
-  }
-  if (known.models.includes('haiku') && simpleSignals.some(s => task.includes(s))) {
-    return 'haiku';
-  }
-  if (known.models.includes('sonnet')) return 'sonnet';
-  return known.models[0];
-}
-
-// ─── Agent 调度 ────────────────────────────────────────────────────────────
 
 /**
- * 调度 everything agent 执行任务
+ * 5. getContexts(projectRoot) — List all context modes defined in the project.
  *
- * 使用 Claude Code 的 Agent tool 模式：
- *   - 构建 agent prompt
- *   - 指定模型
- *   - 传入上下文
+ * Scans contexts/*.md files and returns mode specifications.
+ * Recognized modes: dev, review, research. Falls back to default
+ * behavior descriptions when no frontmatter behaviors are found.
  *
- * @param {string} agentId - Agent ID
- * @param {string} taskDescription - 任务描述
- * @param {object} options - 可选参数
- * @param {string} options.model - 指定模型
- * @param {object} options.context - 额外上下文（文件路径、错误信息等）
- * @param {string} root - 项目根目录
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @returns {Promise<Array<{
+ *   file: string,
+ *   mode: string,
+ *   description: string,
+ *   behaviors: string[]
+ * }>>}
  */
-export function dispatch(agentId, taskDescription, options = {}, root = PROJECT_ROOT) {
-  const info = detect(root);
-  const known = KNOWN_AGENTS[agentId];
+export async function getContexts(projectRoot) {
+  const contextsDir = join(projectRoot, 'contexts');
+  const files = await listFilesByExt(contextsDir, 'md');
+  if (files.length === 0) return [];
 
-  if (!info.available && !known) {
-    return {
-      success: false,
-      error: `Agent "${agentId}" not found in everything config or known agents.`,
-      availableAgents: info.agents.map(a => a.id),
-      knownAgents: Object.keys(KNOWN_AGENTS),
-      suggestion: 'Add the agent to your everything.json config or use a known agent ID.',
-    };
+  const DEFAULT_BEHAVIORS = {
+    dev: [
+      'Auto-detect project type',
+      'Enable code generation and editing',
+      'Use build tools for compilation',
+      'Fast iteration mode',
+    ],
+    review: [
+      'Read-only analysis mode',
+      'No file modifications',
+      'Code quality and security checks',
+      'Architecture review focus',
+    ],
+    research: [
+      'Deep analysis and exploration',
+      'Comprehensive documentation',
+      'Multiple solution comparison',
+      'No implementation — analysis only',
+    ],
+  };
+
+  const results = await Promise.all(
+    files.map(async (file) => {
+      const content = await safeRead(join(contextsDir, file));
+      if (!content) return null;
+
+      const fm = parseFrontmatter(content);
+      const modeName = fm.mode || fm.name || file.replace(/\.md$/, '');
+      const description = fm.description || 'No description provided.';
+
+      // Extract behaviors from frontmatter, or use mode-specific defaults
+      let behaviors = [];
+      if (Array.isArray(fm.behaviors)) {
+        behaviors = fm.behaviors;
+      } else if (DEFAULT_BEHAVIORS[modeName]) {
+        behaviors = DEFAULT_BEHAVIORS[modeName];
+      }
+
+      return {
+        file,
+        mode: modeName,
+        description,
+        behaviors,
+      };
+    }),
+  );
+
+  return results.filter(Boolean);
+}
+
+/**
+ * 6. recommendAgent(userInput, context) — Recommend the optimal Agent based on user input.
+ *
+ * Uses keyword matching to map user intent to the most appropriate
+ * everything agent. Returns a scored result with primary recommendation
+ * and up to 3 fallbacks. Adjusts scoring based on context mode.
+ *
+ * @param {string} userInput - The user's natural language input.
+ * @param {string} [context='dev'] - Current context mode: 'dev' | 'review' | 'research'.
+ * @returns {{
+ *   primary: string|null,
+ *   score: number,
+ *   matchedKeywords: string[],
+ *   fallbacks: Array<{agent: string, score: number, matchedKeywords: string[]}>
+ * }}
+ */
+export function recommendAgent(userInput, context = 'dev') {
+  const input = userInput.toLowerCase();
+  /** @type {Array<{agent: string, score: number, matchedKeywords: string[]}>} */
+  const scored = [];
+
+  for (const [agent, keywords] of Object.entries(AGENT_KEYWORD_MAP)) {
+    const matched = keywords.filter((kw) => input.includes(kw));
+    if (matched.length === 0) continue;
+
+    // Score: weighted by keyword length — longer keywords are more specific
+    const score = matched.reduce((sum, kw) => sum + kw.length / 10, 0);
+    scored.push({ agent, score, matchedKeywords: matched });
   }
 
-  const model = options.model || selectModel(agentId, taskDescription);
-  const agentConfig = info.agents.find(a => a.id === agentId);
+  // Sort by score descending
+  scored.sort((a, b) => b.score - a.score);
 
-  // 构建 Agent tool 调用指令
-  const systemPrompt = buildAgentPrompt(agentId, agentConfig, known, taskDescription, options);
+  // Context-based scoring adjustments
+  if (context === 'review') {
+    const reviewAgents = new Set([
+      'code-reviewer', 'security-auditor', 'architecture-analyzer',
+      'ui-ux-reviewer', 'performance-analyzer',
+    ]);
+    for (const s of scored) {
+      if (reviewAgents.has(s.agent)) {
+        s.score *= 1.5;
+      } else {
+        s.score *= 0.7;
+      }
+    }
+    scored.sort((a, b) => b.score - a.score);
+  }
 
-  const dispatchPayload = {
-    agent: agentId,
-    task: taskDescription,
-    model,
-    systemPrompt,
-    context: {
-      projectRoot: root,
-      timestamp: new Date().toISOString(),
-      ...options.context,
+  if (context === 'research') {
+    const researchAgents = new Set([
+      'architecture-analyzer', 'documentation-writer', 'security-auditor',
+      'performance-analyzer', 'dependency-auditor',
+    ]);
+    for (const s of scored) {
+      if (researchAgents.has(s.agent)) {
+        s.score *= 1.3;
+      }
+    }
+    scored.sort((a, b) => b.score - a.score);
+  }
+
+  const primary = scored.length > 0 ? scored[0] : null;
+  const fallbacks = scored.slice(1, 4);
+
+  return {
+    primary: primary ? primary.agent : null,
+    score: primary ? Math.round(primary.score * 100) / 100 : 0,
+    matchedKeywords: primary ? primary.matchedKeywords : [],
+    fallbacks: fallbacks.map((f) => ({
+      agent: f.agent,
+      score: Math.round(f.score * 100) / 100,
+      matchedKeywords: f.matchedKeywords,
+    })),
+  };
+}
+
+/**
+ * 7. injectRules(projectRoot, rules) — Inject specified rules into session context.
+ *
+ * Reads the specified rule files from rules/ directory, extracts their
+ * content (stripping frontmatter), and merges them into a single block
+ * of rule text suitable for injection into a session system prompt.
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @param {string[]} ruleNames - Rule identifiers (filenames without .md extension).
+ * @returns {Promise<{
+ *   injected: string,
+ *   found: string[],
+ *   missing: string[],
+ *   totalChars: number
+ * }>}
+ */
+export async function injectRules(projectRoot, ruleNames) {
+  const rulesDir = join(projectRoot, 'rules');
+  /** @type {string[]} */
+  const found = [];
+  /** @type {string[]} */
+  const missing = [];
+  /** @type {string[]} */
+  const contents = [];
+
+  for (const name of ruleNames) {
+    // Support both with and without .md extension
+    const fileName = name.endsWith('.md') ? name : `${name}.md`;
+    const content = await safeRead(join(rulesDir, fileName));
+
+    if (content === null) {
+      missing.push(name);
+      continue;
+    }
+
+    found.push(name);
+
+    // Strip frontmatter — keep only the rule body
+    const firstDash = content.indexOf('---');
+    let body;
+    if (firstDash === 0) {
+      const secondDash = content.indexOf('---', firstDash + 3);
+      body = secondDash > 0 ? content.slice(secondDash + 3).trim() : content.trim();
+    } else {
+      body = content.trim();
+    }
+
+    contents.push(`## Rule: ${name}\n\n${body}`);
+  }
+
+  const injected = contents.length > 0
+    ? `<!-- Injected rules from everything-claude-code -->\n${contents.join('\n\n---\n\n')}`
+    : '';
+
+  return {
+    injected,
+    found,
+    missing,
+    totalChars: injected.length,
+  };
+}
+
+/**
+ * 8. mergeWithChaos(projectRoot) — Merge everything best practices into chaos-harness.
+ *
+ * Analyzes all 14 everything agents and determines how each can be absorbed
+ * as a sub-capability within the chaos-harness skill ecosystem. Also maps
+ * hooks to their chaos-harness equivalents and rules to iron laws.
+ * Returns a structured merge plan with compatibility ratings and reasoning.
+ *
+ * @param {string} projectRoot - Absolute path to the project root.
+ * @returns {Promise<{
+ *   agents: Array<{
+ *     everythingAgent: string,
+ *     chaosSkill: string,
+ *     subCapability: string,
+ *     compatibility: string,
+ *     reason: string,
+ *     installed: boolean
+ *   }>,
+ *   hooks: Array<{
+ *     everythingHook: string,
+ *     chaosHook: string,
+ *     note: string
+ *   }>,
+ *   rules: Array<{
+ *     everythingRule: string,
+ *     chaosLaw: string,
+ *     note: string
+ *   }>,
+ *   summary: { high: number, medium: number, low: number }
+ * }>}
+ */
+export async function mergeWithChaos(projectRoot) {
+  // Detect what's actually installed in the project
+  const { agents: installedAgents } = await detect(projectRoot);
+
+  // Build agent merge plan — prioritize installed agents
+  const agents = Object.entries(CHAOS_MERGE_MAP)
+    .map(([agent, mapping]) => ({
+      everythingAgent: agent,
+      chaosSkill: mapping.chaosSkill,
+      subCapability: mapping.subCapability,
+      compatibility: mapping.compatibility,
+      reason: mapping.reason,
+      installed: installedAgents.includes(agent),
+    }))
+    .sort((a, b) => {
+      // Installed agents first, then by compatibility level
+      if (a.installed !== b.installed) return a.installed ? -1 : 1;
+      const order = { high: 0, medium: 1, low: 2 };
+      return (order[a.compatibility] ?? 3) - (order[b.compatibility] ?? 3);
+    });
+
+  // Hook mapping: everything lifecycle events -> chaos-harness hook equivalents
+  const hooks = [
+    {
+      everythingHook: 'pre-session',
+      chaosHook: 'pre-compact',
+      note: 'Both run before session processing; pre-session can inject context, pre-compact saves state.',
     },
-    // Claude Code Agent tool 调用格式
-    agentToolCall: {
-      tool: 'Agent',
-      input: {
-        prompt: systemPrompt,
-        model,
-        ...(agentConfig?.tools ? { allowedTools: agentConfig.tools } : {}),
-      },
+    {
+      everythingHook: 'post-session',
+      chaosHook: 'post-compact',
+      note: 'Both run after session; can be unified for state persistence.',
     },
+    {
+      everythingHook: 'pre-commit',
+      chaosHook: 'pre-commit',
+      note: 'Direct mapping — both validate before commit.',
+    },
+    {
+      everythingHook: 'post-commit',
+      chaosHook: 'post-commit',
+      note: 'Direct mapping — both handle post-commit actions.',
+    },
+    {
+      everythingHook: 'pre-build',
+      chaosHook: 'pre-build',
+      note: 'Both run before build; chaos-harness can adopt pre-build validation.',
+    },
+    {
+      everythingHook: 'post-build',
+      chaosHook: 'post-build',
+      note: 'Both run after build; can unify for build result analysis.',
+    },
+  ];
+
+  // Rule-to-iron-law mapping
+  const rules = [
+    {
+      everythingRule: 'agent-selection',
+      chaosLaw: 'IL-TEAM002',
+      note: 'Agent selection maps to "DEVELOPMENT REQUIRES PARALLEL AGENTS" — auto-select optimal agents.',
+    },
+    {
+      everythingRule: 'context-switching',
+      chaosLaw: 'IL004',
+      note: 'Context switching requires user consent per "NO VERSION CHANGES WITHOUT USER CONSENT".',
+    },
+    {
+      everythingRule: 'tool-usage',
+      chaosLaw: 'IL005',
+      note: 'Tool usage constraints map to "NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL".',
+    },
+    {
+      everythingRule: 'output-format',
+      chaosLaw: 'IL001',
+      note: 'Output formatting aligns with "NO DOCUMENTS WITHOUT VERSION LOCK" — structured outputs.',
+    },
+    {
+      everythingRule: 'error-handling',
+      chaosLaw: 'IL003',
+      note: 'Error handling maps to "NO COMPLETION CLAIMS WITHOUT VERIFICATION" — validate outcomes.',
+    },
+    {
+      everythingRule: 'session-management',
+      chaosLaw: 'IL-TEAM003',
+      note: 'Session management aligns with "MONITORING MUST BE CONTINUOUS" — track session state.',
+    },
+    {
+      everythingRule: 'file-conventions',
+      chaosLaw: 'IL-JAVA001',
+      note: 'File conventions map to code style requirements (CheckStyle for Java, ESLint for JS).',
+    },
+    {
+      everythingRule: 'review-gate',
+      chaosLaw: 'IL-TEAM001',
+      note: 'Review gate maps to "REVIEW REQUIRES MULTIPLE AGENTS" — mandatory multi-agent review.',
+    },
+  ];
+
+  // Summary counts by compatibility level
+  const summary = {
+    high: agents.filter((a) => a.compatibility === 'high').length,
+    medium: agents.filter((a) => a.compatibility === 'medium').length,
+    low: agents.filter((a) => a.compatibility === 'low').length,
   };
 
-  return {
-    success: true,
-    dispatched: dispatchPayload,
-    note: 'To execute, pass agentToolCall.input to Claude Code Agent tool.',
-  };
+  return { agents, hooks, rules, summary };
 }
 
-/** 构建 agent 系统提示 */
-function buildAgentPrompt(agentId, agentConfig, knownDef, taskDescription, options) {
-  const parts = [];
+// ---------------------------------------------------------------------------
+// CLI entry point — run diagnostics when executed directly
+// ---------------------------------------------------------------------------
 
-  // Agent 角色定义
-  const name = agentConfig?.name || knownDef?.name || agentId;
-  const description = agentConfig?.description || knownDef?.description || '';
+if (process.argv[1] && /everything[\\/]adapter\.mjs$/.test(process.argv[1])) {
+  const targetRoot = process.argv[2] || process.cwd();
+  console.log(`[everything adapter] Diagnosing: ${targetRoot}\n`);
 
-  parts.push(`You are ${name}.`);
-  parts.push(description);
-  parts.push('');
+  const detection = await detect(targetRoot);
+  console.log('Detection:', JSON.stringify(detection, null, 2));
 
-  // 任务描述
-  parts.push(`## Task`);
-  parts.push(taskDescription);
-  parts.push('');
+  if (detection.detected) {
+    console.log('\n--- Agents ---');
+    const agents = await getAgents(targetRoot);
+    console.log(JSON.stringify(agents, null, 2));
 
-  // 上下文
-  if (options.context) {
-    parts.push('## Context');
-    if (options.context.filePaths) {
-      parts.push(`### Files`);
-      for (const fp of options.context.filePaths) {
-        parts.push(`- ${fp}`);
-      }
-      parts.push('');
-    }
-    if (options.context.diff) {
-      parts.push(`### Diff`);
-      parts.push('```diff');
-      parts.push(options.context.diff);
-      parts.push('```');
-      parts.push('');
-    }
-    if (options.context.error) {
-      parts.push(`### Error`);
-      parts.push('```');
-      parts.push(options.context.error);
-      parts.push('```');
-      parts.push('');
-    }
+    console.log('\n--- Rules ---');
+    const rules = await getRules(targetRoot);
+    console.log(JSON.stringify(rules.map((r) => ({ file: r.file, name: r.name })), null, 2));
+
+    console.log('\n--- Hooks ---');
+    const hooks = await getHooks(targetRoot);
+    console.log(JSON.stringify(hooks, null, 2));
+
+    console.log('\n--- Contexts ---');
+    const contexts = await getContexts(targetRoot);
+    console.log(JSON.stringify(contexts, null, 2));
   }
 
-  // Agent 自定义 prompt（如果有）
-  if (agentConfig?.prompt) {
-    parts.push('## Instructions');
-    parts.push(agentConfig.prompt);
-    parts.push('');
-  }
+  // Demo recommendation
+  const demoInput = process.argv[3] || 'fix the build error in the project';
+  console.log(`\n--- Recommendation for: "${demoInput}" ---`);
+  const rec = recommendAgent(demoInput);
+  console.log(JSON.stringify(rec, null, 2));
 
-  // 通用约束
-  parts.push('## Rules');
-  parts.push('- Follow the project conventions and coding standards');
-  parts.push('- Be thorough but concise');
-  parts.push('- Report findings clearly with actionable items');
-  parts.push('');
-
-  return parts.join('\n');
+  // Demo merge plan
+  console.log('\n--- Merge Plan Summary ---');
+  const merge = await mergeWithChaos(targetRoot);
+  console.log(JSON.stringify(merge.summary, null, 2));
 }
-
-/**
- * 智能匹配 agent — 根据任务描述自动选择最合适的 agent
- */
-export function matchAgent(taskDescription, root = PROJECT_ROOT) {
-  const capabilities = getCapabilities(root);
-  const task = taskDescription.toLowerCase();
-
-  let bestMatch = null;
-  let bestScore = 0;
-
-  for (const cap of capabilities.capabilities) {
-    let score = 0;
-
-    // 匹配 triggers
-    const triggers = cap.triggers || [];
-    for (const t of triggers) {
-      if (task.includes(t.toLowerCase())) score += 5;
-    }
-
-    // 匹配描述关键词
-    const desc = (cap.description || '').toLowerCase();
-    const name = (cap.name || '').toLowerCase();
-    const keywords = task.split(/\s+/).filter(w => w.length > 3);
-    for (const kw of keywords) {
-      if (desc.includes(kw)) score += 2;
-      if (name.includes(kw)) score += 3;
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = cap;
-    }
-  }
-
-  if (bestMatch && bestScore > 0) {
-    return {
-      matched: true,
-      agent: bestMatch,
-      confidence: Math.min(bestScore / 10, 1),
-      score: bestScore,
-    };
-  }
-
-  return {
-    matched: false,
-    suggestion: capabilities.capabilities[0] || null,
-    reason: `No agent matched "${taskDescription}" with sufficient confidence.`,
-  };
-}
-
-/**
- * 加载 rules 配置
- */
-export function getRules(root = PROJECT_ROOT) {
-  const info = detect(root);
-  const rules = [];
-
-  for (const rule of info.rules) {
-    if (rule.path && existsSync(rule.path)) {
-      try {
-        rules.push({
-          path: rule.path,
-          content: readFileSync(rule.path, 'utf8'),
-          size: statSync(rule.path).size,
-        });
-      } catch { /* skip unreadable files */ }
-    } else if (rule.id) {
-      rules.push(rule);
-    }
-  }
-
-  return {
-    source: 'everything',
-    ruleCount: rules.length,
-    rules,
-  };
-}
-
-/**
- * 加载 hooks 配置
- */
-export function getHooks(root = PROJECT_ROOT) {
-  const info = detect(root);
-  return {
-    source: 'everything',
-    hookCount: info.hooks.length,
-    hooks: info.hooks,
-  };
-}
-
-// ─── CLI 入口 ──────────────────────────────────────────────────────────────
-
-function main() {
-  const command = process.argv[2] || 'detect';
-  const root = process.argv[3] || PROJECT_ROOT;
-
-  switch (command) {
-    case 'detect':
-      console.log(JSON.stringify(detect(root), null, 2));
-      break;
-
-    case 'capabilities':
-      console.log(JSON.stringify(getCapabilities(root), null, 2));
-      break;
-
-    case 'rules':
-      console.log(JSON.stringify(getRules(root), null, 2));
-      break;
-
-    case 'hooks':
-      console.log(JSON.stringify(getHooks(root), null, 2));
-      break;
-
-    case 'dispatch': {
-      const agentId = process.argv[4];
-      const taskDesc = process.argv[5];
-      if (!agentId || !taskDesc) {
-        console.error('Usage: adapter.mjs dispatch <agent-id> <task-description> [projectRoot]');
-        process.exit(1);
-      }
-      const options = {};
-      for (let i = 6; i < process.argv.length; i++) {
-        const arg = process.argv[i];
-        if (arg.startsWith('--model=')) options.model = arg.split('=')[1];
-      }
-      console.log(JSON.stringify(dispatch(agentId, taskDesc, options, root), null, 2));
-      break;
-    }
-
-    case 'match': {
-      const taskDesc = process.argv[4];
-      if (!taskDesc) {
-        console.error('Usage: adapter.mjs match <task-description> [projectRoot]');
-        process.exit(1);
-      }
-      console.log(JSON.stringify(matchAgent(taskDesc, root), null, 2));
-      break;
-    }
-
-    default:
-      console.error(`Unknown command: ${command}`);
-      console.error('Usage: adapter.mjs [detect|capabilities|rules|hooks|dispatch|match] [projectRoot]');
-      process.exit(1);
-  }
-}
-
-if (process.argv[1] && /everything[\\/]adapter/.test(process.argv[1])) {
-  main();
-}
-
-export default { detect, getCapabilities, dispatch, matchAgent, selectModel, getRules, getHooks };
