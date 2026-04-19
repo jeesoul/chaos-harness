@@ -2,57 +2,79 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [main, v1.3.1]
   pull_request:
-    branches: [master, main]
+    branches: [main, v1.3.1]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Build
-      run: npm run build
-
-    - name: Test
-      run: npm test
-
-    - name: Coverage report
-      if: matrix.node-version == '20.x'
-      uses: codecov/codecov-action@v4
-      with:
-        files: ./coverage/coverage-final.json
-        fail_ci_if_error: false
-
-  lint:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-        cache: 'npm'
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-    - name: Install dependencies
-      run: npm ci
+      # Step 1: Check all .mjs script syntax
+      - name: Check .mjs syntax
+        run: |
+          find . -name '*.mjs' -not -path './node_modules/*' -print0 | while IFS= read -r -d '' f; do
+            echo "Checking $f ..."
+            node -c "$f"
+          done
 
-    - name: TypeScript check
-      run: npm run build
+      # Step 2: Run gate-machine tests
+      - name: Run tests
+        run: node tests/gate-machine.test.mjs
+
+      # Step 3: Validate hooks.json format
+      - name: Validate hooks.json
+        run: node -e 'JSON.parse(require("fs").readFileSync("hooks/hooks.json", "utf8")); console.log("hooks.json: valid")'
+
+      # Step 4: Check SKILL.md frontmatter (must have name/description/version)
+      - name: Check SKILL.md frontmatter
+        run: |
+          ERRORS=""
+          while IFS= read -r -d '' f; do
+            FM=$(sed -n '/^---$/,/^---$/p' "$f")
+            if [ -z "$FM" ]; then
+              ERRORS="${ERRORS}FAIL: $f -- no frontmatter found\n"
+              continue
+            fi
+            for KEY in name description version; do
+              if ! echo "$FM" | grep -qi "^${KEY}:"; then
+                ERRORS="${ERRORS}FAIL: $f -- missing '${KEY}' in frontmatter\n"
+              fi
+            done
+          done < <(find . -name 'SKILL.md' -not -path './node_modules/*' -print0)
+          if [ -n "$ERRORS" ]; then
+            echo -e "$ERRORS"
+            echo "Frontmatter check failed"
+            exit 1
+          fi
+          echo "All SKILL.md frontmatter: valid"
+
+      # Step 5: Check critical gate-machine files exist
+      - name: Check critical files
+        run: |
+          FILES=(
+            "scripts/gate-machine.mjs"
+            "scripts/gate-validator.mjs"
+            "scripts/gate-recovery.mjs"
+            "scripts/gate-enforcer.mjs"
+          )
+          FAIL=0
+          for F in "${FILES[@]}"; do
+            if [ ! -f "$F" ]; then
+              echo "FAIL: missing $F"
+              FAIL=1
+            fi
+          done
+          if [ "$FAIL" -eq 1 ]; then
+            echo "Critical file check failed"
+            exit 1
+          fi
+          echo "All critical files present"
