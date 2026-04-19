@@ -1,6 +1,6 @@
 {
   "name": "chaos-harness",
-  "description": "Claude Code Agent Constraint Framework - Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow, Auto Toolkit Installer",
+  "description": "AI Development Process Operating System",
   "owner": {
     "name": "jeesoul",
     "url": "https://github.com/jeesoul"
@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "chaos-harness",
-      "description": "Deterministic AI Agent Constraint Framework with Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow, and Auto Toolkit Installer",
+      "description": "AI 开发流程操作系统 — 整合 Superpowers/OpenSpec/Everything + Gate 状态机",
       "version": "1.4.0",
       "source": "./",
       "author": {

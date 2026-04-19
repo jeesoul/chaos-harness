@@ -30,7 +30,7 @@ import { fileURLToPath } from 'url';
 import { execSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = process.argv[3] || dirname(dirname(__dirname));
+const PROJECT_ROOT = dirname(dirname(__dirname));
 
 // ─── OpenSpec 目录和文件约定 ──────────────────────────────────────────────
 

@@ -1,314 +1,91 @@
 # Chaos Harness
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.0--%E5%AD%94%E6%98%8E-blue.svg">
+  <img src="https://img.shields.io/badge/version-1.4.0-blue.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
+  <img src="https://img.shields.io/badge/tests-14%2F14%20passing-brightgreen.svg">
+  <img src="https://img.shields.io/badge/integrations-Superpowers%20%7C%20OpenSpec%20%7C%20Everything-orange.svg">
 </p>
 
-<p align="center"><strong>确定性 AI Agent 约束框架</strong></p>
-<p align="center"><em>v1.3.0 孔明 — 运筹帷幄，决胜千里；以智御局，以律治心</em></p>
+<p align="center"><strong>AI 开发流程操作系统</strong></p>
+<p align="center"><em>Your AI dev team, finally has an operating system.</em></p>
 <p align="center"><em>Chaos demands order. Harness provides it.</em></p>
 
 ---
 
 ## 一句话定位
 
-> 用代码给 AI 立规矩，让 AI 从"不可控的天才"变成"严谨的工程师"。
+> 整合最优秀的 AI 开发框架，让 AI 从"不可控的天才"变成"可验证的工程"。
 
 ## 核心定位
 
-AI Agent 在辅助开发时的核心问题是非确定性——可能跳过验证、绕过约束、产生幻觉式交付。传统的自然语言提示词是软性建议，存在语义灰色空间。
+Chaos Harness v1.4.0 不是又一个 AI 约束框架，是**让所有 AI 开发框架能一起工作的操作系统**。
 
-Chaos Harness 将约束编码为**铁律（Iron Laws）**——不是文本规则，而是通过 Skills + Hooks 自动执行的硬性检查，消除语义博弈空间。
+- **Superpowers** 负责自动拆任务、子代理调度
+- **OpenSpec** 负责变更提案、规范驱动
+- **Everything** 负责最佳实践配置、Agent 库
+- **chaos-harness** 负责真验证、硬拦截、失败恢复
 
-### 三大特性
+## 架构
 
-| 特性 | 说明 |
-|------|------|
-| **确定性** | 铁律强制执行，行为路径可追溯、可审计 |
-| **可进化** | 自学习闭环：行为记录 → 规则优化 → 能力沉淀 |
-| **可扩展** | 开放插件生态，任意插件继承铁律约束 |
-
-### 适用场景
-
-| 场景 | 传统方式 | Chaos Harness |
-|------|----------|---------------|
-| 修 bug | Agent 说"修好了"，手动验证发现还有问题 | 铁律 IL003 强制提供验证证据，自动跑测试 |
-| 团队协作 | 口头规范，新人容易忘记 | 铁律自动阻断违规操作，规范融入流程 |
-| 开源项目 | Maintainer 手动清理不规范 PR | 铁律自动拦截，贡献者按规范输出 |
-
----
-
-## 安装指南
-
-### 快速安装
-
-```bash
-# 1. 克隆项目
-git clone https://github.com/jeesoul/chaos-harness.git
-
-# 2. 注册本地 marketplace
-claude plugins marketplace add "/path/to/chaos-harness"
-
-# 3. 安装插件
-claude plugins install chaos-harness@chaos-harness
-
-# 4. 重启 Claude Code，验证安装成功
-/chaos-harness:overview
 ```
-
-### 卸载
-
-```bash
-claude plugins uninstall chaos-harness@chaos-harness
-claude plugins marketplace remove chaos-harness
+L1 编排层: orchestrator + overdrive + workflow-supervisor
+    ↓
+L2 规划层: product-lifecycle + product-manager + prd-validator
+    ↓
+L3 能力层: ui-generator + test-assistant + web-access + java-checkstyle
+    ↓
+L4 验证层: gate-system + iron-law-enforcer + recovery + validator
 ```
-
-### 升级
-
-```bash
-# 1. 拉取最新代码
-cd /path/to/chaos-harness && git pull origin main
-
-# 2. 重新注册 marketplace
-claude plugins marketplace remove chaos-harness
-claude plugins marketplace add "/path/to/chaos-harness"
-
-# 3. 重装
-claude plugins uninstall chaos-harness@chaos-harness
-claude plugins install chaos-harness@chaos-harness
-```
-
-### 版本历史
-
-| 版本 | 主要更新 |
-|------|---------|
-| 1.3.0 孔明 | overdrive 超频模式（14 分钟全流程紧急处理）、P03/P04 强制 Multi-Agent 评审、LP007 Team 退化检测、产品经理增强、测试增强（Playwright+CDP 混合模式）、23 个 Skill、跨平台兼容修复（纯 Node.js API） |
-| 1.2.0 | 自学习闭环、自适应 Harness、Agent Team 铁律、CDP 浏览器自动化 |
-| 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 |
-| 1.0.0 | 核心框架：Skills + Hooks + Templates |
-
----
-
-## 解决什么问题？
-
-| 问题 | 表现 | 解决方案 |
-|------|------|----------|
-| 虚假完成声明 | "已修复" 但无验证 | IL003：强制要求验证证据 |
-| 跳过关键步骤 | "简单修复，跳过测试" | LP004：自动阻断并强制执行 |
-| 绕过约束规则 | "就这一次" | 10+ 绕过话术识别 + 驳回 |
-| 版本混乱 | 文档散落各目录 | IL001：强制版本目录 |
-| 敏感配置误操作 | 直接修改数据库/密钥 | IL005：审批机制拦截 |
-| 紧急任务低效 | Agent 说"我看看" | overdrive：所有 Agent 全速运行，14 分钟全流程 |
-| 多 Agent 退化 | 子 Agent 不干活，主 Agent 代劳 | LP007：强制重新分配，禁止单线程 |
-
----
 
 ## 核心能力
 
-### 铁律引擎 (Iron Law Engine)
-
-5 条核心铁律，自动执行，不可绕过：
-
-| ID | 规则 | 触发场景 |
-|----|------|----------|
-| IL001 | 文档必须在版本目录生成 | 任何文档输出 |
-| IL002 | Harness 生成依赖扫描数据 | 约束生成请求 |
-| IL003 | 完成声明必须附带验证证据 | Stop Hook |
-| IL004 | 版本变更需要用户确认 | 版本号修改 |
-| IL005 | 敏感配置修改需要审批 | 数据库/密钥配置 |
-
-扩展铁律支持自定义（`~/.claude/harness/iron-laws.yaml`）。
-
-### 偷懒检测 (Laziness Pattern Detection)
-
-| 模式 | 检测条件 | 处置 |
-|------|----------|------|
-| LP001 | 声称完成但无验证 | 阻断 + 要求举证 |
-| LP002 | 跳过根因分析直接修复 | 阻断 + 强制分析 |
-| LP003 | 长时间无产出 | 施压 + 进度要求 |
-| LP004 | 尝试跳过测试 | 阻断 + 强制测试 |
-| LP005 | 擅自更改版本号 | 阻断 + 恢复原版 |
-| LP006 | 自动处理高风险配置 | 阻断 + 用户审批 |
-| LP007 | Team 阶段主 Agent 代劳 | 阻断 + 强制重新分配 |
-
-### 钩子生态 (Hook System)
-
-| Hook | 触发时机 | 功能 |
-|------|----------|------|
-| SessionStart | 会话开始 | 注入铁律 + 恢复状态 + 智能推荐 + 学习分析 |
-| PreToolUse | 工具调用前 | 铁律预检 + 超频模式检测 |
-| PostToolUse | 工具调用后 | 偷懒检测 + 学习记录 + 场景感知 |
-| Stop | 回合结束 | 完成声明分析 + 偷懒检测 |
-| PreCompact | 对话压缩前 | 保存关键上下文 + Team 退化检测 |
-| Overdrive | 全局检测 | 超频模式激活 + 大模型效率指令注入 |
-
-### 智能场景感知 (Auto Context)
-
-后台自动运行，监测文件操作并推荐对应 Skill：
-
-| 操作 | 推荐 |
-|------|------|
-| 写 Vue/React 组件 | 加载对应模板铁律 |
-| 写 PRD/需求文档 | product-lifecycle + prd-validator |
-| 写测试文件 | test-assistant |
-| P03 设计完成 | 推荐 Multi-Agent 设计评审 |
-| P04 技术完成 | 推荐 Multi-Agent 技术评审 |
-
-### 超频模式 (Overdrive)
-
-当遇到紧急任务时，一键激活最高优先级处理模式：
-
-- **触发词**：紧急、超频、overdrive、立刻解决、线上问题
-- **适用范围**：bug 修复 / 需求变更 / 架构修改 / 测试调整 / 运维事故
-- **效率保障**：零铺垫、不解释、快速拍板、最小上下文
-- **时间目标**：14 分钟完成定位→决策→执行→验证全流程
-- **Agent 配置**：自动分配 3+ Agent 并行处理，主 Agent 只做协调
-- **监督加速**：空闲阈值减半（1/2/3/5 分钟快速响应）
-- **铁律策略**：跳过前置扫描，保留底线验证（版本/验证/安全不可跳过）
-
-### 自适应工作流
-
-12 阶段流程，按项目规模自动裁剪：
-
-| 阶段 | 名称 | Small | Medium | Large |
-|------|------|-------|--------|-------|
-| W01 | 需求理解 | ✅ | ✅ | ✅ |
-| W02 | 技术调研 | ❌ | ✅ | ✅ |
-| W03 | 架构设计 | ✅ | ✅ | ✅ |
-| W04 | 详细设计 | ❌ | ✅ | ✅ |
-| W05 | 编码实现 | ✅ | ✅ | ✅ |
-| W06 | 代码审查 | ❌ | ❌ | ✅ |
-| W07 | 集成测试 | ❌ | ✅ | ✅ |
-| W08 | 文档生成 | ✅ | ✅ | ✅ |
-| W09 | 发布准备 | ✅ | ✅ | ✅ |
-| W10 | 上线部署 | ✅ | ✅ | ✅ |
-| W11 | 回归验证 | ✅ | ✅ | ✅ |
-| W12 | 复盘总结 | ✅ | ✅ | ✅ |
-
----
-
-## 命令速查
-
-| 命令 | 功能 |
-|------|------|
-| `/chaos-harness:overview` | 系统概览：铁律状态、学习进度、项目统计 |
-| `/chaos-harness:overdrive` | 超频模式：最高优先级紧急任务，所有 Agent 全速运行 |
-| `/chaos-harness:project-scanner` | 项目扫描：类型检测、技术栈分析 |
-| `/chaos-harness:version-locker` | 版本管理：锁定、创建、变更追踪 |
-| `/chaos-harness:harness-generator` | 约束生成：基于扫描数据生成专属 Harness |
-| `/chaos-harness:workflow-supervisor` | 工作流编排：阶段控制、进度监控 |
-| `/chaos-harness:agent-team-orchestrator` | Agent Team 编排：自动并行、监督防懒 |
-| `/chaos-harness:iron-law-enforcer` | 铁律执行：自定义规则、绕过检测 |
-| `/chaos-harness:collaboration-reviewer` | 多 Agent 评审：自动启动、多视角汇总 |
-| `/chaos-harness:hooks-manager` | 钩子配置：启用/禁用、日志查看 |
-| `/chaos-harness:plugin-manager` | 插件管理：第三方接入、约束配置 |
-| `/chaos-harness:project-state` | 状态持久化：进度保存、会话恢复 |
-| `/chaos-harness:auto-toolkit-installer` | 工具链检测：自动安装依赖工具 |
-| `/chaos-harness:learning-analyzer` | 自学习分析：失败模式识别、规则优化 |
-| `/chaos-harness:product-lifecycle` | 产品全生命周期：需求→原型→开发→测试→发布 |
-| `/chaos-harness:product-manager` | 产品经理：需求池/Kano/竞品分析/用户故事 |
-| `/chaos-harness:prd-validator` | PRD 质量检查：验收标准/可追溯性 |
-| `/chaos-harness:test-assistant` | 测试助手：用例/E2E/覆盖率/回归对比 |
-| `/chaos-harness:visual-regression` | 可视化回归：CDP 截图对比 |
-| `/chaos-harness:ui-generator` | UI 生成：从 PRD 生成前端界面 |
-| `/chaos-harness:adaptive-harness` | 自适应优化：从学习数据强化铁律 |
-| `/chaos-harness:web-access` | 联网操作：搜索/抓取/CDP 浏览器自动化 |
-
-### 智能触发（无需记住命令）
-
-| 你说... | 自动推荐 |
-|--------|---------|
-| "紧急"、"超频"、"立刻解决" | **overdrive**（最高优先级，直接激活） |
-| "需求"、"PRD"、"原型" | product-lifecycle |
-| "PRD检查"、"PRD质量" | prd-validator |
-| "需求分析"、"竞品分析"、"Kano" | product-manager |
-| "测试用例"、"E2E"、"覆盖率" | test-assistant |
-| "视觉回归"、"截图对比" | visual-regression |
-| "生成界面"、"UI生成" | ui-generator |
-| "自适应优化"、"强化铁律" | adaptive-harness |
-| "搜索"、"CDP"、"浏览器" | web-access |
-| "扫描项目" | project-scanner |
-| "版本"、"v0.1" | version-locker |
-| "工作流"、"阶段" | workflow-supervisor |
-| "铁律"、"约束" | iron-law-enforcer |
-| "学习记录"、"自学习" | learning-analyzer |
-| "评审"、"审查" | collaboration-reviewer |
-| "继续"、"恢复" | project-state |
-
----
-
-## 产品全生命周期
-
-10 阶段研发流程，从需求到发布：
+### Gate 状态机（6 阶段强制流程）
 
 ```
-P01 需求收集 → P02 需求分析 → P03 原型设计 → P04 技术方案 → P05 开发规划
-     ↓
-P10 迭代优化 ← P09 验收交付 ← P08 集成测试 ← P07 后端开发 ← P06 前端开发
+G0 问题定义 → G1 方案设计 → G2 任务拆分 → G3 实现 → G4 测试 → G5 发布
 ```
 
-| 阶段 | 名称 | 输出 |
-|------|------|------|
-| P01 | 需求收集 | 需求池 |
-| P02 | 需求分析 | PRD、MVP 范围 |
-| P03 | 原型设计 | 原型、交互流程 |
-| P04 | 技术方案 | 架构设计、API 设计 |
-| P05 | 开发规划 | 开发计划 |
-| P06 | 前端开发 | 前端代码 |
-| P07 | 后端开发 | 后端代码 |
-| P08 | 集成测试 | 测试报告 |
-| P09 | 验收交付 | 发布包 |
-| P10 | 迭代优化 | 迭代计划 |
+每个 Gate 有明确产出、必要字段、checksum 锁定。**不能跳过，不能回退，不能篡改。**
 
-P03/P04 阶段完成后强制 Multi-Agent 评审（IL-TEAM001）。
+### 真验证（不是关键词匹配）
 
-产品专属铁律：IL-PRD001-003, IL-TECH001-003, IL-PLAN001-003, IL-FE001-003, IL-BE001-004, IL-TEST001-003, IL-RELEASE001-003。
+| 验证器 | 做什么 |
+|--------|--------|
+| artifact | 产出文件存在且有内容 |
+| content | 必要字段完整性 |
+| checksum | SHA-256 文件未被篡改 |
+| code | lint + type check 通过 |
+| test | 测试真的跑过且通过 |
 
----
+### 硬拦截（不是打印警告）
 
-## 用户角色指南
+Gate 未通过时，PreToolUse Hook **直接 exit 1 阻断**，不是打印一段话提醒。
 
-| 角色 | 主导阶段 | 推荐命令 |
-|------|---------|---------|
-| 产品经理 | P01, P02, P03, P10 | product-lifecycle, product-manager, prd-validator |
-| 售前工程师 | P01, P02, P03 | product-lifecycle |
-| 解决方案架构师 | P04, P05 | harness-generator |
-| UI 设计师 | P03 | product-lifecycle, ui-generator |
-| 前端开发 | P06 | 对应模板铁律 |
-| 后端开发 | P07 | 对应模板铁律 |
-| 测试工程师 | P08 | test-assistant, visual-regression |
-| 运维工程师 | P09 | workflow-supervisor |
-| **所有角色** | **紧急情况** | **overdrive** |
+### 失败恢复
 
----
+检测失败类型 → 判断恢复策略 → 自动回退/重试/超频拆分 → 生成恢复计划。
 
-## 自动化工具链
+## 安装
 
-通过 `/chaos-harness:auto-toolkit-installer` 自动检测并安装：
+```bash
+git clone https://github.com/jeesoul/chaos-harness.git
+cd chaos-harness
+git checkout v1.4.0
+```
 
-| 工具 | 用途 |
-|------|------|
-| skill-creator | 自动创建业务场景专属 Skill |
-| superpowers-chrome | Chrome DevTools MCP - 浏览器自动化 |
-| ui-ux-pro-max | UI/UX 设计评审 + Playwright 测试 |
-| webapp-testing | Playwright 自动化测试 |
-| web-access | CDP 浏览器自动化 - 搜索/抓取/登录态 |
+## 与 v1.3.0 的对比
 
-### 镜像加速（国内）
-
-| 类型 | 官方源 | 镜像源 |
+| 维度 | v1.3.0 | v1.4.0 |
 |------|--------|--------|
-| GitHub | github.com | kgithub.com / ghproxy.com |
-| npm | registry.npmjs.org | registry.npmmirror.com |
-| Playwright | playwright.azureedge.net | npmmirror.com/mirrors/playwright |
-
----
+| 定位 | AI 约束框架 | AI 开发流程操作系统 |
+| 核心 | 23 个 Skill（prompt） | Gate 状态机 + 真验证 |
+| 拦截 | 关键词打印警告 | exit 1 硬拦截 |
+| 测试 | 0 个 | 14 个全部通过 |
+| 集成 | 无 | Superpowers + OpenSpec + Everything |
+| 代码 | 18 个 mjs | 18 个 mjs（核心 9 个全新重写） |
+| CI | 无 | GitHub Actions |
 
 ## 许可证
 
-[MIT](LICENSE) — 开源免费
-
----
-
-<p align="center"><strong>Chaos demands order. Harness provides it.</strong></p>
+MIT

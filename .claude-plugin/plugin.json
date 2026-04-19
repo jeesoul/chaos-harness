@@ -1,6 +1,6 @@
 {
   "name": "chaos-harness",
-  "description": "Claude Code Agent Constraint Framework - Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow, Self-Correction Hooks",
+  "description": "AI Development Process Operating System - Integrates Superpowers, OpenSpec, Everything with Gate State Machine + Real Validation",
   "version": "1.4.0",
   "author": {
     "name": "jeesoul"
@@ -9,24 +9,7 @@
   "repository": "https://github.com/jeesoul/chaos-harness",
   "license": "MIT",
   "keywords": [
-    "chaos",
-    "harness",
-    "iron-laws",
-    "scanner",
-    "version-manager",
-    "workflow",
-    "laziness-detection",
-    "bypass-detection",
-    "skills",
-    "agent-constraints",
-    "hooks",
-    "self-correction",
-    "self-learning",
-    "auto-toolkit-installer",
-    "playwright",
-    "chrome-devtools",
-    "web-access",
-    "cdp-proxy",
-    "browser-automation"
+    "chaos", "harness", "gate-system", "orchestrator",
+    "integration", "validation", "superpowers", "openspec"
   ]
 }
