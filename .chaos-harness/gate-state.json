@@ -1,0 +1,99 @@
+{
+  "version": "1.4.0",
+  "currentGate": 1,
+  "problem": "test problem",
+  "gates": [
+    {
+      "id": 0,
+      "name": "problem",
+      "status": "passed",
+      "output": "D:\\claudeCodeSpace\\java\\万物入侵\\.claude\\worktrees\\v1.4.0\\.chaos-harness\\gates\\problem.md",
+      "outputChecksum": "d3315a8727a14a07",
+      "reviewer": "auto",
+      "reviewedAt": "2026-04-19T14:48:55.980Z",
+      "attempts": 1,
+      "lastError": null
+    },
+    {
+      "id": 1,
+      "name": "design",
+      "status": "in_progress",
+      "output": null,
+      "outputChecksum": null,
+      "reviewer": null,
+      "reviewedAt": null,
+      "attempts": 0,
+      "lastError": null
+    },
+    {
+      "id": 2,
+      "name": "tasks",
+      "status": "pending",
+      "output": null,
+      "outputChecksum": null,
+      "reviewer": null,
+      "reviewedAt": null,
+      "attempts": 0,
+      "lastError": null
+    },
+    {
+      "id": 3,
+      "name": "implement",
+      "status": "pending",
+      "output": null,
+      "outputChecksum": null,
+      "reviewer": null,
+      "reviewedAt": null,
+      "attempts": 0,
+      "lastError": null
+    },
+    {
+      "id": 4,
+      "name": "test",
+      "status": "pending",
+      "output": null,
+      "outputChecksum": null,
+      "reviewer": null,
+      "reviewedAt": null,
+      "attempts": 0,
+      "lastError": null
+    },
+    {
+      "id": 5,
+      "name": "release",
+      "status": "pending",
+      "output": null,
+      "outputChecksum": null,
+      "reviewer": null,
+      "reviewedAt": null,
+      "attempts": 0,
+      "lastError": null
+    }
+  ],
+  "artifacts": {
+    "problem.md": {
+      "gate": 0,
+      "checksum": "d3315a8727a14a07",
+      "locked": true,
+      "size": 123
+    }
+  },
+  "history": [
+    {
+      "event": "gate_verify_passed",
+      "gateId": 0,
+      "gate": "problem",
+      "reviewer": "auto",
+      "timestamp": "2026-04-19T14:48:55.980Z"
+    },
+    {
+      "event": "gate_advance",
+      "from": 0,
+      "to": 1,
+      "reviewer": "auto",
+      "timestamp": "2026-04-19T14:48:56.035Z"
+    }
+  ],
+  "createdAt": "2026-04-19T14:48:55.924Z",
+  "updatedAt": "2026-04-19T14:48:56.035Z"
+}
