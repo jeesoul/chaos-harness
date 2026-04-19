@@ -2,10 +2,10 @@
 name: overview
 description: "Chaos Harness 主入口 — AI 开发流程操作系统。始终可用。"
 license: MIT
-version: "1.3.1"
+version: "1.4.0"
 ---
 
-# chaos-harness v1.3.1 孔明Pro
+# chaos-harness v1.4.0 — AI 开发流程操作系统
 
 > **Your AI dev team, finally has an operating system.**
 >

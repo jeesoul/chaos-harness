@@ -219,7 +219,7 @@ function detectPlugin(pluginDef) {
  * Detect all installed components.
  * Returns a map of pluginName -> { detected, path, method, capabilities }
  */
-export function detectComponents(projectRoot = PROJECT_ROOT) {
+function detectComponents(projectRoot = PROJECT_ROOT) {
   const results = {};
 
   for (const [key, def] of Object.entries(PLUGIN_REGISTRY)) {
@@ -269,7 +269,7 @@ export function detectComponents(projectRoot = PROJECT_ROOT) {
  * Given user input and detected components, determine the optimal
  * execution path. Returns a structured plan.
  */
-export function planExecution(input, components) {
+function planExecution(input, components) {
   const detected = Object.values(components).filter(c => c.detected);
   const plan = {
     input,
@@ -467,7 +467,7 @@ function extractKeywords(lower) {
  * Main orchestration function: detect → plan → execute → report.
  * This is the entry point for `orchestrator.mjs orchestrate "input"`.
  */
-export function orchestrate(projectRoot, input) {
+function orchestrate(projectRoot, input) {
   const state = readOrchestratorState();
 
   // Phase 1: Detect
@@ -646,7 +646,7 @@ function writeOrchestratorState(state) {
 /**
  * Generate a human-readable report of detected components and capabilities.
  */
-export function report(components) {
+function report(components) {
   if (!components) {
     components = detectComponents();
   }
