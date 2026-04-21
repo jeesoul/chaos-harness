@@ -2,7 +2,7 @@
 name: overdrive
 description: "超频模式 — 最高优先级、最高效率、所有资源集中处理紧急任务。触发词：紧急、超频、overdrive、优先处理、立刻解决、马上、热修复、线上问题"
 license: MIT
-version: "1.3.1"
+version: "1.3.2"
 ---
 
 # 超频模式 (Overdrive)

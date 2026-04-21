@@ -2,7 +2,7 @@
 name: ui-generator
 description: "从需求直接生成可运行的前端界面。触发词：生成界面、UI生成、生成组件、生成页面"
 license: MIT
-version: "1.3.0"
+version: "1.3.2"
 ---
 
 # UI Generator

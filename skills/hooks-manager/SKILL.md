@@ -2,7 +2,7 @@
 name: hooks-manager
 description: "管理和查看 Chaos Harness 钩子状态。触发词：钩子、hooks、自纠正、自学习"
 license: MIT
-version: "1.3.0"
+version: "1.3.2"
 ---
 
 # Hooks Manager

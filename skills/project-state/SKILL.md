@@ -24,7 +24,7 @@ license: MIT
 {
   "project_name": "my-project",
   "project_root": "/path/to/project",
-  "harness_version": "1.3.0",
+  "harness_version": "1.3.2",
   "created_at": "2026-04-02T22:00:00Z",
   "last_session": "2026-04-03T10:30:00Z",
   "current_version": "v0.1",

@@ -2,10 +2,10 @@
 name: overview
 description: "Chaos Harness 系统概览。当用户明确询问 chaos-harness 功能时使用。"
 license: MIT
-version: "1.3.1"
+version: "1.3.2"
 ---
 
-# Chaos Harness v1.3.1 孔明Pro
+# Chaos Harness v1.3.2 Gate
 
 > 运筹帷幄，决胜千里；以智御局，以律治心。
 > **Chaos demands order. Harness provides it.**

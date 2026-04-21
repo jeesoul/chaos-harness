@@ -1,41 +1,41 @@
 # Chaos Harness
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.1--%E5%AD%94%E6%98%8EPro-blue.svg">
+  <img src="https://img.shields.io/badge/version-1.3.2--Gate-blue.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
 </p>
 
-<p align="center"><strong>确定性 AI Agent 约束框架</strong></p>
-<p align="center"><em>v1.3.1 孔明Pro — 持续学习·评测驱动·Schema工作流·深度防御·战略压缩</em></p>
+<p align="center"><strong>Gate 状态机 + 硬拦截 — AI 开发流程操作系统</strong></p>
+<p align="center"><em>v1.3.2 — Gate 状态机·硬拦截·跨平台·真验证·自学习</em></p>
 <p align="center"><em>Chaos demands order. Harness provides it.</em></p>
 
 ---
 
 ## 一句话定位
 
-> 用代码给 AI 立规矩，让 AI 从"不可控的天才"变成"严谨的工程师"。
+> 用 Gate 状态机给 AI 开发流程立规矩，让每一步操作都经过验证。
 
 ## 核心定位
 
 AI Agent 在辅助开发时的核心问题是非确定性——可能跳过验证、绕过约束、产生幻觉式交付。传统的自然语言提示词是软性建议，存在语义灰色空间。
 
-Chaos Harness 将约束编码为**铁律（Iron Laws）**——不是文本规则，而是通过 Skills + Hooks 自动执行的硬性检查，消除语义博弈空间。
+Chaos Harness 将约束编码为**Gate 状态机**——不是文本规则，而是通过 Gates + Hooks 自动执行的硬性检查，消除语义博弈空间。
 
 ### 三大特性
 
 | 特性 | 说明 |
 |------|------|
-| **确定性** | 铁律强制执行，行为路径可追溯、可审计 |
-| **可进化** | 自学习闭环：行为记录 → 规则优化 → 能力沉淀 |
-| **可扩展** | 开放插件生态，任意插件继承铁律约束 |
+| **确定性** | Gate 分级执行（hard 阻断 / soft 警告），行为路径可追溯、可审计 |
+| **可进化** | 自学习闭环：Gate 失败 → 阈值调整 → 规则优化 |
+| **可扩展** | 开放插件生态，任意项目继承 Gate 约束 |
 
 ### 适用场景
 
 | 场景 | 传统方式 | Chaos Harness |
 |------|----------|---------------|
-| 修 bug | Agent 说"修好了"，手动验证发现还有问题 | 铁律 IL003 强制提供验证证据，自动跑测试 |
-| 团队协作 | 口头规范，新人容易忘记 | 铁律自动阻断违规操作，规范融入流程 |
-| 开源项目 | Maintainer 手动清理不规范 PR | 铁律自动拦截，贡献者按规范输出 |
+| 修 bug | Agent 说"修好了"，手动验证发现还有问题 | Gate 强制提供验证证据，自动跑测试 |
+| 阶段推进 | 口头确认"开发完了"，进入下一阶段 | Gate 检查前置条件，不通过不放行 |
+| 代码提交 | 直接 commit，可能包含未测试代码 | Gate 拦截未测试的提交 |
 
 ---
 
@@ -120,8 +120,9 @@ claude plugins install chaos-harness@chaos-harness
 ### 版本历史
 
 | 版本 | 主要更新 |
-| 1.3.1 孔明Pro | 持续学习系统 2.0（原子本能+PostToolUse 100% 确定）、评测驱动开发（pass@k + 3 种评分器）、Schema-Driven 工作流（YAML + 依赖图）、深度防御（4 层验证 + PreToolUse 预警）、战略压缩（逻辑边界 + 调用计数阈值）、迭代检索（4 阶段循环）、30 个 Skill、27 个 Command、21 个 Script |
 |------|---------|
+| **1.3.2 Gate** | **Gate 状态机 + 硬拦截**：9 个 Gates（6 阶段 + 3 质量）、分级策略（hard/soft）、真验证（6 种验证器）、跨平台路径统一（node .mjs 入口）、自学习闭环（阈值动态调整）、Skill 精简（33 → 12）、恢复机制（suggest/override/history） |
+| 1.3.1 孔明Pro | 持续学习系统 2.0（原子本能+PostToolUse 100% 确定）、评测驱动开发（pass@k + 3 种评分器）、Schema-Driven 工作流（YAML + 依赖图）、深度防御（4 层验证 + PreToolUse 预警）、战略压缩（逻辑边界 + 调用计数阈值）、迭代检索（4 阶段循环）、30 个 Skill、27 个 Command、21 个 Script |
 | 1.3.0 孔明 | overdrive 超频模式（14 分钟全流程紧急处理）、P03/P04 强制 Multi-Agent 评审、LP007 Team 退化检测、产品经理增强、测试增强（Playwright+CDP 混合模式）、23 个 Skill、跨平台兼容修复（纯 Node.js API） |
 | 1.2.0 | 自学习闭环、自适应 Harness、Agent Team 铁律、CDP 浏览器自动化 |
 | 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 |
@@ -133,17 +134,57 @@ claude plugins install chaos-harness@chaos-harness
 
 | 问题 | 表现 | 解决方案 |
 |------|------|----------|
-| 虚假完成声明 | "已修复" 但无验证 | IL003：强制要求验证证据 |
-| 跳过关键步骤 | "简单修复，跳过测试" | LP004：自动阻断并强制执行 |
-| 绕过约束规则 | "就这一次" | 10+ 绕过话术识别 + 驳回 |
-| 版本混乱 | 文档散落各目录 | IL001：强制版本目录 |
+| 虚假完成声明 | "已修复" 但无验证 | Gate 强制要求验证证据 |
+| 跳过关键步骤 | "简单修复，跳过测试" | gate-quality-tests 阻断未测试提交 |
+| 阶段混乱 | 开发未完成就进入测试 | gate-w*-stage 检查前置条件 |
+| 版本混乱 | 文档散落各目录 | IL001 + gate-quality-iron-law 强制版本目录 |
 | 敏感配置误操作 | 直接修改数据库/密钥 | IL005：审批机制拦截 |
-| 紧急任务低效 | Agent 说"我看看" | overdrive：所有 Agent 全速运行，14 分钟全流程 |
-| 多 Agent 退化 | 子 Agent 不干活，主 Agent 代劳 | LP007：强制重新分配，禁止单线程 |
+| 紧急任务低效 | Agent 说"我看看" | overdrive：所有 Agent 全速运行 |
 
 ---
 
 ## 核心能力
+
+### Gate 状态机 (Gate State Machine)
+
+v1.3.2 拳头产品。9 个 Gates，分级执行，真验证。
+
+**阶段 Gates（6 个）：**
+
+| Gate | Level | 说明 |
+|------|-------|------|
+| gate-w01-requirements | hard | 需求阶段进入检查 |
+| gate-w03-architecture | hard | 架构阶段进入检查 |
+| gate-w08-development | hard | 开发阶段进入检查 |
+| gate-w09-code-review | hard | 代码审查阶段进入检查 |
+| gate-w10-testing | hard | 测试阶段进入检查 |
+| gate-w12-release | hard | 发布阶段进入检查 |
+
+**质量 Gates（3 个）：**
+
+| Gate | Level | 说明 |
+|------|-------|------|
+| gate-quality-iron-law | hard | 铁律违规零容忍 |
+| gate-quality-tests | hard | 测试必须通过 |
+| gate-quality-format | soft | 代码格式建议（可绕过） |
+
+**执行策略：**
+
+| Level | 行为 | 说明 |
+|-------|------|------|
+| hard | exit 1 阻断 | 不可绕过，必须修复 |
+| soft | exit 0 警告 | 可绕过（单 session 最多 3 次） |
+
+**验证器（6 种）：**
+
+| 验证器 | 验证方式 | 说明 |
+|--------|---------|------|
+| file-exists | fs.access() + 手动 glob | 阶段前置文档是否存在 |
+| no-syntax-errors | node --check | 项目代码无语法错误 |
+| test-suite-pass | 动态检测 vitest/jest/mocha | 测试套件全部通过 |
+| iron-law-check | 调用现有脚本 | 铁律零违规 |
+| lint-check | 执行 eslint | 代码格式检查 |
+| git-has-commits | git log 计数 | 开发阶段有实际产出 |
 
 ### 铁律引擎 (Iron Law Engine)
 
@@ -159,40 +200,36 @@ claude plugins install chaos-harness@chaos-harness
 
 扩展铁律支持自定义（`~/.claude/harness/iron-laws.yaml`）。
 
-### 偷懒检测 (Laziness Pattern Detection)
+### 深度防御框架 (Defense-in-Depth)
 
-| 模式 | 检测条件 | 处置 |
-|------|----------|------|
-| LP001 | 声称完成但无验证 | 阻断 + 要求举证 |
-| LP002 | 跳过根因分析直接修复 | 阻断 + 强制分析 |
-| LP003 | 长时间无产出 | 施压 + 进度要求 |
-| LP004 | 尝试跳过测试 | 阻断 + 强制测试 |
-| LP005 | 擅自更改版本号 | 阻断 + 恢复原版 |
-| LP006 | 自动处理高风险配置 | 阻断 + 用户审批 |
-| LP007 | Team 阶段主 Agent 代劳 | 阻断 + 强制重新分配 |
+4 层验证，与 Gate 集成：
 
-### 钩子生态 (Hook System)
+| 层级 | 对应 Gate | 检查内容 |
+|------|-----------|---------|
+| L1 入口层 | gate-quality-iron-law | 版本目录格式、文件存在性 |
+| L2 业务层 | gate-quality-iron-law | 铁律合规、上下文验证 |
+| L3 环境层 | Stage Gates | 阶段条件、环境守卫 |
+| L4 调试层 | gate-quality-tests | 测试通过、日志记录 |
 
-| Hook | 触发时机 | 功能 |
-|------|----------|------|
-| SessionStart | 会话开始 | 注入铁律 + 恢复状态 + 智能推荐 + 学习分析 |
-| PreToolUse | 工具调用前 | 铁律预检 + 意图分析预警（intent-analyzer） |
-| PostToolUse | 工具调用后 | 本能收集（instinct-collector）+ 评测采集（eval-collector）+ 偷懒检测 |
-| Stop | 回合结束 | 完成声明分析 + 偷懒检测 |
-| PreCompact | 对话压缩前 | 保存关键上下文 + Team 退化检测 |
-| Overdrive | 全局检测 | 超频模式激活 + 大模型效率指令注入 |
+### 跨平台路径方案
 
-### 智能场景感知 (Auto Context)
+所有 hooks 统一通过 `node` 调用 `.mjs` 文件，避免 shell 脚本的跨平台问题：
 
-后台自动运行，监测文件操作并推荐对应 Skill：
-
-| 操作 | 推荐 |
+| 问题 | 解决 |
 |------|------|
-| 写 Vue/React 组件 | 加载对应模板铁律 |
-| 写 PRD/需求文档 | product-lifecycle + prd-validator |
-| 写测试文件 | test-assistant |
-| P03 设计完成 | 推荐 Multi-Agent 设计评审 |
-| P04 技术完成 | 推荐 Multi-Agent 技术评审 |
+| Windows `\` vs Unix `/` | path-utils.mjs 统一转换 |
+| `%VAR%` vs `$VAR` | 不依赖环境变量，从 import.meta.url 推导 |
+| CRLF 路径转换 | 统一 node 入口，无 shell 脚本 |
+
+### 恢复机制 (Gate Recovery)
+
+Gate 失败后的三重恢复：
+
+| 方式 | 说明 | 限制 |
+|------|------|------|
+| 自动恢复 | 测试失败 rerun、语法错误提示、文件缺失生成模板 | 可配置 |
+| 手动恢复 | `/gate-manager recheck <gate-id>` | 无 |
+| 强制绕过 | `/gate-manager override <gate-id> --reason "xxx"` | 仅 soft Gate，单 session 最多 3 次 |
 
 ### 超频模式 (Overdrive)
 
@@ -206,80 +243,16 @@ claude plugins install chaos-harness@chaos-harness
 - **监督加速**：空闲阈值减半（1/2/3/5 分钟快速响应）
 - **铁律策略**：跳过前置扫描，保留底线验证（版本/验证/安全不可跳过）
 
+### 自学习闭环
 
-### 持续学习系统 2.0 (Instinct System)
+Gate 阈值动态调整：
 
-从行为记录进化为原子本能学习，通过 PostToolUse 钩子 100% 确定性采集：
-
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 观测方式 | Stop 钩子（概率性） | PostToolUse 钩子（100% 确定） |
-| 学习单元 | 完整技能 | 原子本能（instincts/） |
-| 置信度 | 无 | 0.3-0.9 加权评分 |
-| 演进 | 直接到技能 | 本能 → 聚类 → 技能/命令/Agent |
-| 分享 | 无 | 导出/导入本能 JSON |
-
-### 评测驱动开发 (Eval Harness)
-
-评测驱动开发（pass@k 指标 + 3 种评分器）：
-
-| 特性 | 说明 |
-|------|------|
-| 指标 | pass@1（首次通过）、pass@3（3 次通过）、pass^3（平均通过） |
-| 评分器 | 代码评分（自动执行）、模型评分（AI 评估）、人工评分（用户确认） |
-| 存储 | 本地 evals/ 目录 + 可选云端同步 |
-| 追踪 | eval-collector Hook 自动记录测试结果 |
-
-### Schema-Driven 工作流
-
-YAML 定义工作流 + 依赖图 + 自定义验证：
-
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 工作流定义 | 硬编码 12 阶段 | YAML Schema + 依赖图（Kahn 拓扑排序） |
-| 阶段管理 | 固定流程 | 动态解析 + 自定义验证脚本 |
-| 自定义 | 无 | schemas/custom/ 目录 |
-| 模板 | 无 | default + product-lifecycle |
-
-### 深度防御 (Defense-in-Depth)
-
-4 层验证框架，消除约束灰色空间：
-
-| 层级 | 检查内容 | 实现 |
-|------|----------|------|
-| L1 入口层 | 参数验证、权限检查 | PreToolUse Hook（intent-analyzer） |
-| L2 业务层 | 铁律合规、逻辑验证 | iron-law-enforcer |
-| L3 环境层 | 依赖完整性、版本兼容性 | project-scanner |
-| L4 调试层 | 失败诊断、根因分析 | learning-analyzer |
-
-### 战略压缩 (Strategic Compact)
-
-逻辑边界压缩 + 工具调用计数阈值检测：
-
-| 阈值 | 行为 |
-|------|------|
-| 50 次警告 | 压缩子 Agent 上下文，只传递必要信息 |
-| 100 次强制 | 主 Agent 保存状态快照，重新分配简化任务 |
-| 150 次 PreCompact | 保存关键决策后重启上下文 |
-
-### 自适应工作流
-
-12 阶段流程，按项目规模自动裁剪：
-
-| 阶段 | 名称 | Small | Medium | Large |
-|------|------|-------|--------|-------|
-| W01 | 需求理解 | ✅ | ✅ | ✅ |
-| W02 | 技术调研 | ❌ | ✅ | ✅ |
-| W03 | 架构设计 | ✅ | ✅ | ✅ |
-| W04 | 详细设计 | ❌ | ✅ | ✅ |
-| W05 | 编码实现 | ✅ | ✅ | ✅ |
-| W06 | 代码审查 | ❌ | ❌ | ✅ |
-| W07 | 集成测试 | ❌ | ✅ | ✅ |
-| W08 | 文档生成 | ✅ | ✅ | ✅ |
-| W09 | 发布准备 | ✅ | ✅ | ✅ |
-| W10 | 上线部署 | ✅ | ✅ | ✅ |
-| W11 | 回归验证 | ✅ | ✅ | ✅ |
-| W12 | 复盘总结 | ✅ | ✅ | ✅ |
+| 场景 | 自动行为 |
+|------|---------|
+| soft Gate 连续 3 次 override | 阈值放宽（warning → info） |
+| soft Gate 连续 5 次 override | 降级为 info-only（不再阻止流程） |
+| 某 Gate 一直 passed | 缓存跳过次数 +1（减少重复验证开销） |
+| 新版本首次触发 Gate | 不自动学习，等待用户确认 |
 
 ---
 
@@ -287,128 +260,62 @@ YAML 定义工作流 + 依赖图 + 自定义验证：
 
 | 命令 | 功能 |
 |------|------|
-| `/chaos-harness:overview` | 系统概览：铁律状态、学习进度、项目统计 |
-| `/chaos-harness:overdrive` | 超频模式：最高优先级紧急任务，所有 Agent 全速运行 |
-| `/chaos-harness:project-scanner` | 项目扫描：类型检测、技术栈分析 |
-| `/chaos-harness:version-locker` | 版本管理：锁定、创建、变更追踪 |
-| `/chaos-harness:harness-generator` | 约束生成：基于扫描数据生成专属 Harness |
-| `/chaos-harness:workflow-supervisor` | 工作流编排：阶段控制、进度监控 |
-| `/chaos-harness:agent-team-orchestrator` | Agent Team 编排：自动并行、监督防懒 |
-| `/chaos-harness:iron-law-enforcer` | 铁律执行：自定义规则、绕过检测 |
-| `/chaos-harness:collaboration-reviewer` | 多 Agent 评审：自动启动、多视角汇总 |
-| `/chaos-harness:hooks-manager` | 钩子配置：启用/禁用、日志查看 |
-| `/chaos-harness:plugin-manager` | 插件管理：第三方接入、约束配置 |
-| `/chaos-harness:project-state` | 状态持久化：进度保存、会话恢复 |
-| `/chaos-harness:auto-toolkit-installer` | 工具链检测：自动安装依赖工具 |
-| `/chaos-harness:learning-analyzer` | 自学习分析：失败模式识别、规则优化 |
-| `/chaos-harness:product-lifecycle` | 产品全生命周期：需求→原型→开发→测试→发布 |
-| `/chaos-harness:product-manager` | 产品经理：需求池/Kano/竞品分析/用户故事 |
-| `/chaos-harness:prd-validator` | PRD 质量检查：验收标准/可追溯性 |
-| `/chaos-harness:test-assistant` | 测试助手：用例/E2E/覆盖率/回归对比 |
-| `/chaos-harness:visual-regression` | 可视化回归：CDP 截图对比 |
-| `/chaos-harness:ui-generator` | UI 生成：从 PRD 生成前端界面 |
-| `/chaos-harness:adaptive-harness` | 自适应优化：从学习数据强化铁律 |
-| `/chaos-harness:web-access` | 联网操作：搜索/抓取/CDP 浏览器自动化 |
-| `/chaos-harness:instinct-system` | 直觉系统：原子本能 + 置信度演进 + 导出分享 |
-| `/chaos-harness:eval-harness` | 评测系统：pass@k 指标 + 能力/回归评测 + 3 种评分器 |
-| `/chaos-harness:iterative-retrieval` | 迭代检索：4 阶段检索循环 + 上下文优化 |
-| `/chaos-harness:schema-workflow` | Schema 工作流：YAML 定义 + 依赖图 + 自定义验证 |
-| `/chaos-harness:defense-in-depth` | 深度防御：4 层验证框架（入口→业务→环境→调试） |
-| `/chaos-harness:strategic-compact` | 战略压缩：逻辑边界 + 工具调用计数阈值（50/100/150） |
+| `/gate-manager status` | Gate 状态仪表盘 |
+| `/gate-manager recheck <id>` | 手动重新验证 Gate |
+| `/gate-manager transition <stage>` | 发起阶段切换 |
+| `/gate-manager override <id> --reason "xxx"` | 绕过 soft Gate |
+| `/gate-manager history` | 查看绕过日志 |
+| `/gate-manager list` | 列出所有 Gates |
+| `/gate-manager reset <id>` | 重置 Gate 状态 |
+| `/chaos-harness:overview` | 系统概览 |
+| `/chaos-harness:overdrive` | 超频模式 |
+| `/chaos-harness:harness-generator` | 约束生成 |
+| `/chaos-harness:version-locker` | 版本管理 |
+| `/chaos-harness:hooks-manager` | 钩子配置 |
+| `/chaos-harness:project-state` | 状态持久化 |
+| `/chaos-harness:product-manager` | 产品经理（需求/Kano/PRD/生命周期） |
+| `/chaos-harness:test-assistant` | 测试助手 |
+| `/chaos-harness:ui-generator` | UI 生成 |
+| `/chaos-harness:web-access` | 联网操作/浏览器自动化 |
 
 ### 智能触发（无需记住命令）
 
 | 你说... | 自动推荐 |
 |--------|---------|
 | "紧急"、"超频"、"立刻解决" | **overdrive**（最高优先级，直接激活） |
-| "需求"、"PRD"、"原型" | product-lifecycle |
-| "PRD检查"、"PRD质量" | prd-validator |
-| "需求分析"、"竞品分析"、"Kano" | product-manager |
+| "Gate 状态"、"阶段切换" | **gate-manager** |
+| "需求"、"PRD"、"原型" | product-manager |
 | "测试用例"、"E2E"、"覆盖率" | test-assistant |
-| "视觉回归"、"截图对比" | visual-regression |
 | "生成界面"、"UI生成" | ui-generator |
-| "自适应优化"、"强化铁律" | adaptive-harness |
 | "搜索"、"CDP"、"浏览器" | web-access |
-| "扫描项目" | project-scanner |
-| "版本"、"v0.1" | version-locker |
-| "工作流"、"阶段" | workflow-supervisor |
 | "铁律"、"约束" | iron-law-enforcer |
-| "学习记录"、"自学习" | learning-analyzer |
-| "评审"、"审查" | collaboration-reviewer |
 | "继续"、"恢复" | project-state |
-| "直觉"、"本能"、"instinct"、"置信度" | instinct-system |
-| "评测"、"pass@k"、"回归评测"、"能力评测" | eval-harness |
-| "迭代检索"、"上下文优化" | iterative-retrieval |
-| "工作流"、"Schema"、"阶段依赖" | schema-workflow |
-| "深度防御"、"多层验证" | defense-in-depth |
-| "压缩"、"上下文优化"、"strategic" | strategic-compact |
 
 ---
 
-## 产品全生命周期
+## 技能清单
 
-10 阶段研发流程，从需求到发布：
+### 核心 Skills（8 个）
 
-```
-P01 需求收集 → P02 需求分析 → P03 原型设计 → P04 技术方案 → P05 开发规划
-     ↓
-P10 迭代优化 ← P09 验收交付 ← P08 集成测试 ← P07 后端开发 ← P06 前端开发
-```
+| Skill | 说明 |
+|-------|------|
+| `gate-manager` | Gate 状态机用户交互层 |
+| `overview` | 项目总览入口 |
+| `project-state` | 状态持久化 |
+| `hooks-manager` | 钩子管理 |
+| `iron-law-enforcer` | 铁律执行 + 深度防御 |
+| `overdrive` | 应急模式 |
+| `harness-generator` | 约束生成 |
+| `version-locker` | 版本管理 |
 
-| 阶段 | 名称 | 输出 |
-|------|------|------|
-| P01 | 需求收集 | 需求池 |
-| P02 | 需求分析 | PRD、MVP 范围 |
-| P03 | 原型设计 | 原型、交互流程 |
-| P04 | 技术方案 | 架构设计、API 设计 |
-| P05 | 开发规划 | 开发计划 |
-| P06 | 前端开发 | 前端代码 |
-| P07 | 后端开发 | 后端代码 |
-| P08 | 集成测试 | 测试报告 |
-| P09 | 验收交付 | 发布包 |
-| P10 | 迭代优化 | 迭代计划 |
+### 可选 Skills（4 个）
 
-P03/P04 阶段完成后强制 Multi-Agent 评审（IL-TEAM001）。
-
-产品专属铁律：IL-PRD001-003, IL-TECH001-003, IL-PLAN001-003, IL-FE001-003, IL-BE001-004, IL-TEST001-003, IL-RELEASE001-003。
-
----
-
-## 用户角色指南
-
-| 角色 | 主导阶段 | 推荐命令 |
-|------|---------|---------|
-| 产品经理 | P01, P02, P03, P10 | product-lifecycle, product-manager, prd-validator |
-| 售前工程师 | P01, P02, P03 | product-lifecycle |
-| 解决方案架构师 | P04, P05 | harness-generator |
-| UI 设计师 | P03 | product-lifecycle, ui-generator |
-| 前端开发 | P06 | 对应模板铁律 |
-| 后端开发 | P07 | 对应模板铁律 |
-| 测试工程师 | P08 | test-assistant, visual-regression |
-| 运维工程师 | P09 | workflow-supervisor |
-| **所有角色** | **紧急情况** | **overdrive** |
-
----
-
-## 自动化工具链
-
-通过 `/chaos-harness:auto-toolkit-installer` 自动检测并安装：
-
-| 工具 | 用途 |
-|------|------|
-| skill-creator | 自动创建业务场景专属 Skill |
-| superpowers-chrome | Chrome DevTools MCP - 浏览器自动化 |
-| ui-ux-pro-max | UI/UX 设计评审 + Playwright 测试 |
-| webapp-testing | Playwright 自动化测试 |
-| web-access | CDP 浏览器自动化 - 搜索/抓取/登录态 |
-
-### 镜像加速（国内）
-
-| 类型 | 官方源 | 镜像源 |
-|------|--------|--------|
-| GitHub | github.com | kgithub.com / ghproxy.com |
-| npm | registry.npmjs.org | registry.npmmirror.com |
-| Playwright | playwright.azureedge.net | npmmirror.com/mirrors/playwright |
+| Skill | 说明 |
+|-------|------|
+| `product-manager` | 产品经理（需求/Kano/PRD/生命周期 7 合 1） |
+| `java-checkstyle` | Java 代码检查 |
+| `ui-generator` | UI 生成工具 |
+| `web-access` | 浏览器访问 |
 
 ---
 
