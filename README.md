@@ -235,6 +235,15 @@ claude plugins install chaos-harness@chaos-harness
 | `/chaos-harness:overdrive` | 超频模式 |
 | `/chaos-harness:product-manager` | 产品经理 |
 | `/chaos-harness:dev-intelligence` | 智能建议 |
+| `/chaos-harness:overview` | 项目总览 |
+| `/chaos-harness:iron-law-enforcer` | 铁律执行 |
+| `/chaos-harness:project-state` | 状态恢复 |
+| `/chaos-harness:version-locker` | 版本管理 |
+| `/chaos-harness:harness-generator` | 约束生成 |
+| `/chaos-harness:hooks-manager` | 钩子管理 |
+| `/chaos-harness:java-checkstyle` | Java 代码规范检查 |
+| `/chaos-harness:ui-generator` | UI 生成工具 |
+| `/chaos-harness:web-access` | 浏览器自动化 |
 
 ### 智能触发
 
