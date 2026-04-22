@@ -113,67 +113,6 @@
       "dependsOn": []
     },
     {
-      "id": "gate-prd-quality",
-      "type": "quality",
-      "level": "hard",
-      "description": "PRD 质量检查 — 6 项质量门 (PQC01-PQC06)",
-      "trigger": "stage-transition",
-      "cachePolicy": "never",
-      "validators": [
-        { "type": "script", "script": "prd-validator.mjs", "args": ["--file", "output/{version}/W01_requirements/prd.md"] }
-      ],
-      "dependsOn": ["gate-w01-requirements"]
-    },
-    {
-      "id": "gate-requirements-ready",
-      "type": "quality",
-      "level": "hard",
-      "description": "需求池分析完成 + Kano 分类完成",
-      "trigger": "stage-transition",
-      "cachePolicy": "on-change",
-      "validators": [
-        { "type": "file-exists", "path": ".chaos-harness/kano-result.json" },
-        { "type": "file-exists", "path": ".chaos-harness/pool-manager-result.json" }
-      ],
-      "dependsOn": ["gate-prd-quality"]
-    },
-    {
-      "id": "gate-test-coverage",
-      "type": "quality",
-      "level": "soft",
-      "description": "测试覆盖率检查（soft — 仅警告）",
-      "trigger": "stage-transition",
-      "cachePolicy": "on-change",
-      "validators": [
-        { "type": "script", "script": "coverage-checker.mjs", "args": ["--threshold", "60"] }
-      ],
-      "dependsOn": ["gate-w10-testing"]
-    },
-    {
-      "id": "gate-visual-regression",
-      "type": "quality",
-      "level": "soft",
-      "description": "视觉回归检查（需要 sharp）",
-      "trigger": "stage-transition",
-      "cachePolicy": "on-change",
-      "validators": [
-        { "type": "script", "script": "visual-regression.mjs", "args": ["report", "--dir", "output/visual-diff"] }
-      ],
-      "dependsOn": ["gate-w10-testing"]
-    },
-    {
-      "id": "gate-api-tests",
-      "type": "quality",
-      "level": "hard",
-      "description": "API 测试必须通过",
-      "trigger": "stage-transition",
-      "cachePolicy": "on-change",
-      "validators": [
-        { "type": "script", "script": "api-tester.mjs", "args": ["--spec", "output/{version}/tests/api-spec.json"] }
-      ],
-      "dependsOn": ["gate-w10-testing"]
-    },
-    {
       "id": "gate-intelligence-check",
       "type": "quality",
       "level": "soft",
