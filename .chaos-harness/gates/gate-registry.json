@@ -1,0 +1,195 @@
+{
+  "gates": [
+    {
+      "id": "gate-w01-requirements",
+      "type": "stage",
+      "stage": "W01_requirements",
+      "level": "hard",
+      "description": "需求阶段进入检查",
+      "trigger": "stage-transition",
+      "cachePolicy": "always",
+      "validators": [],
+      "dependsOn": []
+    },
+    {
+      "id": "gate-w03-architecture",
+      "type": "stage",
+      "stage": "W03_architecture",
+      "level": "hard",
+      "description": "架构阶段进入检查",
+      "trigger": "stage-transition",
+      "cachePolicy": "always",
+      "validators": [
+        { "type": "file-exists", "path": "output/*/W01_requirements" }
+      ],
+      "dependsOn": ["gate-w01-requirements"]
+    },
+    {
+      "id": "gate-w08-development",
+      "type": "stage",
+      "stage": "W08_development",
+      "level": "hard",
+      "description": "开发阶段进入检查",
+      "trigger": "stage-transition",
+      "cachePolicy": "always",
+      "validators": [
+        { "type": "file-exists", "path": "output/*/W03_architecture" }
+      ],
+      "dependsOn": ["gate-w03-architecture"]
+    },
+    {
+      "id": "gate-w09-code-review",
+      "type": "stage",
+      "stage": "W09_code_review",
+      "level": "hard",
+      "description": "代码审查阶段进入检查",
+      "trigger": "stage-transition",
+      "cachePolicy": "always",
+      "validators": [
+        { "type": "git-has-commits", "minCommits": 1 }
+      ],
+      "dependsOn": ["gate-w08-development"]
+    },
+    {
+      "id": "gate-w10-testing",
+      "type": "stage",
+      "stage": "W10_testing",
+      "level": "hard",
+      "description": "测试阶段进入检查",
+      "trigger": "stage-transition",
+      "cachePolicy": "always",
+      "validators": [
+        { "type": "no-syntax-errors" }
+      ],
+      "dependsOn": ["gate-w09-code-review"]
+    },
+    {
+      "id": "gate-w12-release",
+      "type": "stage",
+      "stage": "W12_release",
+      "level": "hard",
+      "description": "发布阶段进入检查",
+      "trigger": "stage-transition",
+      "cachePolicy": "always",
+      "validators": [
+        { "type": "test-suite-pass" }
+      ],
+      "dependsOn": ["gate-w10-testing"]
+    },
+    {
+      "id": "gate-quality-iron-law",
+      "type": "quality",
+      "level": "hard",
+      "description": "铁律违规零容忍",
+      "trigger": "pre-write",
+      "cachePolicy": "never",
+      "validators": [
+        { "type": "iron-law-check" }
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "gate-quality-tests",
+      "type": "quality",
+      "level": "hard",
+      "description": "测试必须通过",
+      "trigger": "pre-commit",
+      "cachePolicy": "on-change",
+      "validators": [
+        { "type": "test-suite-pass" }
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "gate-quality-format",
+      "type": "quality",
+      "level": "soft",
+      "description": "代码格式建议",
+      "trigger": "pre-commit",
+      "cachePolicy": "on-change",
+      "validators": [
+        { "type": "lint-check" }
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "gate-prd-quality",
+      "type": "quality",
+      "level": "hard",
+      "description": "PRD 质量检查 — 6 项质量门 (PQC01-PQC06)",
+      "trigger": "stage-transition",
+      "cachePolicy": "never",
+      "validators": [
+        { "type": "script", "script": "prd-validator.mjs", "args": ["--file", "output/{version}/W01_requirements/prd.md"] }
+      ],
+      "dependsOn": ["gate-w01-requirements"]
+    },
+    {
+      "id": "gate-requirements-ready",
+      "type": "quality",
+      "level": "hard",
+      "description": "需求池分析完成 + Kano 分类完成",
+      "trigger": "stage-transition",
+      "cachePolicy": "on-change",
+      "validators": [
+        { "type": "file-exists", "path": ".chaos-harness/kano-result.json" },
+        { "type": "file-exists", "path": ".chaos-harness/pool-manager-result.json" }
+      ],
+      "dependsOn": ["gate-prd-quality"]
+    },
+    {
+      "id": "gate-test-coverage",
+      "type": "quality",
+      "level": "soft",
+      "description": "测试覆盖率检查（soft — 仅警告）",
+      "trigger": "stage-transition",
+      "cachePolicy": "on-change",
+      "validators": [
+        { "type": "script", "script": "coverage-checker.mjs", "args": ["--threshold", "60"] }
+      ],
+      "dependsOn": ["gate-w10-testing"]
+    },
+    {
+      "id": "gate-visual-regression",
+      "type": "quality",
+      "level": "soft",
+      "description": "视觉回归检查（需要 sharp）",
+      "trigger": "stage-transition",
+      "cachePolicy": "on-change",
+      "validators": [
+        { "type": "script", "script": "visual-regression.mjs", "args": ["report", "--dir", "output/visual-diff"] }
+      ],
+      "dependsOn": ["gate-w10-testing"]
+    },
+    {
+      "id": "gate-api-tests",
+      "type": "quality",
+      "level": "hard",
+      "description": "API 测试必须通过",
+      "trigger": "stage-transition",
+      "cachePolicy": "on-change",
+      "validators": [
+        { "type": "script", "script": "api-tester.mjs", "args": ["--spec", "output/{version}/tests/api-spec.json"] }
+      ],
+      "dependsOn": ["gate-w10-testing"]
+    },
+    {
+      "id": "gate-intelligence-check",
+      "type": "quality",
+      "level": "soft",
+      "description": "智能建议检查 — 根据当前阶段推荐 Gate 配置和常见反模式",
+      "trigger": "stage-transition",
+      "cachePolicy": "on-change",
+      "validators": [
+        {
+          "type": "script",
+          "script": "dev-intelligence.mjs",
+          "args": ["--auto-check", "--stage", "{current_stage}"]
+        }
+      ],
+      "dependsOn": []
+    }
+  ],
+  "version": "1.3.2",
+  "createdAt": "2026-04-20T00:00:00Z"
+}

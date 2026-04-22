@@ -1,0 +1,8 @@
+{
+  "name": "python-fastapi",
+  "test_frameworks": ["pytest", "httpx"],
+  "lint_tools": ["ruff", "black", "mypy"],
+  "ui_test": ["playwright"],
+  "coverage_tool": "coverage.py",
+  "recommended_gates": ["gate-w10-testing", "gate-quality-tests"]
+}
