@@ -104,9 +104,13 @@ claude plugins marketplace remove chaos-harness
 
 ### 升级
 
+**当前版本：v1.3.2 Gate**
+
 ```bash
-# 1. 拉取最新代码
-cd /path/to/chaos-harness && git pull origin main
+# 1. 切换到 v1.3.2 分支并拉取最新代码
+cd /path/to/chaos-harness
+git checkout v1.3.2
+git pull origin v1.3.2
 
 # 2. 重新注册 marketplace
 claude plugins marketplace remove chaos-harness
@@ -115,7 +119,13 @@ claude plugins marketplace add "/path/to/chaos-harness"
 # 3. 重装
 claude plugins uninstall chaos-harness@chaos-harness
 claude plugins install chaos-harness@chaos-harness
+
+# 4. 验证
+bash install.sh   # Linux/macOS
+install.bat       # Windows
 ```
+
+> **注意：** 所有迭代在 `v1.3.2` 分支进行，升级时不要切换到 main 或其他分支。
 
 ### 版本历史
 
