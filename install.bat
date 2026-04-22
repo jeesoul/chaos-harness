@@ -1,9 +1,9 @@
 @echo off
-REM Chaos Harness v1.3.1 安装验证脚本（Windows）
+REM Chaos Harness v1.3.2 安装验证脚本（Windows）
 REM 无需手动配置 settings.json，插件系统自动加载 Skills 和 Hooks
 
 echo =========================================
-echo  Chaos Harness v1.3.1 孔明Pro 安装验证
+echo  Chaos Harness v1.3.2 Gate 安装验证
 echo =========================================
 echo.
 

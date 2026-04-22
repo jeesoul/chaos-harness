@@ -9,8 +9,8 @@ coverage/
 # Project-specific: 需求文档、参考文档、设计文档、实施计划不提交
 介绍
 参考/
-docs/superpowers/specs/
-docs/superpowers/plans/
+# Superpowers 本地计划与规格文档，不提交
+docs/superpowers/
 
 # 设计思想和审计文档不提交
 docs/state-and-association-audit.md

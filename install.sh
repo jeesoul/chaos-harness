@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Chaos Harness v1.3.1 安装验证脚本
+# Chaos Harness v1.3.2 安装验证脚本
 # 插件系统自动加载 skills 和 hooks.json，无需手动配置 settings.json
 
 set -e
 
 echo "========================================="
-echo " Chaos Harness v1.3.1 孔明Pro 安装验证"
+echo " Chaos Harness v1.3.2 Gate 安装验证"
 echo "========================================="
 echo ""
 
