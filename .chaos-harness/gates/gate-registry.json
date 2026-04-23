@@ -5,10 +5,12 @@
       "type": "stage",
       "stage": "W01_requirements",
       "level": "hard",
-      "description": "需求阶段进入检查",
+      "description": "需求阶段进入检查 — 自动扫描项目识别类型和技术栈",
       "trigger": "stage-transition",
-      "cachePolicy": "always",
-      "validators": [],
+      "cachePolicy": "on-change",
+      "validators": [
+        { "type": "project-scan" }
+      ],
       "dependsOn": []
     },
     {

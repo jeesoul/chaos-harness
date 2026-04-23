@@ -242,6 +242,40 @@ function validateGitCommits(validator, projectRoot) {
   }
 }
 
+/**
+ * project-scan: 运行项目扫描，结果写入 .chaos-harness/scan-result.json
+ */
+function validateProjectScan(validator, projectRoot) {
+  const scannerPath = join(pluginRoot, 'scripts', 'project-scanner.mjs');
+  if (!existsSync(scannerPath)) {
+    return { status: 'failed', reason: 'project-scanner.mjs not found' };
+  }
+
+  try {
+    execSync(`node "${scannerPath}" --root "${projectRoot}"`, {
+      cwd: projectRoot,
+      stdio: 'pipe',
+      timeout: 15000,
+    });
+
+    // 验证输出文件是否存在且有效
+    const scanResultPath = join(projectRoot, '.chaos-harness', 'scan-result.json');
+    if (!existsSync(scanResultPath)) {
+      return { status: 'failed', reason: 'scan-result.json was not generated' };
+    }
+
+    const scanResult = JSON.parse(readFileSync(scanResultPath, 'utf-8'));
+    if (!scanResult.project_type) {
+      return { status: 'failed', reason: 'scan-result.json missing project_type' };
+    }
+
+    return { status: 'passed', projectType: scanResult.project_type, harnessTemplate: scanResult.harness_template };
+  } catch (e) {
+    const output = e.stdout?.toString() + e.stderr?.toString() || '';
+    return { status: 'failed', reason: 'Project scan failed', details: output.slice(-300) };
+  }
+}
+
 // ---- 验证调度器 ----
 
 const validators = {
@@ -251,6 +285,7 @@ const validators = {
   'iron-law-check': validateIronLaw,
   'lint-check': validateLint,
   'git-has-commits': validateGitCommits,
+  'project-scan': validateProjectScan,
 };
 
 /**

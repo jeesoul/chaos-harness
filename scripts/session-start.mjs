@@ -125,9 +125,9 @@ if (state) {
   hookPrint('这是一个新项目或首次使用 Chaos Harness。');
   hookPrint('');
   hookPrint('**建议操作:**');
-  hookPrint('1. 使用 /chaos-harness:project-scanner 扫描项目');
-  hookPrint('2. 使用 /chaos-harness:version-locker 创建版本');
-  hookPrint('3. 使用 /chaos-harness:harness-generator 生成约束');
+  hookPrint('1. 使用 project-scanner 扫描项目（运行 node scripts/project-scanner.mjs）');
+  hookPrint('2. 使用 /version-locker 创建版本');
+  hookPrint('3. 使用 /harness-generator 生成约束');
   hookPrint('');
   hookPrint("或说 '开始使用 chaos-harness' 进行初始化。");
   hookPrint('</CHAOS_HARNESS_NEW_PROJECT>');

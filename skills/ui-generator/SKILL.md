@@ -15,7 +15,7 @@ version: "1.3.2"
 
 ## 前置检查
 
-1. **项目扫描检查**（IL002）：读取 `.chaos-harness/scan-result.json`，确认存在扫描结果。如无，停止并提示先运行 `/chaos-harness:project-scanner`。
+1. **项目扫描检查**（IL002）：读取 `.chaos-harness/scan-result.json`，确认存在扫描结果。如无，停止并提示先运行 `node <plugin-root>/scripts/project-scanner.mjs`。
 2. **框架检测**：读取项目根目录 `package.json`，识别前端框架：
    - `"vue": "^3."` → Vue3
    - `"vue": "^2."` → Vue2

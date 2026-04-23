@@ -33,7 +33,7 @@ const BYPASS_PATTERNS = {
   IL002: [
     {
       excuse: /我已经了解|不需要扫描|already know/i,
-      rebuttal: '主观了解不够，需要扫描数据确认。使用 /project-scanner 快速扫描。',
+      rebuttal: '主观了解不够，需要扫描数据确认。运行 node scripts/project-scanner.mjs 快速扫描。',
       severity: 'warning'
     }
   ],

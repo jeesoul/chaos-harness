@@ -60,12 +60,6 @@ Delete: `<plugin-root>/.chaos-harness/gates/<gate-id>.json`
 
 ## Self-Learning Integration
 
-Gate 的自学习功能整合了以下原有 Skill 的能力：
+Gate 的自学习功能通过 `project-scan` 验证器在 W01 阶段自动扫描项目，将结果写入 `scan-result.json` 供后续流程使用。
 
-- **learning-analyzer**: 分析学习记录，作为 Gate 阈值调整的输入信号
-- **instinct-system**: 直觉评分影响 Gate 的验证优先级
-- **adaptive-harness**: 动态调整约束
-- **strategic-compact**: 压缩策略优化
 
-这些 Skill 的脚本（learning-update.mjs, instinct-collector.mjs 等）保持不变，
-但它们的业务逻辑已通过 gate-learning.json 统一由 Gate Manager 管理。

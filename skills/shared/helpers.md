@@ -31,7 +31,7 @@ fi
 # 输出路径: .chaos-harness/scan-result.json
 create_scan_result() {
   # 使用 project-scanner skill 的检测结果
-  # 或直接运行: /chaos-harness:project-scanner
+  # 或直接运行: node scripts/project-scanner.mjs
 }
 
 # 验证扫描结果
