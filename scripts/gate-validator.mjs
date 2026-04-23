@@ -22,7 +22,7 @@ const gatesDir = join(pluginRoot, '.chaos-harness', 'gates');
  * 加载 Gate 注册表
  */
 export function loadRegistry() {
-  const registryPath = join(gatesDir, 'gate-registry.json');
+  const registryPath = join(pluginRoot, 'data', 'gate-registry.json');
   if (!existsSync(registryPath)) {
     console.error('ERROR: gate-registry.json not found');
     process.exit(1);

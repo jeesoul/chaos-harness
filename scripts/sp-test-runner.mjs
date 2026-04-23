@@ -82,7 +82,7 @@ async function main() {
 
   // 检查 gate 注册表
   console.log('\nChecking gates...');
-  const registryPath = join(pluginRoot, '.chaos-harness', 'gates', 'gate-registry.json');
+  const registryPath = join(pluginRoot, 'data', 'gate-registry.json');
   const registryExists = existsSync(registryPath);
   results.push({ test: 'gate-registry', passed: registryExists });
   console.log(`  [${registryExists ? 'PASS' : 'FAIL'}] gate-registry.json`);

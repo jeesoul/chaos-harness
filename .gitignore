@@ -46,4 +46,4 @@ instincts/clusters/*.json
 
 # Eval system runtime data
 evals/results/eval-log.jsonl
-.chaos-harness/retrieval-state.json
+.chaos-harness/

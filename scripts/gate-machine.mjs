@@ -27,7 +27,7 @@ const stateJsonPath = join(pluginRoot, '.chaos-harness', 'state.json');
  * 首次安装：生成默认注册表
  */
 function generateDefaultRegistry() {
-  const registryPath = join(gatesDir, 'gate-registry.json');
+  const registryPath = join(pluginRoot, 'data', 'gate-registry.json');
   if (existsSync(registryPath)) return;
 
   ensureDir(gatesDir);
@@ -99,7 +99,7 @@ function generateDefaultRegistry() {
  */
 function loadRegistry() {
   generateDefaultRegistry();
-  const registryPath = join(gatesDir, 'gate-registry.json');
+  const registryPath = join(pluginRoot, 'data', 'gate-registry.json');
   const registry = readJson(registryPath, null);
   if (!registry) {
     console.error('ERROR: gate-registry.json is invalid');

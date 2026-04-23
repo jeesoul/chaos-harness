@@ -69,7 +69,7 @@ function getFixSuggestion(result) {
  * 绕过 soft Gate
  */
 function overrideGate(gateId, reason) {
-  const registryPath = join(gatesDir, 'gate-registry.json');
+  const registryPath = join(pluginRoot, 'data', 'gate-registry.json');
   const registry = readJson(registryPath, { gates: [] });
   const gateDef = registry.gates.find(g => g.id === gateId);
 

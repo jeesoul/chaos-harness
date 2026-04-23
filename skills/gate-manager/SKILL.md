@@ -50,7 +50,7 @@ Run: `node <plugin-root>/scripts/gate-recovery.mjs history`
 
 列出所有 Gates 及定义。
 
-Read: `<plugin-root>/.chaos-harness/gates/gate-registry.json`
+Read: `<plugin-root>/data/gate-registry.json`
 
 ### /gate-manager reset <gate-id>
 
