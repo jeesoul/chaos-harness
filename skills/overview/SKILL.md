@@ -34,6 +34,7 @@ version: "1.3.2"
 | project-state | 继续、恢复 | 会话持久化 |
 | java-checkstyle | Java 项目 | Java 代码规范 |
 | ui-generator | 生成界面、UI 生成 | 从 PRD 生成可运行的前端界面 |
+| ui-ux-intelligence | 设计、UI、UX、配色、字体、排版 | 161 色板、50 风格、57 字体、60 组件、40 动画、50 UX 指南 |
 | web-access | 搜索、网页、CDP | 联网操作与浏览器自动化 |
 | overdrive | 紧急、超频、立刻解决 | 最高优先级、全速运行 |
 | product-manager | 需求分析、竞品分析、Kano | 产品经理工作助手 |
@@ -41,8 +42,8 @@ version: "1.3.2"
 
 ## Gate 状态机
 
-10 Gates（6 stage + 4 quality），7 种验证器：
-- `file-exists` `project-scan` `git-has-commits` `no-syntax-errors` `test-suite-pass` `lint-check` `iron-law-check`
+11 Gates（6 stage + 5 quality），9 种验证器：
+- `file-exists` `project-scan` `git-has-commits` `no-syntax-errors` `test-suite-pass` `lint-check` `iron-law-check` `ui-quality-check` `prd-quality-check`
 
 ## 防绕过
 

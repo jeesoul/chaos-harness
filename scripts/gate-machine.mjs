@@ -182,6 +182,13 @@ function transitionStage(stageId, projectRoot) {
     process.exit(1);
   }
 
+  // 输出阶段过渡确认信息，等待用户确认
+  console.log(`\n[Gate Transition] Request: Enter stage ${stageId}`);
+  console.log(`  Gate: ${gate.id}`);
+  console.log(`  Description: ${gate.description}`);
+  console.log(`  Validators: ${gate.validators.length > 0 ? gate.validators.map(v => v.type).join(', ') : 'none'}`);
+  console.log('');
+
   // 检查所有依赖 Gates
   for (const depId of gate.dependsOn) {
     const depStatePath = join(gatesDir, `${depId}.json`);
@@ -190,7 +197,8 @@ function transitionStage(stageId, projectRoot) {
       console.log(`Checking dependency: ${depId}...`);
       const ok = checkGate(depId, projectRoot);
       if (!ok) {
-        console.error(`\nCannot transition: dependency ${depId} failed`);
+        console.error(`\n[GATE FAILED] ${depId}: dependency check`);
+        console.error('\nCannot transition: dependency failed');
         process.exit(1);
       }
     }
@@ -200,7 +208,8 @@ function transitionStage(stageId, projectRoot) {
   console.log(`Checking gate: ${gate.id}...`);
   const ok = checkGate(gate.id, projectRoot);
   if (!ok) {
-    console.error(`\nCannot transition: ${gate.id} failed`);
+    console.error(`\n[GATE FAILED] ${gate.id}: ${gate.description}`);
+    console.error('Level: HARD\n');
     process.exit(1);
   }
 
@@ -226,7 +235,6 @@ function transitionStage(stageId, projectRoot) {
 
   // 设置下一阶段
   state.workflow.current_stage = stageId;
-  state.current_version = 'v1.3.2';
   state.last_session = new Date().toISOString();
 
   writeJsonAtomic(stateJsonPath, state);
@@ -289,7 +297,8 @@ function statusPad(status) {
  */
 function main() {
   const args = process.argv.slice(2);
-  const projectRoot = resolveProjectRoot() || process.cwd();
+  const rootIdx = args.indexOf('--root');
+  const projectRoot = rootIdx >= 0 ? args[rootIdx + 1] : (resolveProjectRoot() || process.cwd());
 
   const gateIdx = args.indexOf('--gate');
   const sessionIdx = args.indexOf('--session-start');

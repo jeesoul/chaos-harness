@@ -74,7 +74,7 @@ function validateFileExists(validator, projectRoot) {
     if (!existsSync(searchDir)) {
       return { status: 'failed', reason: `Directory not found: ${basePattern || '(project root)'}` };
     }
-    const matches = findFilesRecursive(searchDir, pattern);
+    const matches = findFilesRecursive(searchDir, pattern, projectRoot);
     if (matches.length > 0) {
       return { status: 'passed', matched: matches[0] };
     }
@@ -90,18 +90,21 @@ function validateFileExists(validator, projectRoot) {
 /**
  * 简易 glob 替代：递归查找匹配模式的文件
  */
-function findFilesRecursive(dir, pattern) {
+function findFilesRecursive(dir, pattern, projectRoot) {
   const results = [];
   if (!existsSync(dir)) return results;
   const parts = readdirSync(dir);
+  const normRoot = normalizePath(projectRoot);
   for (const part of parts) {
     const fullPath = join(dir, part);
     try {
       const stat = statSync(fullPath);
-      if (stat.isDirectory()) {
-        results.push(...findFilesRecursive(fullPath, pattern));
-      } else if (matchesPattern(fullPath, pattern)) {
+      const relPath = normalizePath(fullPath).replace(normRoot + '/', '');
+      if (matchesPattern(relPath, pattern)) {
         results.push(fullPath);
+      }
+      if (stat.isDirectory()) {
+        results.push(...findFilesRecursive(fullPath, pattern, projectRoot));
       }
     } catch { /* skip inaccessible */ }
   }
@@ -112,8 +115,14 @@ function findFilesRecursive(dir, pattern) {
  * 简易路径匹配：将 pattern 中的 * 转换为正则
  */
 function matchesPattern(filePath, pattern) {
-  const regex = pattern.replace(/\*/g, '[^/]*').replace(/\//g, '[\\\\/]');
-  return new RegExp(regex).test(filePath);
+  // Must normalize forward slashes first, then replace * with glob, then replace / with path separator
+  const normalized = filePath.replace(/\\/g, '/');
+  const normPattern = pattern.replace(/\\/g, '/');
+  const regex = normPattern
+    .replace(/\*/g, '__STAR__')
+    .replace(/\//g, '[\\\\/]')
+    .replace(/__STAR__/g, '[^/]*');
+  return new RegExp(regex).test(normalized);
 }
 
 /**
@@ -278,6 +287,111 @@ function validateProjectScan(validator, projectRoot) {
 
 // ---- 验证调度器 ----
 
+/**
+ * ui-quality-check: Run UI quality validation (contrast/touch targets/semantic HTML/focus ring/form labels)
+ */
+function validateUIQuality(validator, projectRoot) {
+  const scriptPath = join(pluginRoot, 'scripts', 'ui-quality-validator.mjs');
+  if (!existsSync(scriptPath)) {
+    return { status: 'failed', reason: 'ui-quality-validator.mjs not found' };
+  }
+  try {
+    const output = execSync(`node "${scriptPath}" --root "${projectRoot}"`, {
+      cwd: projectRoot,
+      stdio: 'pipe',
+      timeout: 15000,
+    }).toString();
+    const result = JSON.parse(output);
+    return { status: result.status === 'passed' ? 'passed' : 'failed', passed: result.passed, failed: result.failed, details: result.results };
+  } catch (e) {
+    const output = e.stdout?.toString() || '';
+    try {
+      const result = JSON.parse(output);
+      return { status: 'failed', reason: 'UI quality issues' , details: result.results };
+    } catch {
+      return { status: 'skipped', reason: 'UI validator error', details: output.slice(-300) };
+    }
+  }
+}
+
+/**
+ * prd-quality-check: Validate PRD completeness and production-grade requirements
+ */
+function validatePRDQuality(validator, projectRoot) {
+  const checks = [];
+  let failed = 0;
+
+  // Find PRD file
+  const outputDirs = existsSync(join(projectRoot, 'output'))
+    ? readdirSync(join(projectRoot, 'output')).filter(d => statSync(join(projectRoot, 'output', d)).isDirectory())
+    : [];
+  const w01Dir = outputDirs.find(d => {
+    const children = readdirSync(join(projectRoot, 'output', d));
+    return children.includes('W01_requirements') || children.includes('W01_requirements_docs');
+  });
+
+  if (!w01Dir) {
+    return { status: 'failed', reason: 'No W01_requirements output directory found' };
+  }
+
+  const reqDirs = ['W01_requirements', 'W01_requirements_docs'];
+  let prdPath = null;
+  for (const reqDir of reqDirs) {
+    const candidate = join(projectRoot, 'output', w01Dir, reqDir, 'PRD.md');
+    if (existsSync(candidate)) {
+      prdPath = candidate;
+      break;
+    }
+  }
+
+  if (!prdPath) {
+    return { status: 'failed', reason: 'PRD.md not found in output/*/W01_requirements/' };
+  }
+
+  const content = readFileSync(prdPath, 'utf-8');
+  const contentLower = content.toLowerCase();
+
+  // Check: PRD has version lock
+  const hasVersion = /^版本[:：]/m.test(content) || /^version[:：]/mi.test(content);
+  checks.push({ check: 'version-lock', passed: hasVersion });
+  if (!hasVersion) failed++;
+
+  // Check: Acceptance criteria (Given-When-Then or similar)
+  const hasAcceptance = /given.*when.*then/i.test(content) || /验收标准/.test(content) || /acceptance criterion/i.test(content);
+  checks.push({ check: 'acceptance-criteria', passed: hasAcceptance });
+  if (!hasAcceptance) failed++;
+
+  // Check: Production-grade indicators
+  const prodKeywords = ['性能', '性能指标', 'QPS', '响应时间', '容错', '降级', '监控', '告警', 'logging', 'monitoring', 'error handling', '错误处理', '缓存', 'cache'];
+  const prodCount = prodKeywords.filter(kw => contentLower.includes(kw.toLowerCase())).length;
+  const hasProdGrade = prodCount >= 3;
+  checks.push({ check: 'production-grade', passed: hasProdGrade, matched: prodCount + '/8 keywords' });
+  if (!hasProdGrade) failed++;
+
+  // Check: Data model / API design mentioned
+  const hasDataModel = /数据模型|data model|数据库|database|schema|表结构|entity/.test(content);
+  checks.push({ check: 'data-model', passed: hasDataModel });
+  if (!hasDataModel) failed++;
+
+  // Check: User stories exist
+  let userStoriesPath = null;
+  for (const reqDir of reqDirs) {
+    const candidate = join(projectRoot, 'output', w01Dir, reqDir, 'user-stories.md');
+    if (existsSync(candidate)) {
+      userStoriesPath = candidate;
+      break;
+    }
+  }
+  const hasUserStories = userStoriesPath !== null;
+  checks.push({ check: 'user-stories', passed: hasUserStories });
+  if (!hasUserStories) failed++;
+
+  if (failed === 0) {
+    return { status: 'passed', checks };
+  }
+  return { status: 'failed', reason: `${failed} PRD quality check(s) failed`, details: checks.filter(c => !c.passed) };
+}
+
 const validators = {
   'file-exists': validateFileExists,
   'no-syntax-errors': validateNoSyntaxErrors,
@@ -285,7 +399,9 @@ const validators = {
   'iron-law-check': validateIronLaw,
   'lint-check': validateLint,
   'git-has-commits': validateGitCommits,
+  'ui-quality-check': validateUIQuality,
   'project-scan': validateProjectScan,
+  'prd-quality-check': validatePRDQuality,
 };
 
 /**

@@ -1,0 +1,51 @@
+id,style_name,category,css_keywords,use_case,ai_prompt_keywords,anti_patterns
+S01,glassmorphism,modern,backdrop-filter blur rgba border subtle shadow,dashboard hero modal overlay card,Semi-transparent frosted glass with subtle blur,Overusing blur effects that impact performance
+S02,brutalism,bold,raw borders monospace bold typography stark contrast,portfolio landing page creative agency,Harsh visuals that hurt readability
+S03,neumorphism,soft,box-shadow inset shadow soft rounded background-match,Toggle buttons cards subtle UI elements,Low contrast that fails accessibility
+S04,claymorphism,playful,rounded border soft shadow pastel colors gradient,Children apps casual products badges,Too childish for enterprise products
+S05,minimalism,clean,whitespace clean lines limited palette typography,blog SaaS dashboard documentation,Boring and lifeless without personality
+S06,skeuomorphism,realistic,texture gradient drop-shadow realistic details,gaming premium product showcase,Outdated and heavy on performance
+S07,flat-design,clean,solid colors no shadow clean typography icon,enterprise dashboard admin panel,Too flat - no depth hierarchy
+S08,material-design,structured,elevation ripple animation card grid,Firebase products Android web apps,Overusing default material components
+S09,art-deco,ornamental,geometric gold accent decorative lines symmetry,luxury brand jewelry premium product,Too decorative for modern products
+S10,bauhaus,geometric,primary colors geometric shapes bold grid,architecture museum creative portfolio,Not suitable for data-heavy apps
+S11,cyberpunk,neon,dark neon glow grid lines monospace,gaming tech product developer tools,Too dark for content-heavy products
+S12,retro-vintage,warm,serif warm tones paper texture badge,blog restaurant vintage brand products,Feels outdated for tech products
+S13,swiss-style,typographic,grid system sans-serif asymmetrical hierarchy,editorial magazine typography-focused,Too rigid for interactive products
+S14,japanese-minimal,zen,earth tones whitespace natural texture,meditation wellness cultural product,Too muted for engagement products
+S15,nordic-scandi,clean,cool tones light wood natural light,furniture lifestyle wellness app,Too light for data-heavy products
+S16,art-nouveau,ornamental,organic curves flowing lines floral gradient,beauty luxury cultural heritage,Too decorative for modern products
+S17,pop-art,bold,bright halftone comic-style bold outline,event festival youth product,Too loud for professional products
+S18,constructivism,geometric,bold diagonal red black white typography,political activist bold brand,Too aggressive for most products
+S19,memphis,playful,geometric bright pattern squiggles asymmetrical,youth product creative tool party app,Too chaotic for serious products
+S20,corporate-clean,professional,blue white clean lines grid hierarchy,enterprise banking SaaS healthcare,Governmental and soulless
+S21,editorial-magazine,typographic,large headlines grid whitespace serif,fashion media publishing product,Content-heavy layout not app-focused
+S22,dashboard-clean,functional,sidebar cards table chart icons,SaaS admin analytics tool,Not visually distinctive
+S23,landing-hero,impactful,large hero gradient CTA prominent whitespace,startup SaaS product launch,Hero takes too much space
+S24,bento-grid,modern,grid cards rounded clean whitespace,presentation portfolio feature showcase,Rigid grid limits flexibility
+S25,organic-natural,warm,earth tones rounded natural texture,wellness eco-friendly food product,Not suitable for tech products
+S26,tech-futuristic,modern,dark neon geometric grid lines,blockchain AI developer tool,Too cold for consumer products
+S27,hand-drawn,playful,sketch lines irregular warm tones,creative portfolio children app,Not professional enough
+S28,isometric,3d,isometric perspective geometric shadows,developer tool SaaS feature showcase,Too decorative for data products
+S29,gradient-mesh,modern,gradient mesh blur organic shapes,creative agency portfolio landing,Heavy on GPU performance
+S30,dark-premium,luxury,dark gold accent refined typography,premium service financial tool,Not accessible for all users
+S31,light-airy,clean,white light pastel whitespace open,wellness lifestyle blog,Not enough contrast for data
+S32,cyber-grid,tech,grid lines neon dark monospace data,developer dashboard analytics tool,Too cold for consumer products
+S33,nature-inspired,warm,organic green earth tones leaf texture,eco-friendly outdoor wellness product,Not suitable for tech products
+S34,monochrome,single,one color white black variations,portfolio art photography product,Can feel limiting and cold
+S35,duotone,modern,two colors overlay blend contrast,photo product music app creative,Limiting color palette
+S36,watercolor,artistic,watercolor texture soft edges organic,art gallery creative portfolio wellness,Not suitable for data products
+S37,geometric-pattern,pattern,geometric shapes repeat pattern grid,creative agency design tool,Pattern can be distracting
+S38,hand-lettered,artisanal,hand-drawn typography sketch warm tones,craft food artisan brand product,Not professional for enterprise
+S39,vaporwave,retro-neon,purple pink gradient retro 90s grid,music game retro product creative,Nostalgic but not timeless
+S40,nordic-dark,modern,dark blue accent card elevation chart,SaaS dashboard developer tool,Can feel too cold
+S41,warm-gradient,warm,orange pink gradient sunset warmth,travel food lifestyle product,Too warm for data products
+S42,cool-gradient,cool,blue green gradient ocean calm,healthcare finance productivity app,Can feel too clinical
+S43,paper-cut,craft,layered shadow paper texture depth,creative portfolio storytelling product,Too crafty for tech products
+S44,liquid-glass,modern,glass gradient reflection shine blur,premium product showcase luxury,Heavy on performance
+S45,typography-first,typographic,large type hierarchy bold headline,editorial news content product,Not visually rich enough
+S46,illustration-heavy,illustrative,illustration hand-drawn color character,children app storytelling education,Heavy on loading performance
+S47,photo-dominant,visual,large photo full-bleed minimal text,travel real estate portfolio product,Photos can slow loading
+S48,data-dense,functional,table chart density compact layout,analytics trading admin tool,Can feel overwhelming
+S49,mobile-first,responsive,touch target bottom nav swipe,Mobile app responsive web,Hard to scale to desktop
+S50,voice-friendly,accessible,large type clear hierarchy audio cues,accessibility smart speaker car UI,Not suitable for visual products

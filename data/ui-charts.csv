@@ -1,0 +1,26 @@
+id,name,data_type,use_case,min_data_points,max_categories,interactive,color_limit,accessibility_notes,when_not_to_use
+CH001,Bar Chart,comparison,Sales comparison,2,12,yes,10,Provide data table alternative,Too many categories
+CH002,Line Chart,trend,Revenue over time,2,12,yes,20,Provide data table alternative,Precise values needed
+CH003,Pie Chart,composition,Market share,2,12,yes,10,Provide data table alternative,Precise values needed
+CH004,Doughnut Chart,composition,Budget allocation,2,12,yes,20,Provide data table alternative,Too many categories
+CH005,Area Chart,trend,Growth trend,2,12,yes,10,Provide data table alternative,Precise values needed
+CH006,Scatter Plot,relationship,Correlation analysis,10,100,yes,20,Provide data table alternative,Precise values needed
+CH007,Bubble Chart,relationship,Multi-variate data,10,100,yes,10,Provide data table alternative,Too many categories
+CH008,Heat Map,distribution,User activity,10,100,yes,20,Provide data table alternative,Precise values needed
+CH009,Treemap,hierarchy,Category breakdown,10,100,yes,10,Provide data table alternative,Precise values needed
+CH010,Waterfall Chart,composition,Financial changes,10,100,yes,20,Provide data table alternative,Too many categories
+CH011,Funnel Chart,process,Conversion funnel,5,8,yes,10,Provide data table alternative,Precise values needed
+CH012,Radar Chart,comparison,Performance metrics,5,8,yes,20,Provide data table alternative,Precise values needed
+CH013,Gauge Chart,status,KPI dashboard,5,8,yes,10,Provide data table alternative,Too many categories
+CH014,Candlestick Chart,financial,Stock prices,5,8,yes,20,Provide data table alternative,Precise values needed
+CH015,Box Plot,distribution,Statistical analysis,5,8,yes,10,Provide data table alternative,Precise values needed
+CH016,Sankey Diagram,flow,User flow,20,50,yes,20,Provide data table alternative,Too many categories
+CH017,Network Graph,relationship,Social network,20,50,yes,10,Provide data table alternative,Precise values needed
+CH018,Timeline,sequence,Project timeline,20,50,yes,20,Provide data table alternative,Precise values needed
+CH019,Calendar Heatmap,distribution,Activity heatmap,20,50,yes,10,Provide data table alternative,Too many categories
+CH020,Gantt Chart,schedule,Project plan,20,50,yes,20,Provide data table alternative,Precise values needed
+CH021,Sparkline,trend,Mini trend,20,50,yes,10,Provide data table alternative,Precise values needed
+CH022,Bullet Chart,comparison,Goal tracking,20,50,yes,20,Provide data table alternative,Too many categories
+CH023,Choropleth Map,geographic,Regional data,20,50,yes,10,Provide data table alternative,Precise values needed
+CH024,Word Cloud,frequency,Tag frequency,20,50,yes,20,Provide data table alternative,Precise values needed
+CH025,Sunburst Chart,hierarchy,Hierarchical data,20,50,yes,10,Provide data table alternative,Too many categories

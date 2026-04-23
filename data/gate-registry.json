@@ -9,7 +9,9 @@
       "trigger": "stage-transition",
       "cachePolicy": "on-change",
       "validators": [
-        { "type": "project-scan" }
+        {
+          "type": "project-scan"
+        }
       ],
       "dependsOn": []
     },
@@ -22,9 +24,17 @@
       "trigger": "stage-transition",
       "cachePolicy": "always",
       "validators": [
-        { "type": "file-exists", "path": "output/*/W01_requirements" }
+        {
+          "type": "file-exists",
+          "path": "output/*/W01_requirements"
+        },
+        {
+          "type": "prd-quality-check"
+        }
       ],
-      "dependsOn": ["gate-w01-requirements"]
+      "dependsOn": [
+        "gate-w01-requirements"
+      ]
     },
     {
       "id": "gate-w08-development",
@@ -35,9 +45,14 @@
       "trigger": "stage-transition",
       "cachePolicy": "always",
       "validators": [
-        { "type": "file-exists", "path": "output/*/W03_architecture" }
+        {
+          "type": "file-exists",
+          "path": "output/*/W03_architecture"
+        }
       ],
-      "dependsOn": ["gate-w03-architecture"]
+      "dependsOn": [
+        "gate-w03-architecture"
+      ]
     },
     {
       "id": "gate-w09-code-review",
@@ -48,9 +63,14 @@
       "trigger": "stage-transition",
       "cachePolicy": "always",
       "validators": [
-        { "type": "git-has-commits", "minCommits": 1 }
+        {
+          "type": "git-has-commits",
+          "minCommits": 1
+        }
       ],
-      "dependsOn": ["gate-w08-development"]
+      "dependsOn": [
+        "gate-w08-development"
+      ]
     },
     {
       "id": "gate-w10-testing",
@@ -61,9 +81,13 @@
       "trigger": "stage-transition",
       "cachePolicy": "always",
       "validators": [
-        { "type": "no-syntax-errors" }
+        {
+          "type": "no-syntax-errors"
+        }
       ],
-      "dependsOn": ["gate-w09-code-review"]
+      "dependsOn": [
+        "gate-w09-code-review"
+      ]
     },
     {
       "id": "gate-w12-release",
@@ -74,9 +98,13 @@
       "trigger": "stage-transition",
       "cachePolicy": "always",
       "validators": [
-        { "type": "test-suite-pass" }
+        {
+          "type": "test-suite-pass"
+        }
       ],
-      "dependsOn": ["gate-w10-testing"]
+      "dependsOn": [
+        "gate-w10-testing"
+      ]
     },
     {
       "id": "gate-quality-iron-law",
@@ -86,7 +114,9 @@
       "trigger": "pre-write",
       "cachePolicy": "never",
       "validators": [
-        { "type": "iron-law-check" }
+        {
+          "type": "iron-law-check"
+        }
       ],
       "dependsOn": []
     },
@@ -98,7 +128,9 @@
       "trigger": "pre-commit",
       "cachePolicy": "on-change",
       "validators": [
-        { "type": "test-suite-pass" }
+        {
+          "type": "test-suite-pass"
+        }
       ],
       "dependsOn": []
     },
@@ -110,7 +142,9 @@
       "trigger": "pre-commit",
       "cachePolicy": "on-change",
       "validators": [
-        { "type": "lint-check" }
+        {
+          "type": "lint-check"
+        }
       ],
       "dependsOn": []
     },
@@ -125,7 +159,25 @@
         {
           "type": "script",
           "script": "dev-intelligence.mjs",
-          "args": ["--auto-check", "--stage", "{current_stage}"]
+          "args": [
+            "--auto-check",
+            "--stage",
+            "{current_stage}"
+          ]
+        }
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "gate-quality-ui",
+      "type": "quality",
+      "level": "hard",
+      "description": "UI 无障碍与质量检查 — 对比度/触摸目标/语义 HTML/焦点环/表单标签",
+      "trigger": "pre-commit",
+      "cachePolicy": "on-change",
+      "validators": [
+        {
+          "type": "ui-quality-check"
         }
       ],
       "dependsOn": []

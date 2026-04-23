@@ -31,6 +31,15 @@ const DOMAIN_MAP = {
   "anti-patterns": "anti-patterns.csv",
   "ui-patterns": "ui-patterns.csv",
   "prd-quality-rules": "prd-quality-rules.csv",
+  "ui-color-palettes": "ui-color-palettes.csv",
+  "ui-styles": "ui-styles.csv",
+  "ui-typography": "ui-typography.csv",
+  "ui-components": "ui-components.csv",
+  "ui-animations": "ui-animations.csv",
+  "ui-responsive": "ui-responsive.csv",
+  "ui-product-types": "ui-product-types.csv",
+  "ui-ux-guidelines": "ui-ux-guidelines.csv",
+  "ui-charts": "ui-charts.csv",
 };
 
 /** 调用 search.py 执行 BM25 搜索 */

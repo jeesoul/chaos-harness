@@ -36,7 +36,12 @@ function printFailure(gateDef, result) {
   for (const r of result.results) {
     if (r.status === 'failed') {
       process.stderr.write(`  X ${r.type}: ${r.reason}\n`);
-      if (r.details) process.stderr.write(`    ${r.details}\n`);
+      if (r.details) {
+        const detailStr = Array.isArray(r.details)
+          ? r.details.map(d => typeof d === 'object' ? JSON.stringify(d) : String(d)).join('\n    ')
+          : String(r.details);
+        process.stderr.write(`    ${detailStr}\n`);
+      }
     } else if (r.status === 'skipped') {
       process.stderr.write(`  - ${r.type}: ${r.reason} (skipped)\n`);
     } else {

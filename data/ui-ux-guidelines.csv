@@ -1,0 +1,51 @@
+id,rule,category,severity,wcag_ref,how_to_test,common_violation,fix,notes
+UX001,"Contrast ratio must be at least 4.5:1 for normal text",accessibility,critical,1.4.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX002,"Large text (18pt+) requires minimum 3:1 contrast ratio",accessibility,critical,1.4.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX003,"All interactive elements must have visible focus states",accessibility,critical,2.4.7,Automated+manual,Common in production,Apply the rule,Guideline
+UX004,"Touch targets must be at least 44x44px",accessibility,critical,2.5.5,Automated+manual,Common in production,Apply the rule,Guideline
+UX005,"All icon buttons must have aria-label or title",accessibility,high,4.1.2,Automated+manual,Common in production,Apply the rule,Guideline
+UX006,"Form inputs must have associated labels",forms,high,1.3.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX007,"Error messages must display below the relevant field",feedback,high,3.3.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX008,"Color must not be the only way to convey information",feedback,high,1.4.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX009,"Images must have descriptive alt text",accessibility,high,1.1.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX010,"Navigation must be keyboard accessible",navigation,high,2.1.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX011,"Skip navigation link must be provided",navigation,medium,2.4.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX012,"Page title must be descriptive and unique",seo,medium,2.4.2,Automated+manual,Common in production,Apply the rule,Guideline
+UX013,"Heading hierarchy must be logical (h1 > h2 > h3)",structure,medium,1.3.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX014,"Loading states must be communicated to users",feedback,high,4.1.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX015,"Empty states must provide actionable guidance",feedback,high,3.3.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX016,"404 pages must offer navigation options",feedback,medium,3.2.5,Automated+manual,Common in production,Apply the rule,Guideline
+UX017,"Buttons must have clear action labels",interaction,medium,3.3.2,Automated+manual,Common in production,Apply the rule,Guideline
+UX018,"Dangerous actions must require confirmation",safety,critical,3.3.4,Automated+manual,Common in production,Apply the rule,Guideline
+UX019,"Destructive actions must be visually distinct",safety,high,3.3.4,Automated+manual,Common in production,Apply the rule,Guideline
+UX020,"Form validation must happen inline",forms,high,3.3.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX021,"Success feedback must be immediate and clear",feedback,medium,3.1.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX022,"Timeout warnings must give sufficient time",feedback,medium,2.2.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX023,"Auto-save must indicate save status",data,medium,2.4.10,Automated+manual,Common in production,Apply the rule,Guideline
+UX024,"Search results must show result count",navigation,medium,3.3.2,Automated+manual,Common in production,Apply the rule,Guideline
+UX025,"Pagination must indicate current page",navigation,medium,2.4.5,Automated+manual,Common in production,Apply the rule,Guideline
+UX026,"Breadcrumbs must be provided for deep navigation",navigation,medium,2.4.8,Automated+manual,Common in production,Apply the rule,Guideline
+UX027,"Tables must have sortable columns for data",data,medium,1.3.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX028,"Charts must have accessible data alternatives",data,medium,1.1.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX029,"Dark mode must maintain contrast ratios",dark-mode,high,1.4.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX030,"Animations must respect prefers-reduced-motion",motion,high,2.3.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX031,"Font size must be at least 16px for body text",typography,medium,1.4.4,Automated+manual,Common in production,Apply the rule,Guideline
+UX032,"Line height must be at least 1.5 for readability",typography,medium,1.4.8,Automated+manual,Common in production,Apply the rule,Guideline
+UX033,"Paragraph width must not exceed 75 characters",typography,medium,1.4.8,Automated+manual,Common in production,Apply the rule,Guideline
+UX034,"Links must be distinguishable without color alone",interaction,medium,1.4.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX035,"Hover states must provide visual feedback",interaction,medium,2.4.7,Automated+manual,Common in production,Apply the rule,Guideline
+UX036,"Active states must differ from hover states",interaction,low,2.4.7,Automated+manual,Common in production,Apply the rule,Guideline
+UX037,"Disabled elements must explain why",forms,medium,3.3.5,Automated+manual,Common in production,Apply the rule,Guideline
+UX038,"Required fields must be clearly marked",forms,medium,3.3.2,Automated+manual,Common in production,Apply the rule,Guideline
+UX039,"Password fields must have show/hide toggle",forms,high,4.1.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX040,"File uploads must show progress",accessibility,high,2.4.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX041,"Modals must trap focus correctly",feedback,medium,3.2.3,Automated+manual,Common in production,Apply the rule,Guideline
+UX042,"Toast notifications must auto-dismiss",navigation,low,2.4.10,Automated+manual,Common in production,Apply the rule,Guideline
+UX043,"Long content must have scroll-to-top",data,medium,1.3.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX044,"Data tables must have column headers",accessibility,high,1.1.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX045,"Images of text must have text alternatives",media,high,1.2.2,Automated+manual,Common in production,Apply the rule,Guideline
+UX046,"Video content must have captions",media,high,1.2.1,Automated+manual,Common in production,Apply the rule,Guideline
+UX047,"Audio content must have transcripts",forms,medium,3.3.2,Automated+manual,Common in production,Apply the rule,Guideline
+UX048,"Forms must have submit buttons",forms,medium,3.3.4,Automated+manual,Common in production,Apply the rule,Guideline
+UX049,"Multi-step forms must show progress",data,critical,3.3.4,Automated+manual,Common in production,Apply the rule,Guideline
+UX050,"Critical data must have undo capability",undefined,undefined,undefined,Automated+manual,Common in production,Apply the rule,Guideline
