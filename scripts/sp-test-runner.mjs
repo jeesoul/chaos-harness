@@ -27,7 +27,6 @@ async function main() {
     'gate-machine.mjs',
     'gate-enforcer.mjs',
     'gate-recovery.mjs',
-    'gate-dispatcher.mjs',
     'iron-law-check.mjs',
     'laziness-detect.mjs',
     'learning-update.mjs',
