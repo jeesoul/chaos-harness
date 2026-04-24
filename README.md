@@ -116,8 +116,7 @@ claude plugins uninstall chaos-harness@chaos-harness
 claude plugins install chaos-harness@chaos-harness
 
 # 4. 验证
-bash install.sh   # Linux/macOS
-install.bat       # Windows
+/chaos-harness:overview
 ```
 
 > **注意：** 所有迭代在 `v1.3.2` 分支进行，升级时不要切换到 main 或其他分支。

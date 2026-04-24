@@ -294,4 +294,4 @@ node scripts/dev-intelligence.mjs --persist --key "decision" --value "use vitest
 | Gate 阻断无法继续 | 查看阻断原因，修复后 recheck |
 | Hook 报错 | 检查 `hooks/hooks.json` 配置 |
 | 状态丢失 | 使用 `/chaos-harness:project-state` 恢复 |
-| 版本号不一致 | 运行 `install.sh` 或 `install.bat` 检查 |
+| 版本号不一致 | 运行 `claude plugins marketplace list` 检查版本 |
