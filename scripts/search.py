@@ -95,7 +95,7 @@ def search_domain(data_dir, domain, query, top_n):
             results = search_rows(rows, query, top_n * 3, dname)
             all_results.extend(results)
         all_results.sort(key=lambda x: x["score"], reverse=True)
-        return all_results[:top_n]
+        return all_results[:top_n], None
     else:
         fname = DOMAIN_MAP.get(domain)
         if not fname:
@@ -110,7 +110,7 @@ def search_domain(data_dir, domain, query, top_n):
 def search_rows(rows, query, top_n, domain):
     docs = []
     for row in rows:
-        text = " ".join(row.values())
+        text = " ".join(str(v) if v is not None else "" for v in row.values())
         docs.append(tokenize(text))
     query_tokens = tokenize(query)
     ranked = bm25_search(docs, query_tokens, top_n)
@@ -119,13 +119,13 @@ def search_rows(rows, query, top_n, domain):
         if score <= 0:
             continue
         row = rows[idx]
-        matched = [k for k, v in row.items() if any(q in v.lower() for q in query_tokens)]
+        matched = [k for k, v in row.items() if v and any(q in str(v).lower() for q in query_tokens)]
         results.append({
             "id": row.get("id", ""),
             "score": round(float(score), 2),
             "source_domain": domain,
             "matched_fields": matched,
-            "data": {k: v for k, v in row.items()},
+            "data": {k: v for k, v in row.items() if v is not None},
         })
     return results
 

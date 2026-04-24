@@ -31,14 +31,19 @@ Run: `node <plugin-root>/scripts/gate-enforcer.mjs <gate-id> --root <plugin-root
 
 发起阶段切换请求。
 
-**重要：阶段切换必须经过用户确认，禁止自动推进。**
+**铁律：阶段切换必须经过用户明确确认，禁止任何形式的自动推进。**
 
 1. 确认用户请求的阶段 ID
-2. 运行 Gate 预检查，输出检查结果给用户
-3. 等待用户明确确认（"确认"、"继续"、"yes"等）
-4. Run: `node <plugin-root>/scripts/gate-machine.mjs --transition <stage-id> --root <plugin-root>`
+2. 运行 Gate 预检查（`node <plugin-root>/scripts/gate-machine.mjs --transition <stage-id> --root <plugin-root>`）
+3. **将检查结果完整展示给用户，等待用户明确回复**
+4. 只有用户明确说"确认"、"继续"、"yes"、"推进"等明确意图后，才能执行实际切换
 
-如果 Gate 预检查失败，向用户报告失败原因和修复建议，不得自动跳过。
+**禁止行为：**
+- 禁止在写完文档/代码后自动执行阶段切换
+- 禁止在用户没明确同意的情况下假设用户想要推进
+- 禁止因 Gate 预检查失败而自动跳过或绕行
+
+如果 Gate 预检查失败，必须向用户报告失败原因和修复建议，等待用户决定如何处理。
 
 ### /gate-manager override <gate-id> --reason "xxx"
 

@@ -85,23 +85,14 @@ Claude Code 启动 → SessionStart Hook 触发 → 检查 state.json → 存在
 - 记录变更原因和时间
 - 保留旧版本的状态快照
 
-## 状态更新函数
+## 状态更新
 
-调用 `shared/state-helpers.md` 中的函数：
+通过直接读写 `.chaos-harness/state.json` 管理状态：
 
-```bash
-# 更新阶段状态
-update_project_state '{"current_stage":"W08","last_session":"..."}'
-
-# 阶段完成标记
-complete_stage "W08" "output/v0.1/W08"
-
-# 读取当前版本
-get_current_version
-
-# 读取当前阶段
-get_current_stage
-```
+- 更新阶段：修改 `workflow.current_stage` 和 `workflow.stages_completed`
+- 标记完成：追加到 `workflow.stages_completed` 数组
+- 读取版本：`state.current_version`
+- 读取阶段：`state.workflow.current_stage`
 
 ## 全局状态 vs 项目状态
 
@@ -116,7 +107,6 @@ get_current_stage
 
 | 文件 | 何时加载 |
 |------|---------|
-| `shared/state-helpers.md` | 需要状态管理函数时 |
 | `.chaos-harness/state.json` | 读取项目当前状态时 |
 | `.chaos-harness/decisions-log.json` | 查看历史决策时 |
 | `~/.claude/harness/workflow-log.json` | 查看工作流事件历史时 |

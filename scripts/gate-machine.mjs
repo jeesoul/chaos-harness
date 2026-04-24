@@ -20,8 +20,21 @@ import { readJson, writeJsonAtomic, ensureDir } from './hook-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolvePluginRoot();
-const gatesDir = join(pluginRoot, '.chaos-harness', 'gates');
 const stateJsonPath = join(pluginRoot, '.chaos-harness', 'state.json');
+
+/**
+ * 获取项目级 state.json 路径
+ */
+function projectStatePath(projectRoot) {
+  return join(projectRoot, '.chaos-harness', 'state.json');
+}
+
+/**
+ * 获取项目级 gates 目录
+ */
+function projectGatesDir(projectRoot) {
+  return join(projectRoot, '.chaos-harness', 'gates');
+}
 
 /**
  * 首次安装：生成默认注册表
@@ -30,9 +43,9 @@ function generateDefaultRegistry() {
   const registryPath = join(pluginRoot, 'data', 'gate-registry.json');
   if (existsSync(registryPath)) return;
 
-  ensureDir(gatesDir);
+  ensureDir(projectGatesDir(pluginRoot));
 
-  const state = readJson(stateJsonPath, null);
+  const state = readJson(projectStatePath(projectRoot), null);
   const stages = state?.workflow?.stages_completed?.map(s => s.stage) || [];
 
   const defaultGates = [
@@ -134,7 +147,7 @@ function sessionStart(projectRoot) {
   const stageGates = registry.gates.filter(g => g.type === 'stage');
 
   for (const gate of stageGates) {
-    const statePath = join(gatesDir, `${gate.id}.json`);
+    const statePath = join(projectGatesDir(projectRoot), `${gate.id}.json`);
     const state = readJson(statePath, null);
     if (state?.status === 'passed') {
       // 重新验证（静默模式，不输出到 stdout）
@@ -150,7 +163,7 @@ function sessionStart(projectRoot) {
  * 自动检测并提示阶段切换
  */
 function suggestTransition(projectRoot, registry) {
-  const state = readJson(stateJsonPath, null);
+  const state = readJson(projectStatePath(projectRoot), null);
   if (!state) return;
 
   const stages = state.workflow?.stages_completed?.map(s => s.stage) || [];
@@ -191,7 +204,7 @@ function transitionStage(stageId, projectRoot) {
 
   // 检查所有依赖 Gates
   for (const depId of gate.dependsOn) {
-    const depStatePath = join(gatesDir, `${depId}.json`);
+    const depStatePath = join(projectGatesDir(projectRoot), `${depId}.json`);
     const depState = readJson(depStatePath, null);
     if (!depState || depState.status !== 'passed') {
       console.log(`Checking dependency: ${depId}...`);
@@ -214,7 +227,7 @@ function transitionStage(stageId, projectRoot) {
   }
 
   // 更新 state.json
-  const state = readJson(stateJsonPath, null);
+  const state = readJson(projectStatePath(projectRoot), null);
   if (!state) {
     console.error('Cannot read state.json');
     process.exit(1);
@@ -237,24 +250,25 @@ function transitionStage(stageId, projectRoot) {
   state.workflow.current_stage = stageId;
   state.last_session = new Date().toISOString();
 
-  writeJsonAtomic(stateJsonPath, state);
+  writeJsonAtomic(projectStatePath(projectRoot), state);
   console.log(`\nTransitioned to stage: ${stageId}`);
 }
 
 /**
  * 显示所有 Gate 状态
  */
-function showStatus() {
+function showStatus(projectRoot) {
   const registry = loadRegistry();
   const stageGates = registry.gates.filter(g => g.type === 'stage');
   const qualityGates = registry.gates.filter(g => g.type === 'quality');
+  const projGatesDir = projectGatesDir(projectRoot);
 
   console.log('\nGate Status Dashboard');
   console.log('='.repeat(40));
 
   console.log('\nStage Gates:');
   for (const gate of stageGates) {
-    const statePath = join(gatesDir, `${gate.id}.json`);
+    const statePath = join(projGatesDir, `${gate.id}.json`);
     const state = readJson(statePath, null);
     const status = state?.status || 'pending';
     const date = state?.lastChecked ? new Date(state.lastChecked).toISOString().slice(0, 10) : '';
@@ -263,7 +277,7 @@ function showStatus() {
 
   console.log('\nQuality Gates:');
   for (const gate of qualityGates) {
-    const statePath = join(gatesDir, `${gate.id}.json`);
+    const statePath = join(projGatesDir, `${gate.id}.json`);
     const state = readJson(statePath, null);
     const status = state?.status || 'pending';
     const date = state?.lastChecked ? new Date(state.lastChecked).toISOString().slice(0, 10) : '';
@@ -274,7 +288,7 @@ function showStatus() {
   const allGates = registry.gates;
   let passed = 0, pending = 0, softFail = 0;
   for (const gate of allGates) {
-    const statePath = join(gatesDir, `${gate.id}.json`);
+    const statePath = join(projGatesDir, `${gate.id}.json`);
     const state = readJson(statePath, null);
     if (state?.status === 'passed') passed++;
     else if (state?.status === 'soft-fail') softFail++;
@@ -312,7 +326,7 @@ function main() {
   } else if (transitionIdx >= 0) {
     transitionStage(args[transitionIdx + 1], projectRoot);
   } else if (statusIdx >= 0) {
-    showStatus();
+    showStatus(projectRoot);
   } else {
     console.error('Usage: node gate-machine.mjs --gate <id> | --session-start | --transition <stage> | --status');
     process.exit(1);

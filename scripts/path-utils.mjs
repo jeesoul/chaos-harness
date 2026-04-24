@@ -37,12 +37,24 @@ export function formatPathForShell(input) {
 }
 
 /**
+ * 判断目录是否是插件根目录（有 scripts/ + data/ 特征）
+ */
+function isPluginRoot(dir) {
+  try {
+    return existsSync(join(dir, 'scripts')) && existsSync(join(dir, 'data'));
+  } catch {
+    return false;
+  }
+}
+
+/**
  * 可靠的项目根目录检测（查找 .chaos-harness/state.json）
+ * 跳过插件根目录，返回真实用户项目路径
  */
 export function resolveProjectRoot(startDir = process.cwd()) {
   let dir = resolve(startDir);
   for (let depth = 0; depth < 20; depth++) {
-    if (existsSync(join(dir, '.chaos-harness', 'state.json'))) {
+    if (existsSync(join(dir, '.chaos-harness', 'state.json')) && !isPluginRoot(dir)) {
       return dir;
     }
     const parent = dirname(dir);

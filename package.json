@@ -28,5 +28,8 @@
     "web-access",
     "cdp-proxy",
     "browser-automation"
-  ]
+  ],
+  "scripts": {
+    "test": "node --test tests/*.mjs"
+  }
 }

@@ -211,6 +211,6 @@ updated: 2026-04-14
 |------|---------|
 | `output/{version}/docs/PRD.md` | 读取用户故事和 MVP 范围时 |
 | `.chaos-harness/scan-result.json` | 检测前端框架时 |
-| `skills/product-lifecycle/SKILL.md` | 了解 P03 阶段上下文时 |
+| `skills/product-manager/SKILL.md` | 了解产品生命周期上下文时 |
 | `skills/web-access/SKILL.md` | 执行 CDP 预览验证时 |
 | `references/ui-patterns/` | 复用已验证的 UI 模式时 |

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-machine.mjs\" --session-start --root \"${CLAUDE_PLUGIN_ROOT}\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-machine.mjs\" --session-start",
             "async": false
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-iron-law --root \"${CLAUDE_PLUGIN_ROOT}\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-iron-law",
             "async": false
           },
           {
@@ -29,16 +29,16 @@
         ]
       },
       {
-        "matcher": "Bash",
+        "matcher": "git.*commit|mvn.*test|gradle.*test|npm.*test|npx.*vitest|npx.*jest|npx.*mocha|pytest|go.*test|dotnet.*test",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-tests --root \"${CLAUDE_PLUGIN_ROOT}\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-tests",
             "async": false
           },
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-format --root \"${CLAUDE_PLUGIN_ROOT}\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-format",
             "async": true
           }
         ]
@@ -95,7 +95,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/dev-intelligence.mjs\" --session-context --root \"${CLAUDE_PLUGIN_ROOT}\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/dev-intelligence.mjs\" --session-context",
             "async": true
           }
         ]

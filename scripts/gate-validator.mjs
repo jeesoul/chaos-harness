@@ -8,7 +8,8 @@
 
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { execSync } from 'node:child_process';
+import { tmpdir, platform } from 'node:os';
+import { execSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { resolvePluginRoot, resolveProjectRoot, normalizePath } from './path-utils.mjs';
@@ -126,64 +127,155 @@ function matchesPattern(filePath, pattern) {
 }
 
 /**
- * no-syntax-errors: 检查项目代码 .mjs/.js 文件语法
- * 扫描项目根目录和 src/ 目录，不扫描 chaos-harness/ 自身
+ * no-syntax-errors: 根据项目类型检查所有源代码文件的语法
+ * 支持 Java (javac)、JS/TS (node --check)、Python (py_compile)
  */
 function validateNoSyntaxErrors(validator, projectRoot) {
-  const scanDirs = [projectRoot, join(projectRoot, 'src')].filter(existsSync);
-  if (scanDirs.length === 0) {
-    return { status: 'skipped', reason: 'No source directories found' };
+  const scanPath = join(projectRoot, '.chaos-harness', 'scan-result.json');
+  let projectType = null;
+  if (existsSync(scanPath)) {
+    try { projectType = JSON.parse(readFileSync(scanPath, 'utf-8')).project_type; } catch {}
   }
 
   const errors = [];
-  for (const dir of scanDirs) {
-    const files = findFilesRecursive(dir, '*.mjs').concat(findFilesRecursive(dir, '*.js'));
-    const filtered = files.filter(f => !f.includes('chaos-harness'));
-    for (const file of filtered.slice(0, 50)) {
-      try {
-        execSync(`node -c "${file}"`, { stdio: 'pipe', timeout: 5000 });
-      } catch (e) {
-        errors.push({ file, error: e.stderr?.toString()?.trim() || 'syntax error' });
+  const checked = [];
+
+  // Java check: javac -proc:none (syntax only, no classpath resolution)
+  if (['java-spring', 'java-spring-legacy', 'java-maven', 'java-gradle'].includes(projectType)) {
+    const srcDir = join(projectRoot, 'src');
+    if (existsSync(srcDir)) {
+      const javaFiles = findFilesRecursive(srcDir, '*.java', projectRoot).slice(0, 100);
+      if (javaFiles.length > 0) {
+        let hasJavac = false;
+        try { execSync('javac -version', { stdio: 'pipe' }); hasJavac = true; } catch {}
+        if (hasJavac) {
+          for (const file of javaFiles) {
+            try {
+              execFileSync('javac', ['-proc:none', '-Xlint:none', '-d', tmpdir(), '-sourcepath', srcDir, file], { stdio: 'pipe', timeout: 10000 });
+            } catch (e) {
+              const err = (e.stderr?.toString() || '').trim();
+              // Only flag actual syntax errors, not missing dependencies
+              if (/error:.*syntax|expected|illegal|unclosed/.test(err.toLowerCase())) {
+                errors.push({ file: normalizePath(file).replace(normalizePath(projectRoot) + '/', ''), error: err.split('\n')[0] });
+              }
+            }
+          }
+          checked.push(`java: ${javaFiles.length} files`);
+        }
       }
     }
   }
 
-  if (errors.length === 0) return { status: 'passed' };
-  return { status: 'failed', reason: `Syntax errors: ${errors.map(e => e.file).join(', ')}`, details: errors };
+  // JS check: node --check
+  const srcDir = join(projectRoot, 'src');
+  if (existsSync(srcDir)) {
+    const jsFiles = findFilesRecursive(srcDir, '*.mjs', projectRoot).concat(findFilesRecursive(srcDir, '*.js', projectRoot))
+      .filter(f => !f.includes('node_modules') && !f.includes('.chaos-harness')).slice(0, 50);
+    for (const file of jsFiles) {
+      try {
+        execFileSync('node', ['-c', file], { stdio: 'pipe', timeout: 5000 });
+      } catch (e) {
+        errors.push({ file: normalizePath(file).replace(normalizePath(projectRoot) + '/', ''), error: 'syntax error' });
+      }
+    }
+    if (jsFiles.length > 0) checked.push(`javascript: ${jsFiles.length} files`);
+  }
+
+  // Python check: py_compile
+  const pyFiles = findFilesRecursive(projectRoot, '*.py', projectRoot)
+    .filter(f => !f.includes('__pycache__') && !f.includes('.venv') && !f.includes('venv') && !f.includes('site-packages')).slice(0, 50);
+  for (const file of pyFiles) {
+    try {
+      execFileSync('python', ['-m', 'py_compile', file], { stdio: 'pipe', timeout: 5000 });
+    } catch (e) {
+      errors.push({ file: normalizePath(file).replace(normalizePath(projectRoot) + '/', ''), error: 'syntax error' });
+    }
+  }
+  if (pyFiles.length > 0) checked.push(`python: ${pyFiles.length} files`);
+
+  if (errors.length === 0) return { status: 'passed', checked: checked.join(', ') || 'no source files' };
+  return { status: 'failed', reason: `${errors.length} syntax error(s) found`, details: errors.slice(0, 10) };
 }
 
 /**
- * test-suite-pass: 动态检测测试框架并运行测试
+ * test-suite-pass: 根据项目类型动态选择测试框架并执行
+ * 支持 Maven/JUnit、Gradle、Jest/Vitest/Mocha、pytest
  */
 function validateTestSuite(validator, projectRoot) {
-  const pkgPath = join(projectRoot, 'chaos-harness', 'package.json');
-  if (!existsSync(pkgPath)) {
-    return { status: 'skipped', reason: 'No package.json found' };
+  const scanPath = join(projectRoot, '.chaos-harness', 'scan-result.json');
+  let projectType = null;
+  let testFramework = null;
+  if (existsSync(scanPath)) {
+    try {
+      const scan = JSON.parse(readFileSync(scanPath, 'utf-8'));
+      projectType = scan.project_type;
+      testFramework = scan.test_framework;
+    } catch {}
   }
 
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
-  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-
-  let testCmd = null;
-  if (deps.vitest) testCmd = 'npx vitest run --passWithNoTests';
-  else if (deps.jest) testCmd = 'npx jest --passWithNoTests';
-  else if (deps.mocha) testCmd = 'npx mocha';
-
-  if (!testCmd) {
-    return { status: 'skipped', reason: 'No test framework detected (vitest/jest/mocha)' };
+  // Maven (Java Spring)
+  if (['java-spring', 'java-spring-legacy', 'java-maven'].includes(projectType) || testFramework === 'junit') {
+    if (existsSync(join(projectRoot, 'pom.xml'))) {
+      try {
+        execSync('mvn test -q', { cwd: projectRoot, stdio: 'pipe', timeout: 120000 });
+        return { status: 'passed', framework: 'maven-junit' };
+      } catch (e) {
+        const output = (e.stdout?.toString() || '') + (e.stderr?.toString() || '');
+        return { status: 'failed', reason: 'Maven tests failed', framework: 'maven-junit', details: output.slice(-500) };
+      }
+    }
   }
 
-  try {
-    execSync(testCmd, {
-      cwd: join(projectRoot, 'chaos-harness'),
-      stdio: 'pipe',
-      timeout: 30000
-    });
-    return { status: 'passed' };
-  } catch (e) {
-    const output = e.stdout?.toString() + e.stderr?.toString() || '';
-    return { status: 'failed', reason: 'Test suite failed', details: output.slice(-500) };
+  // Gradle (Java)
+  if (['java-gradle'].includes(projectType)) {
+    const gradleCmd = existsSync(join(projectRoot, 'gradlew')) ? './gradlew test' : 'gradle test';
+    try {
+      execSync(gradleCmd, { cwd: projectRoot, stdio: 'pipe', timeout: 120000, shell: true });
+      return { status: 'passed', framework: 'gradle' };
+    } catch (e) {
+      const output = (e.stdout?.toString() || '') + (e.stderr?.toString() || '');
+      return { status: 'failed', reason: 'Gradle tests failed', framework: 'gradle', details: output.slice(-500) };
+    }
   }
+
+  // Node.js (Jest/Vitest/Mocha)
+  const pkgPath = join(projectRoot, 'package.json');
+  if (existsSync(pkgPath)) {
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+
+    let cmd = null;
+    let fw = null;
+    if (deps.vitest) { cmd = 'npx vitest run --passWithNoTests'; fw = 'vitest'; }
+    else if (deps.jest) { cmd = 'npx jest --passWithNoTests'; fw = 'jest'; }
+    else if (deps.mocha) { cmd = 'npx mocha'; fw = 'mocha'; }
+    else if (pkg.scripts?.test) { cmd = 'npm test'; fw = 'npm-test'; }
+
+    if (cmd) {
+      try {
+        execSync(cmd, { cwd: projectRoot, stdio: 'pipe', timeout: 60000, shell: true });
+        return { status: 'passed', framework: fw };
+      } catch (e) {
+        const output = (e.stdout?.toString() || '') + (e.stderr?.toString() || '');
+        return { status: 'failed', reason: `${fw} tests failed`, framework: fw, details: output.slice(-500) };
+      }
+    }
+  }
+
+  // Python (pytest)
+  if (['python-fastapi', 'python-django'].includes(projectType)) {
+    if (existsSync(join(projectRoot, 'tests')) || existsSync(join(projectRoot, 'pytest.ini'))) {
+      try {
+        execSync('python -m pytest -q', { cwd: projectRoot, stdio: 'pipe', timeout: 60000 });
+        return { status: 'passed', framework: 'pytest' };
+      } catch (e) {
+        const output = (e.stdout?.toString() || '') + (e.stderr?.toString() || '');
+        return { status: 'failed', reason: 'pytest failed', framework: 'pytest', details: output.slice(-500) };
+      }
+    }
+  }
+
+  return { status: 'skipped', reason: 'No test framework detected. Add tests before release.' };
 }
 
 /**
@@ -196,7 +288,7 @@ function validateIronLaw(validator, projectRoot) {
   }
 
   try {
-    execSync(`node "${scriptPath}"`, { stdio: 'pipe', timeout: 5000 });
+    execFileSync('node', [scriptPath], { stdio: 'pipe', timeout: 5000 });
     return { status: 'passed' };
   } catch (e) {
     const output = e.stdout?.toString() || '';
@@ -205,30 +297,61 @@ function validateIronLaw(validator, projectRoot) {
 }
 
 /**
- * lint-check: 代码格式检查
+ * lint-check: 根据项目类型选择 lint 工具并执行
+ * 支持 checkstyle (Java)、ESLint (JS/TS)、flake8 (Python)
  */
 function validateLint(validator, projectRoot) {
-  const pkgPath = join(projectRoot, 'chaos-harness', 'package.json');
-  if (!existsSync(pkgPath)) {
-    return { status: 'skipped', reason: 'No package.json found' };
+  const scanPath = join(projectRoot, '.chaos-harness', 'scan-result.json');
+  let projectType = null;
+  if (existsSync(scanPath)) {
+    try { projectType = JSON.parse(readFileSync(scanPath, 'utf-8')).project_type; } catch {}
   }
 
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
-  if (!pkg.devDependencies?.eslint && !pkg.scripts?.lint) {
-    return { status: 'skipped', reason: 'ESLint not configured' };
+  // Java: checkstyle
+  if (['java-spring', 'java-spring-legacy', 'java-maven', 'java-gradle'].includes(projectType)) {
+    const hasCheckstyle = existsSync(join(projectRoot, 'checkstyle.xml')) ||
+      existsSync(join(projectRoot, 'checkstyle', 'checkstyle.xml')) ||
+      existsSync(join(projectRoot, 'config', 'checkstyle', 'checkstyle.xml'));
+    if (hasCheckstyle && existsSync(join(projectRoot, 'pom.xml'))) {
+      try {
+        execSync('mvn checkstyle:check -q', { cwd: projectRoot, stdio: 'pipe', timeout: 60000 });
+        return { status: 'passed', framework: 'checkstyle' };
+      } catch (e) {
+        return { status: 'soft-fail', reason: 'Checkstyle issues', framework: 'checkstyle', details: (e.stdout?.toString() || e.stderr?.toString() || '').slice(-500) };
+      }
+    }
+    // Fallback: just check javac
+    return { status: 'skipped', reason: 'No checkstyle configuration found' };
   }
 
-  try {
-    execSync('npx eslint . --quiet', {
-      cwd: join(projectRoot, 'chaos-harness'),
-      stdio: 'pipe',
-      timeout: 10000
-    });
-    return { status: 'passed' };
-  } catch (e) {
-    const output = e.stdout?.toString() || '';
-    return { status: 'failed', reason: 'Lint issues found', details: output.slice(-500) };
+  // Node.js: ESLint
+  const pkgPath = join(projectRoot, 'package.json');
+  if (existsSync(pkgPath)) {
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+    const hasEslint = pkg.devDependencies?.eslint || existsSync(join(projectRoot, '.eslintrc')) ||
+      existsSync(join(projectRoot, '.eslintrc.js')) || existsSync(join(projectRoot, 'eslint.config.js')) ||
+      existsSync(join(projectRoot, 'eslint.config.mjs'));
+    if (hasEslint) {
+      try {
+        execSync('npx eslint . --quiet', { cwd: projectRoot, stdio: 'pipe', timeout: 30000 });
+        return { status: 'passed', framework: 'eslint' };
+      } catch (e) {
+        return { status: 'soft-fail', reason: 'ESLint issues', framework: 'eslint', details: (e.stdout?.toString() || '').slice(-500) };
+      }
+    }
   }
+
+  // Python: flake8
+  if (['python-fastapi', 'python-django'].includes(projectType)) {
+    try {
+      execSync('python -m flake8 --max-line-length=120', { cwd: projectRoot, stdio: 'pipe', timeout: 30000 });
+      return { status: 'passed', framework: 'flake8' };
+    } catch {
+      return { status: 'soft-fail', reason: 'flake8 issues', framework: 'flake8', details: 'Run flake8 for details' };
+    }
+  }
+
+  return { status: 'skipped', reason: 'No linting tool detected' };
 }
 
 /**
@@ -261,7 +384,7 @@ function validateProjectScan(validator, projectRoot) {
   }
 
   try {
-    execSync(`node "${scannerPath}" --root "${projectRoot}"`, {
+    execFileSync('node', [scannerPath, '--root', projectRoot], {
       cwd: projectRoot,
       stdio: 'pipe',
       timeout: 15000,
@@ -296,7 +419,7 @@ function validateUIQuality(validator, projectRoot) {
     return { status: 'failed', reason: 'ui-quality-validator.mjs not found' };
   }
   try {
-    const output = execSync(`node "${scriptPath}" --root "${projectRoot}"`, {
+    const output = execFileSync('node', [scriptPath, '--root', projectRoot], {
       cwd: projectRoot,
       stdio: 'pipe',
       timeout: 15000,
@@ -392,6 +515,31 @@ function validatePRDQuality(validator, projectRoot) {
   return { status: 'failed', reason: `${failed} PRD quality check(s) failed`, details: checks.filter(c => !c.passed) };
 }
 
+/**
+ * script: 运行自定义脚本验证器（如 dev-intelligence.mjs）
+ */
+function validateScript(validator, projectRoot) {
+  if (!validator.script) {
+    return { status: 'failed', reason: 'script validator requires a script path' };
+  }
+  const scriptPath = join(pluginRoot, 'scripts', validator.script);
+  if (!existsSync(scriptPath)) {
+    return { status: 'failed', reason: `Script not found: ${validator.script}` };
+  }
+  const args = (validator.args || []).map(a => a.replace('{current_stage}', 'unknown'));
+  try {
+    execFileSync('node', [scriptPath, ...args], {
+      cwd: projectRoot,
+      stdio: 'pipe',
+      timeout: 15000,
+    });
+    return { status: 'passed', script: validator.script };
+  } catch (e) {
+    const output = (e.stdout?.toString() || '') + (e.stderr?.toString() || '');
+    return { status: 'failed', reason: `Script ${validator.script} failed`, details: output.slice(-300) };
+  }
+}
+
 const validators = {
   'file-exists': validateFileExists,
   'no-syntax-errors': validateNoSyntaxErrors,
@@ -402,6 +550,7 @@ const validators = {
   'ui-quality-check': validateUIQuality,
   'project-scan': validateProjectScan,
   'prd-quality-check': validatePRDQuality,
+  'script': validateScript,
 };
 
 /**

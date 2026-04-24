@@ -15,14 +15,13 @@ import { validateGate, loadRegistry, loadGateState, isCacheValid } from './gate-
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolvePluginRoot();
-const gatesDir = join(pluginRoot, '.chaos-harness', 'gates');
 
 /**
  * 保存 Gate 状态
  */
-function saveGateState(gateId, state) {
-  ensureDir(gatesDir);
-  const statePath = join(gatesDir, `${gateId}.json`);
+function saveGateState(gateId, state, dir) {
+  ensureDir(dir);
+  const statePath = join(dir, `${gateId}.json`);
   writeJson(statePath, state);
 }
 
@@ -85,8 +84,9 @@ function main() {
     process.exit(1);
   }
 
-  // 检查缓存
-  const state = loadGateState(gateId);
+  // 检查缓存 — 使用项目级的 .chaos-harness/gates/ 而非插件级的
+  const projectGatesDir = join(projectRoot, '.chaos-harness', 'gates');
+  const state = readJson(join(projectGatesDir, `${gateId}.json`), null);
   if (isCacheValid(gateDef, state)) {
     process.exit(0);
   }
@@ -108,9 +108,10 @@ function main() {
       id: gateId,
       status: 'passed',
       lastChecked: new Date().toISOString(),
+      projectRoot,
       fileHashes,
       result: { results: result.results },
-    });
+    }, projectGatesDir);
     process.exit(0);
   }
 
@@ -125,8 +126,9 @@ function main() {
       id: gateId,
       status: 'soft-fail',
       lastChecked: new Date().toISOString(),
+      projectRoot,
       result: { results: result.results },
-    });
+    }, projectGatesDir);
     process.exit(0);
   }
 }

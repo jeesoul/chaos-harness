@@ -20,7 +20,7 @@ version: "1.3.2"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（14 个）
+## 可用 Skills（15 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
@@ -42,8 +42,8 @@ version: "1.3.2"
 
 ## Gate 状态机
 
-11 Gates（6 stage + 5 quality），9 种验证器：
-- `file-exists` `project-scan` `git-has-commits` `no-syntax-errors` `test-suite-pass` `lint-check` `iron-law-check` `ui-quality-check` `prd-quality-check`
+11 Gates（6 stage + 5 quality），10 种验证器：
+- `file-exists` `project-scan` `git-has-commits` `no-syntax-errors` `test-suite-pass` `lint-check` `iron-law-check` `ui-quality-check` `prd-quality-check` `script`
 
 ## 防绕过
 
