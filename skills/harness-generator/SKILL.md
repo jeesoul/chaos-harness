@@ -94,4 +94,3 @@ laziness_patterns:
 |------|---------|
 | `.chaos-harness/scan-result.json` | 读取扫描结果选择模板时 |
 | `scripts/project-scanner.mjs` | 需要触发项目扫描时 |
-| `templates/` | 读取 Harness 模板文件时 |

@@ -136,8 +136,8 @@ function extractFilePath(input) {
 function isNonVersionedPath(filePath) {
   const excluded = [
     'output/v', '.chaos-harness', 'instincts/', 'evals/',
-    'schemas/', 'skills/', 'scripts/', 'commands/', 'hooks/',
-    'templates/', 'node_modules/'
+    'skills/', 'scripts/', 'commands/', 'hooks/',
+    'node_modules/'
   ];
   return !excluded.some(dir => filePath.includes(dir));
 }
