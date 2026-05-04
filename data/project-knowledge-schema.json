@@ -1,0 +1,57 @@
+{
+  "$schema": "project-knowledge-v1",
+  "version": "1.0.0",
+  "layers": {
+    "code": {
+      "description": "代码结构层 — 模块、类、方法、依赖关系",
+      "fields": {
+        "modules": "模块列表（包/目录级别）",
+        "classes": "类/接口/组件列表",
+        "methods": "关键方法签名",
+        "dependencies": "内部依赖关系图",
+        "external_deps": "外部依赖及版本约束",
+        "entry_points": "入口点（Controller/Router/Main）"
+      }
+    },
+    "convention": {
+      "description": "规范层 — 命名、日志、异常、注释风格",
+      "fields": {
+        "naming": "命名规范（类/方法/变量/常量/文件）",
+        "logging": "日志规范（框架/格式/级别使用）",
+        "error_handling": "异常处理规范（自定义异常/全局处理）",
+        "comments": "注释风格（语言/格式/密度）",
+        "imports": "导入规范（排序/分组）",
+        "formatting": "格式化规范（缩进/行宽/括号风格）"
+      }
+    },
+    "data": {
+      "description": "数据层 — 表结构、关联关系、数据量级",
+      "fields": {
+        "entities": "实体/表列表",
+        "relationships": "关联关系（1:1/1:N/M:N）",
+        "indexes": "索引策略",
+        "volume_hints": "数据量级提示",
+        "migration_history": "迁移历史摘要"
+      }
+    },
+    "architecture": {
+      "description": "架构层 — 分层、模式、约束",
+      "fields": {
+        "layers": "分层结构（Controller/Service/Repository）",
+        "patterns": "设计模式使用",
+        "constraints": "架构约束（不可违反的规则）",
+        "tech_debt": "已知技术债务",
+        "decisions": "关键架构决策记录"
+      }
+    },
+    "business": {
+      "description": "业务层 — 功能清单、业务规则、性能约束",
+      "fields": {
+        "features": "功能清单",
+        "rules": "业务规则",
+        "performance": "性能约束（SLA/响应时间/并发）",
+        "security": "安全约束（认证/授权/加密）"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "graphify": {
+    "enabled": false,
+    "auto_generate": true,
+    "auto_update": true,
+    "query_before_action": true,
+    "output_dir": "graphify-out",
+    "ignore_patterns": [
+      "node_modules/",
+      "dist/",
+      "build/",
+      ".chaos-harness/",
+      "graphify-out/"
+    ],
+    "token_budget": 2000
+  }
+}
