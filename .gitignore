@@ -41,10 +41,8 @@ skills/web-access/references/site-patterns/*.md
 # 开发用 package.json 备份，不提交
 package.dev.json
 
-# Instinct system local data
-instincts/observations.jsonl
-instincts/*.bak
-instincts/clusters/*.json
+# Instinct system local data (全部运行时数据，不提交)
+instincts/
 
 # Eval system runtime data
 evals/results/eval-log.jsonl
@@ -56,3 +54,4 @@ evals/results/eval-log.jsonl
 __pycache__/
 .test-project-v133/
 instincts/instincts.json
+
