@@ -55,3 +55,4 @@ evals/results/eval-log.jsonl
 .idea/
 __pycache__/
 .test-project-v133/
+instincts/instincts.json
