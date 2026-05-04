@@ -12,6 +12,9 @@ coverage/
 
 # 项目输出文件不提交
 output/
+
+# Graphify 生成的知识图谱（运行时产物，不提交）
+graphify-out/
 # Superpowers 本地计划与规格文档，不提交
 docs/superpowers/
 

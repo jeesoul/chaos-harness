@@ -129,18 +129,16 @@ export function generateGraph(projectRoot, options = {}) {
   }
 
   try {
-    execFileSync('graphify', [projectRoot], {
+    // graphify update <path> — re-extracts code files, no LLM needed
+    execFileSync('graphify', ['update', projectRoot], {
       cwd: projectRoot,
       stdio: 'pipe',
       timeout: 300000,
     });
     return { success: true, cached: false, paths };
   } catch (err) {
-    // 清理不完整的 graph.json（timeout 或其他错误）
     if (existsSync(paths.graph)) {
-      try {
-        unlinkSync(paths.graph);
-      } catch {}
+      try { unlinkSync(paths.graph); } catch {}
     }
     return { success: false, error: err.message };
   }
@@ -273,9 +271,16 @@ export function loadGraph(projectRoot) {
 export function getGodNodes(projectRoot, topN = 10) {
   const graph = loadGraph(projectRoot);
   if (!graph || !graph.nodes) return [];
+  // Compute degree from links (graph.json doesn't include a degree field)
+  const degree = {};
+  for (const l of (graph.links || [])) {
+    degree[l.source] = (degree[l.source] || 0) + 1;
+    degree[l.target] = (degree[l.target] || 0) + 1;
+  }
   return graph.nodes
+    .map(n => ({ ...n, degree: degree[n.id] || 0 }))
     .filter(n => n.degree > 0)
-    .sort((a, b) => (b.degree || 0) - (a.degree || 0))
+    .sort((a, b) => b.degree - a.degree)
     .slice(0, topN);
 }
 
