@@ -28,6 +28,11 @@
           },
           {
             "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/context-advisor.mjs\" --hook",
+            "async": true
+          },
+          {
+            "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-iron-law",
             "async": false
           },

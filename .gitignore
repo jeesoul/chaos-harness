@@ -54,3 +54,4 @@ evals/results/eval-log.jsonl
 .claude/
 .idea/
 __pycache__/
+.test-project-v133/

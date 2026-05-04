@@ -185,8 +185,31 @@ const rootArgIdx = args.indexOf('--project-root');
 const explicitRoot = rootArgIdx !== -1 ? args[rootArgIdx + 1] : null;
 const projectRoot = resolveProjectRoot(explicitRoot);
 if (!projectRoot) {
-  console.log('[Context Advisor] 未检测到项目根目录');
-  console.log('  提示: 使用 --project-root <path> 指定目标项目路径');
+  process.exit(0);
+}
+
+// --hook モード: PreToolUse から呼ばれる。hookSpecificOutput 形式で出力
+if (args.includes('--hook')) {
+  const filePath = process.env.CLAUDE_TOOL_INPUT_FILE_PATH || '';
+  const result = filePath
+    ? getFileContext(projectRoot, filePath)
+    : null;
+  const advice = generateAdvice(projectRoot, filePath ? basename(filePath) : '');
+
+  if (!advice.advice || advice.advice.length === 0) process.exit(0);
+
+  const lines = [];
+  for (const group of advice.advice) {
+    lines.push(`[${group.category}] ${group.items.join(' | ')}`);
+  }
+
+  const hookOutput = {
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      additionalContext: `context-advisor: ${lines.join(' || ')}`,
+    },
+  };
+  process.stdout.write(JSON.stringify(hookOutput));
   process.exit(0);
 }
 

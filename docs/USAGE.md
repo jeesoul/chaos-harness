@@ -7,6 +7,9 @@
 ## 目录
 
 - [通用安装](#通用安装)
+- [项目知识引擎（v1.3.3 新增）](#项目知识引擎)
+- [需求影响分析（v1.3.3 新增）](#需求影响分析)
+- [上下文感知建议（v1.3.3 新增）](#上下文感知建议)
 - [Graphify 知识图谱](#graphify-知识图谱)
 - [产品经理](#产品经理)
 - [架构师](#架构师)
@@ -32,7 +35,152 @@ claude plugins install chaos-harness@chaos-harness
 /chaos-harness:overview
 ```
 
-安装后，Gate 状态机、Graphify 知识图谱和 Hooks 自动拦截即刻生效，无需额外配置。
+安装后，Gate 状态机、知识图谱和 Hooks 自动拦截即刻生效，无需额外配置。
+
+---
+
+## 项目知识引擎
+
+**v1.3.3 新增**。扫描项目生成结构化知识，让 AI 在动手前先读懂项目。
+
+### 使用场景
+
+- 老项目接手：快速了解项目结构、规范、约束
+- 新成员上手：自动提取编码规范，不用口口相传
+- AI 辅助开发：让 AI 知道项目已有什么，不重复造轮子
+
+### 命令
+
+```bash
+# 扫描项目，生成知识图谱（存入 .chaos-harness/project-knowledge.json）
+node scripts/project-knowledge-engine.mjs --scan
+
+# 查询特定知识
+node scripts/project-knowledge-engine.mjs --query code.languages
+node scripts/project-knowledge-engine.mjs --query dependencies
+node scripts/project-knowledge-engine.mjs --query convention.naming
+
+# 生成可读报告
+node scripts/project-knowledge-engine.mjs --report
+
+# 指定目标项目（在 chaos-harness 目录外调用时）
+node scripts/project-knowledge-engine.mjs --scan --project-root /path/to/your-project
+```
+
+或通过 Slash 命令：`/chaos-harness:graphify generate`
+
+### 扫描内容
+
+| 层 | 内容 |
+|----|------|
+| 代码层 | 模块结构、入口点、源文件统计、语言分布 |
+| 依赖层 | 外部依赖及版本约束、engine 约束 |
+| 数据层 | JPA 实体、表名映射、字段列表 |
+| 规范层 | 命名风格、日志框架、异常处理模式 |
+
+### 输出文件
+
+| 文件 | 说明 |
+|------|------|
+| `.chaos-harness/project-knowledge.json` | 结构化知识图谱（机器可读） |
+| `.chaos-harness/knowledge-report.md` | 可读分析报告 |
+
+---
+
+## 需求影响分析
+
+**v1.3.3 新增**。输入一个需求，在开发前就知道影响范围、风险和工作量。
+
+### 使用场景
+
+- 评估新需求：在排期前了解复杂度和风险
+- 老项目迭代：避免踩到隐性约束（数据量、版本锁定、架构边界）
+- 复用发现：找出项目里已有的可复用代码和依赖
+
+### 命令
+
+```bash
+# 分析需求影响
+node scripts/impact-analyzer.mjs --requirement "用户导出 Excel"
+
+# 输出 JSON 格式（供其他工具消费）
+node scripts/impact-analyzer.mjs --requirement "添加缓存层" --json
+
+# 指定目标项目
+node scripts/impact-analyzer.mjs --requirement "需求" --project-root /path/to/project
+```
+
+或通过 Slash 命令：`/chaos-harness:impact-analyzer`
+
+### 分析维度
+
+| 维度 | 说明 |
+|------|------|
+| 影响范围 | 哪些模块受影响，影响程度 |
+| 复用建议 | 项目里已有哪些可复用的代码/依赖 |
+| 约束提醒 | 哪些约束不能违反（数据量、版本锁定、架构边界） |
+| 风险预警 | 哪些地方可能出问题 |
+| 工作量估算 | 乐观 / 可能 / 悲观三点估算（小时） |
+
+### 触发词
+
+| 你说... | 自动触发 |
+|---------|---------|
+| "影响分析"、"需求影响" | impact-analyzer |
+| "风险预警"、"影响范围" | impact-analyzer |
+| "复用建议"、"工作量估算" | impact-analyzer |
+
+### 输出文件
+
+报告自动保存到 `.chaos-harness/impact-report.md`。
+
+---
+
+## 上下文感知建议
+
+**v1.3.3 新增**。在 AI 生成代码前，自动注入项目规范，确保生成的代码和老代码风格一致。
+
+### 使用场景
+
+- 新功能开发：AI 生成的代码命名、日志、异常处理和老代码一致
+- 代码审查：快速了解当前文件所在模块的规范
+- 依赖选择：优先复用已有依赖，不引入冲突
+
+### 命令
+
+```bash
+# 获取编码建议
+node scripts/context-advisor.mjs --advise "创建 UserExportService"
+
+# 获取文件级上下文
+node scripts/context-advisor.mjs --for-file src/service/UserService.java
+
+# 指定目标项目
+node scripts/context-advisor.mjs --advise "描述" --project-root /path/to/project
+```
+
+或通过 Slash 命令：`/chaos-harness:context-advisor`
+
+### 建议维度
+
+| 维度 | 说明 |
+|------|------|
+| 命名风格 | 和现有代码一致（PascalCase / camelCase / snake_case） |
+| 依赖选择 | 优先复用已有依赖，不引入冲突 |
+| 架构模式 | 和现有分层架构一致 |
+| 异常处理 | 和现有 GlobalExceptionHandler 一致 |
+| 日志格式 | 和现有 slf4j / log4j 格式一致 |
+
+### 自动行为
+
+PreToolUse Hook 在每次 Write/Edit 前自动触发，将项目规范注入 AI 上下文。无需手动调用。
+
+### 触发词
+
+| 你说... | 自动触发 |
+|---------|---------|
+| "上下文建议"、"编码建议" | context-advisor |
+| "项目规范"、"代码风格" | context-advisor |
 
 ---
 
