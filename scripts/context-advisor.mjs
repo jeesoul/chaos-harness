@@ -181,9 +181,12 @@ export function formatAdvice(result) {
 const args = process.argv.slice(2);
 if (args.length === 0) process.exit(0);
 
-const projectRoot = resolveProjectRoot();
+const rootArgIdx = args.indexOf('--project-root');
+const explicitRoot = rootArgIdx !== -1 ? args[rootArgIdx + 1] : null;
+const projectRoot = resolveProjectRoot(explicitRoot);
 if (!projectRoot) {
   console.log('[Context Advisor] 未检测到项目根目录');
+  console.log('  提示: 使用 --project-root <path> 指定目标项目路径');
   process.exit(0);
 }
 

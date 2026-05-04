@@ -6,7 +6,7 @@
 
 import { dirname, join, resolve, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,11 +37,15 @@ export function formatPathForShell(input) {
 }
 
 /**
- * 判断目录是否是插件根目录（有 scripts/ + data/ 特征）
+ * 判断目录是否是 chaos-harness 插件根目录
+ * 通过 package.json name 字段判断，比目录特征更可靠
  */
 function isPluginRoot(dir) {
   try {
-    return existsSync(join(dir, 'scripts')) && existsSync(join(dir, 'data'));
+    const pkgPath = join(dir, 'package.json');
+    if (!existsSync(pkgPath)) return false;
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+    return pkg.name === 'chaos-harness';
   } catch {
     return false;
   }
@@ -49,10 +53,27 @@ function isPluginRoot(dir) {
 
 /**
  * 可靠的项目根目录检测（查找 .chaos-harness/state.json）
- * 跳过插件根目录，返回真实用户项目路径
+ * 优先级：显式参数 > CHAOS_PROJECT_ROOT 环境变量 > 向上遍历查找
+ * 跳过 chaos-harness 插件自身目录，返回真实用户项目路径
  */
-export function resolveProjectRoot(startDir = process.cwd()) {
-  let dir = resolve(startDir);
+export function resolveProjectRoot(startDir = null) {
+  // 1. 显式传入路径
+  if (startDir) {
+    const dir = resolve(startDir);
+    if (existsSync(join(dir, '.chaos-harness', 'state.json'))) return dir;
+    // 传入路径没有 state.json 也接受（用于新项目初始化场景）
+    if (existsSync(dir)) return dir;
+  }
+
+  // 2. 环境变量
+  const envRoot = process.env.CHAOS_PROJECT_ROOT;
+  if (envRoot) {
+    const dir = resolve(envRoot);
+    if (existsSync(dir)) return dir;
+  }
+
+  // 3. 向上遍历查找 .chaos-harness/state.json，跳过插件自身
+  let dir = resolve(process.cwd());
   for (let depth = 0; depth < 20; depth++) {
     if (existsSync(join(dir, '.chaos-harness', 'state.json')) && !isPluginRoot(dir)) {
       return dir;
