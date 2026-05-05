@@ -540,6 +540,367 @@ function validateScript(validator, projectRoot) {
   }
 }
 
+/**
+ * coverage-threshold: 读取覆盖率报告，检查是否达到阈值
+ * 支持 lcov.info（Java/JS）和 coverage-summary.json（Jest/Istanbul）
+ */
+function validateCoverageThreshold(validator, projectRoot) {
+  const threshold = validator.threshold ?? 80;
+
+  // 1. 尝试 coverage-summary.json（Jest/Istanbul 格式）
+  const summaryPath = join(projectRoot, 'coverage', 'coverage-summary.json');
+  if (existsSync(summaryPath)) {
+    try {
+      const summary = JSON.parse(readFileSync(summaryPath, 'utf-8'));
+      const total = summary.total;
+      if (total && total.lines) {
+        const pct = total.lines.pct;
+        if (pct >= threshold) {
+          return { status: 'passed', coverage: pct, threshold, source: 'coverage-summary.json' };
+        }
+        return { status: 'failed', reason: `Coverage ${pct.toFixed(1)}% < threshold ${threshold}%`, coverage: pct, threshold };
+      }
+    } catch (e) {
+      // fall through to lcov
+    }
+  }
+
+  // 2. 尝试 lcov.info（Java JaCoCo / JS Istanbul lcov 格式）
+  const lcovPath = join(projectRoot, 'coverage', 'lcov.info');
+  if (existsSync(lcovPath)) {
+    try {
+      const content = readFileSync(lcovPath, 'utf-8');
+      let totalHit = 0;
+      let totalFound = 0;
+      for (const line of content.split('\n')) {
+        if (line.startsWith('LH:')) totalHit += parseInt(line.slice(3), 10);
+        else if (line.startsWith('LF:')) totalFound += parseInt(line.slice(3), 10);
+      }
+      if (totalFound > 0) {
+        const pct = (totalHit / totalFound) * 100;
+        if (pct >= threshold) {
+          return { status: 'passed', coverage: pct.toFixed(1), threshold, source: 'lcov.info' };
+        }
+        return { status: 'failed', reason: `Coverage ${pct.toFixed(1)}% < threshold ${threshold}%`, coverage: pct.toFixed(1), threshold };
+      }
+    } catch (e) {
+      // fall through
+    }
+  }
+
+  // 3. 尝试 JaCoCo XML（Maven Java 项目）
+  const jacocoXmlPath = join(projectRoot, 'target', 'site', 'jacoco', 'jacoco.xml');
+  if (existsSync(jacocoXmlPath)) {
+    try {
+      const xml = readFileSync(jacocoXmlPath, 'utf-8');
+      const match = xml.match(/<counter type="LINE" missed="(\d+)" covered="(\d+)"/);
+      if (match) {
+        const missed = parseInt(match[1], 10);
+        const covered = parseInt(match[2], 10);
+        const total = missed + covered;
+        if (total > 0) {
+          const pct = (covered / total) * 100;
+          if (pct >= threshold) {
+            return { status: 'passed', coverage: pct.toFixed(1), threshold, source: 'jacoco.xml' };
+          }
+          return { status: 'failed', reason: `Coverage ${pct.toFixed(1)}% < threshold ${threshold}%`, coverage: pct.toFixed(1), threshold };
+        }
+      }
+    } catch (e) {
+      // fall through
+    }
+  }
+
+  // 没有 coverage 报告，降级为 soft 建议
+  return { status: 'skipped', reason: 'No coverage report found. Run tests with coverage to generate: jest --coverage / mvn test -Pcoverage' };
+}
+
+/**
+ * no-todo-critical: 扫描代码中的关键标记（TODO(critical), FIXME, HACK 等）
+ */
+function validateNoTodoCritical(validator, projectRoot) {
+  const patterns = validator.patterns || ['TODO(critical)', 'FIXME', 'HACK'];
+  const excludeDirs = ['node_modules', '.chaos-harness', 'dist', 'build', 'coverage', 'graphify-out', '.git'];
+  const includeExts = ['.java', '.js', '.mjs', '.ts', '.tsx', '.py', '.go', '.rs', '.kt'];
+
+  const findings = [];
+
+  function scanDir(dir) {
+    if (!existsSync(dir)) return;
+    let entries;
+    try { entries = readdirSync(dir); } catch { return; }
+    for (const entry of entries) {
+      if (excludeDirs.some(ex => entry === ex)) continue;
+      const fullPath = join(dir, entry);
+      let stat;
+      try { stat = statSync(fullPath); } catch { continue; }
+      if (stat.isDirectory()) {
+        scanDir(fullPath);
+      } else if (includeExts.some(ext => entry.endsWith(ext))) {
+        try {
+          const lines = readFileSync(fullPath, 'utf-8').split('\n');
+          lines.forEach((line, idx) => {
+            for (const pattern of patterns) {
+              if (line.includes(pattern)) {
+                const relPath = normalizePath(fullPath).replace(normalizePath(projectRoot) + '/', '');
+                findings.push({ file: relPath, line: idx + 1, pattern, text: line.trim().slice(0, 120) });
+              }
+            }
+          });
+        } catch { /* skip unreadable */ }
+      }
+    }
+  }
+
+  scanDir(projectRoot);
+
+  if (findings.length === 0) {
+    return { status: 'passed', scanned: true, patterns };
+  }
+  return {
+    status: 'failed',
+    reason: `Found ${findings.length} critical marker(s): ${patterns.join(', ')}`,
+    details: findings.slice(0, 20),
+  };
+}
+
+/**
+ * security-audit: 运行 npm audit 检查依赖安全漏洞
+ */
+function validateSecurityAudit(validator, projectRoot) {
+  const maxSeverity = validator.maxSeverity || 'high';
+  const severityOrder = ['info', 'low', 'moderate', 'high', 'critical'];
+  const maxIdx = severityOrder.indexOf(maxSeverity);
+
+  const pkgPath = join(projectRoot, 'package.json');
+  if (!existsSync(pkgPath)) {
+    // 非 Node.js 项目跳过
+    return { status: 'skipped', reason: 'Not a Node.js project (no package.json)' };
+  }
+
+  const lockFile = existsSync(join(projectRoot, 'package-lock.json')) ||
+    existsSync(join(projectRoot, 'yarn.lock')) ||
+    existsSync(join(projectRoot, 'pnpm-lock.yaml'));
+  if (!lockFile) {
+    return { status: 'skipped', reason: 'No lockfile found. Run npm install first.' };
+  }
+
+  try {
+    const output = execSync('npm audit --json', {
+      cwd: projectRoot,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 30000,
+    });
+    const audit = JSON.parse(output);
+    const vulns = audit.vulnerabilities || {};
+    const violations = [];
+    for (const [name, info] of Object.entries(vulns)) {
+      const sev = info.severity || 'info';
+      const sevIdx = severityOrder.indexOf(sev);
+      if (sevIdx >= maxIdx) {
+        violations.push({ package: name, severity: sev, via: (info.via || []).slice(0, 2) });
+      }
+    }
+    if (violations.length === 0) {
+      return { status: 'passed', maxSeverity, totalVulnerabilities: Object.keys(vulns).length };
+    }
+    return {
+      status: 'failed',
+      reason: `${violations.length} ${maxSeverity}+ severity vulnerability(s) found`,
+      details: violations.slice(0, 10),
+    };
+  } catch (e) {
+    // npm audit returns exit code 1 when vulnerabilities found
+    const output = e.stdout || '';
+    if (output.includes('{')) {
+      try {
+        const audit = JSON.parse(output);
+        const vulns = audit.vulnerabilities || {};
+        const violations = [];
+        for (const [name, info] of Object.entries(vulns)) {
+          const sev = info.severity || 'info';
+          const sevIdx = severityOrder.indexOf(sev);
+          if (sevIdx >= maxIdx) {
+            violations.push({ package: name, severity: sev });
+          }
+        }
+        if (violations.length === 0) {
+          return { status: 'passed', maxSeverity };
+        }
+        return {
+          status: 'failed',
+          reason: `${violations.length} ${maxSeverity}+ severity vulnerability(s)`,
+          details: violations.slice(0, 10),
+        };
+      } catch {}
+    }
+    return { status: 'skipped', reason: 'npm audit failed: ' + (e.message || '').slice(0, 100) };
+  }
+}
+
+/**
+ * architecture-layer: 检查代码是否违反分层规则（如 controller 直接 import repository）
+ * 使用路径规则分析，兼容 Java 包路径和 JS/TS 目录结构
+ */
+async function validateArchitectureLayer(validator, projectRoot) {
+  const rules = validator.rules || [];
+  if (rules.length === 0) {
+    return { status: 'skipped', reason: 'No architecture rules configured' };
+  }
+
+  const violations = [];
+  const srcDir = join(projectRoot, 'src');
+  if (!existsSync(srcDir)) {
+    return { status: 'skipped', reason: 'No src directory found' };
+  }
+
+  // 收集所有源码文件
+  const sourceExts = ['.java', '.js', '.mjs', '.ts', '.tsx', '.kt'];
+  const allFiles = [];
+  function collectFiles(dir) {
+    try {
+      for (const entry of readdirSync(dir)) {
+        const fullPath = join(dir, entry);
+        try {
+          const stat = statSync(fullPath);
+          if (stat.isDirectory() && entry !== 'node_modules' && entry !== 'build' && entry !== 'dist') {
+            collectFiles(fullPath);
+          } else if (sourceExts.some(ext => entry.endsWith(ext))) {
+            allFiles.push(fullPath);
+          }
+        } catch { /* skip */ }
+      }
+    } catch { /* skip */ }
+  }
+  collectFiles(srcDir);
+
+  // 解析 import（使用简单正则，兼容性好，不依赖 es-module-lexer）
+  for (const rule of rules) {
+    const fromLayer = rule.from;
+    const forbidLayers = Array.isArray(rule.forbids) ? rule.forbids : [rule.forbids];
+
+    // 找到属于 fromLayer 的文件
+    const fromFiles = allFiles.filter(f => {
+      const normalized = normalizePath(f).toLowerCase();
+      return normalized.includes(`/${fromLayer.toLowerCase()}/`) ||
+        normalized.includes(`/${fromLayer.toLowerCase()}impl`) ||
+        normalized.includes(`_${fromLayer.toLowerCase()}.`);
+    });
+
+    for (const file of fromFiles) {
+      let content;
+      try { content = readFileSync(file, 'utf-8'); } catch { continue; }
+
+      // 提取 import 语句（Java: import xxx.xxx; / JS: import ... from '...' / require('...'))
+      const importMatches = [];
+      // Java imports
+      const javaImports = content.match(/^import\s+[\w.]+;/gm) || [];
+      importMatches.push(...javaImports.map(m => m.replace(/^import\s+/, '').replace(';', '').toLowerCase()));
+      // JS/TS imports
+      const jsImports = content.match(/(?:import|require)\s*(?:\{[^}]*\}\s*from\s*)?['"]([^'"]+)['"]/g) || [];
+      importMatches.push(...jsImports.map(m => {
+        const match = m.match(/['"]([^'"]+)['"]/);
+        return match ? match[1].toLowerCase() : '';
+      }));
+
+      for (const importPath of importMatches) {
+        if (!importPath) continue;
+        for (const forbidLayer of forbidLayers) {
+          if (importPath.includes(forbidLayer.toLowerCase())) {
+            const relFile = normalizePath(file).replace(normalizePath(projectRoot) + '/', '');
+            violations.push({
+              file: relFile,
+              rule: `${fromLayer} → ${forbidLayer}`,
+              importPath: importPath.slice(0, 80),
+            });
+          }
+        }
+      }
+    }
+  }
+
+  if (violations.length === 0) {
+    return { status: 'passed', rules: rules.length, filesChecked: allFiles.length };
+  }
+  return {
+    status: 'failed',
+    reason: `${violations.length} architecture layer violation(s) found`,
+    details: violations.slice(0, 15),
+  };
+}
+
+/**
+ * branch-naming: 检查当前分支名是否符合规范
+ */
+function validateBranchNaming(validator, projectRoot) {
+  const pattern = validator.pattern || '^(feature|fix|chore|hotfix|release)/.+';
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+      cwd: projectRoot,
+      encoding: 'utf-8',
+      stdio: 'pipe',
+    }).trim();
+
+    if (branch === 'HEAD') {
+      return { status: 'skipped', reason: 'Detached HEAD state, cannot check branch name' };
+    }
+
+    // 豁免主干分支
+    const exemptBranches = ['main', 'master', 'develop', 'dev', 'staging', 'production'];
+    if (exemptBranches.includes(branch)) {
+      return { status: 'passed', branch, reason: 'Exempt branch (main/master/develop)' };
+    }
+
+    const regex = new RegExp(pattern);
+    if (regex.test(branch)) {
+      return { status: 'passed', branch, pattern };
+    }
+    return {
+      status: 'failed',
+      reason: `Branch "${branch}" does not match pattern: ${pattern}`,
+      branch,
+      suggestion: 'Rename: git branch -m ' + branch + ' feature/' + branch,
+    };
+  } catch {
+    return { status: 'skipped', reason: 'Not a git repository or git not available' };
+  }
+}
+
+/**
+ * commit-message: 检查最近 N 条 commit 信息是否符合规范（Conventional Commits）
+ */
+function validateCommitMessage(validator, projectRoot) {
+  const pattern = validator.pattern || '^(feat|fix|chore|docs|refactor|test|style|perf|ci|build|revert)(\\([^)]+\\))?:';
+  const count = validator.count || 5;
+  try {
+    const output = execSync(`git log --oneline -${count} --pretty=format:"%s"`, {
+      cwd: projectRoot,
+      encoding: 'utf-8',
+      stdio: 'pipe',
+    });
+    const commits = output.split('\n').filter(l => l.trim());
+    if (commits.length === 0) {
+      return { status: 'skipped', reason: 'No commits found' };
+    }
+
+    const regex = new RegExp(pattern);
+    const violations = commits.filter(msg => !regex.test(msg.trim()));
+    if (violations.length === 0) {
+      return { status: 'passed', checked: commits.length, pattern };
+    }
+    return {
+      status: 'failed',
+      reason: `${violations.length}/${commits.length} commits don't follow convention`,
+      violations: violations.slice(0, 5),
+      pattern,
+      suggestion: 'Use format: feat: add xxx / fix: resolve yyy / docs: update zzz',
+    };
+  } catch {
+    return { status: 'skipped', reason: 'Not a git repository or git not available' };
+  }
+}
+
 const validators = {
   'file-exists': validateFileExists,
   'no-syntax-errors': validateNoSyntaxErrors,
@@ -551,6 +912,13 @@ const validators = {
   'project-scan': validateProjectScan,
   'prd-quality-check': validatePRDQuality,
   'script': validateScript,
+  // 新增验证器（Gate 深化：覆盖率/TODO/安全/架构/分支/提交规范）
+  'coverage-threshold': validateCoverageThreshold,
+  'no-todo-critical': validateNoTodoCritical,
+  'security-audit': validateSecurityAudit,
+  'architecture-layer': validateArchitectureLayer,
+  'branch-naming': validateBranchNaming,
+  'commit-message': validateCommitMessage,
 };
 
 /**

@@ -501,3 +501,167 @@ node scripts/dev-intelligence.mjs --persist --key "decision" --value "use vitest
 | Hook 报错 | 检查 `hooks/hooks.json` 配置 |
 | 状态丢失 | 使用 `/chaos-harness:project-state` 恢复 |
 | 版本号不一致 | 运行 `claude plugins marketplace list` 检查版本 |
+
+---
+
+## CI 集成
+
+### 基本用法
+
+在 GitHub Actions 中集成 Gate 检查：
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  gate-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Chaos Harness Gate Check
+        run: node scripts/ci-gate-check.mjs
+```
+
+### 命令行用法
+
+```bash
+# 运行所有 quality Gate（适合 CI 使用）
+node scripts/ci-gate-check.mjs
+
+# 只检查指定 Gate
+node scripts/ci-gate-check.mjs --gate gate-quality-tests,gate-quality-iron-law
+
+# 预览将检查哪些 Gate
+node scripts/ci-gate-check.mjs --dry-run
+
+# 生成 Gate 检查报告（保存到 .chaos-harness/gate-report.md）
+node scripts/gate-reporter.mjs
+
+# 生成 PR 描述格式报告（输出到 stdout，可粘贴到 PR）
+node scripts/gate-reporter.mjs --pr-description
+
+# JSON 格式输出（供 CI 消费）
+node scripts/gate-reporter.mjs --json
+```
+
+### 退出码
+
+| 退出码 | 含义 |
+|--------|------|
+| `0` | 所有 Gate 通过 |
+| `1` | 有 hard Gate 失败 |
+| `2` | 有 soft Gate 警告（无 hard 失败） |
+
+---
+
+## 团队协作
+
+### 共享 Gate 配置
+
+将 `chaos-harness.yaml` 提交到 git，让团队共享同一套 Gate 配置：
+
+```yaml
+# chaos-harness.yaml（项目根目录，提交到 git）
+version: "1.3.3"
+
+gates:
+  coverage-threshold: 80          # 整体覆盖率要求
+  security-audit: high            # 最大允许漏洞级别
+  branch-naming: "^(feature|fix|chore|hotfix|release|refactor|test)/.+"
+
+team:
+  enforce_branch_naming: true     # 强制分支命名规范
+  shared_iron_laws: true          # 共享铁律配置
+  gate_report_on_commit: false    # 提交时自动生成报告
+```
+
+### 团队分支规范
+
+推荐的分支命名规范（与 `gate-quality-branch` Gate 对应）：
+
+| 分支类型 | 命名格式 | 示例 |
+|---------|---------|------|
+| 新功能 | `feature/<描述>` | `feature/user-auth` |
+| 问题修复 | `fix/<描述>` | `fix/login-crash` |
+| 日常维护 | `chore/<描述>` | `chore/update-deps` |
+| 紧急热修 | `hotfix/<描述>` | `hotfix/payment-error` |
+| 发布准备 | `release/<版本>` | `release/v2.1.0` |
+| 重构 | `refactor/<描述>` | `refactor/service-layer` |
+
+豁免：`main`、`master`、`develop`、`dev`、`staging`、`production`
+
+### 提交信息规范
+
+推荐 Conventional Commits 格式（与 `commit-message` Gate 对应）：
+
+```
+<type>(<scope>): <description>
+
+feat: add user authentication
+fix: resolve login crash on mobile
+chore: update dependencies
+docs: improve README examples
+refactor: extract service layer
+test: add coverage for payment module
+```
+
+### Gate 报告工作流
+
+```bash
+# 在 PR 前生成完整报告
+node scripts/gate-reporter.mjs
+
+# 查看报告
+cat .chaos-harness/gate-report.md
+
+# 生成 PR 描述格式（复制粘贴到 PR 描述）
+node scripts/gate-reporter.mjs --pr-description
+```
+
+---
+
+## 架构层级验证
+
+`gate-quality-architecture` Gate 检查分层规则，防止跨层调用：
+
+### 默认规则
+
+```json
+{
+  "from": "controller",
+  "forbids": ["repository", "dao", "mapper"]
+}
+```
+
+- **Controller/Web/API 层** → 禁止直接调用 Repository/DAO/Mapper 层
+- 正确做法：Controller → Service → Repository
+
+### 适用场景
+
+| 项目类型 | 分层规则 |
+|---------|---------|
+| Spring Boot | Controller → Service → Repository |
+| Node.js Express | Router → Controller → Service → DAO |
+| FastAPI | Router → Service → Repository |
+
+### 自定义规则
+
+在 `data/gate-registry.json` 的 `gate-quality-architecture` 中配置：
+
+```json
+{
+  "type": "architecture-layer",
+  "rules": [
+    { "from": "controller", "forbids": ["repository", "dao", "mapper"] },
+    { "from": "web", "forbids": ["repository", "dao", "mapper"] },
+    { "from": "router", "forbids": ["dao"] }
+  ]
+}
+```

@@ -1,0 +1,68 @@
+# chaos-harness 团队共享配置
+# 提交到 git，全团队共享同一套 Gate 规则
+# 文档: docs/USAGE.md
+version: "1.3.3"
+
+# ---- Gate 阈值覆盖 ----
+# 覆盖 data/gate-registry.json 中的默认值
+gates:
+  # 覆盖率阈值（%）
+  coverage-threshold:
+    testing: 60       # W10_testing 阶段（soft）
+    release: 80       # W12_release 阶段（hard）
+
+  # 安全审计最高允许严重级别: info | low | moderate | high | critical
+  security-audit:
+    maxSeverity: high
+
+  # 分支命名规范（正则表达式）
+  branch-naming:
+    pattern: "^(feature|fix|chore|hotfix|release|refactor|test)/.+"
+
+  # commit message 规范（Conventional Commits）
+  commit-message:
+    pattern: "^(feat|fix|chore|docs|refactor|test|style|perf|ci|build|revert)(\\([^)]+\\))?:"
+    count: 5
+
+  # 架构分层规则
+  architecture-layer:
+    rules:
+      - from: controller
+        forbids: [repository, dao, mapper]
+      - from: web
+        forbids: [repository, dao, mapper]
+      - from: api
+        forbids: [repository, dao, mapper]
+
+  # TODO 关键标记（触发 soft 警告的标记）
+  no-todo-critical:
+    patterns:
+      - "TODO(critical)"
+      - FIXME
+      - HACK
+
+# ---- 团队协作设置 ----
+team:
+  # 强制分支命名检查（true = hard gate，false = soft）
+  enforce_branch_naming: false
+
+  # 共享铁律配置（Iron Laws 规则适用于所有团队成员）
+  shared_iron_laws: true
+
+  # CI 模式下失败时是否发送通知（预留，暂未实现）
+  ci_notify: false
+
+# ---- CI 集成设置 ----
+ci:
+  # CI 运行时跳过的 Gate（如在 CI 环境中不适合运行的检查）
+  skip_gates: []
+  #   - gate-intelligence-check   # 示例：CI 中跳过智能建议检查
+
+  # GitHub Actions 注解格式输出（::error file=...::message）
+  github_annotations: true
+
+  # 退出码规则：
+  #   0 = 全部通过
+  #   1 = 有 hard gate 失败
+  #   2 = 仅有 soft gate 警告（不阻断 CI）
+  soft_fail_exit_code: 2

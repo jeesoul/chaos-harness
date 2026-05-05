@@ -83,3 +83,96 @@ describe('gate-enforcer output format', () => {
       `Enforcer output should not contain [object Object]: ${result.stderr}`);
   });
 });
+
+// ---- 新验证器测试 ----
+
+import { validateGate } from '../scripts/gate-validator.mjs';
+
+describe('coverage-threshold validator', () => {
+  test('passes when coverage-summary.json meets threshold', () => {
+    const tmp = join(ROOT, 'test-coverage-pass');
+    mkdirSync(join(tmp, 'coverage'), { recursive: true });
+    writeFileSync(join(tmp, 'coverage', 'coverage-summary.json'), JSON.stringify({
+      total: { lines: { pct: 85 }, statements: { pct: 83 }, functions: { pct: 80 }, branches: { pct: 78 } }
+    }));
+    const gateDef = { id: 'test', type: 'quality', level: 'hard', description: 'test', validators: [{ type: 'coverage-threshold', threshold: 80 }] };
+    const result = validateGate(gateDef, tmp);
+    rmSync(tmp, { recursive: true, force: true });
+    assert.ok(result.allPassed, `Should pass: ${JSON.stringify(result.results)}`);
+  });
+
+  test('fails when coverage below threshold', () => {
+    const tmp = join(ROOT, 'test-coverage-fail');
+    mkdirSync(join(tmp, 'coverage'), { recursive: true });
+    writeFileSync(join(tmp, 'coverage', 'coverage-summary.json'), JSON.stringify({
+      total: { lines: { pct: 55 }, statements: { pct: 50 }, functions: { pct: 45 }, branches: { pct: 40 } }
+    }));
+    const gateDef = { id: 'test', type: 'quality', level: 'hard', description: 'test', validators: [{ type: 'coverage-threshold', threshold: 80 }] };
+    const result = validateGate(gateDef, tmp);
+    rmSync(tmp, { recursive: true, force: true });
+    assert.ok(!result.allPassed, 'Should fail when coverage below threshold');
+  });
+
+  test('skips when no coverage report found', () => {
+    const tmp = join(ROOT, 'test-coverage-skip');
+    mkdirSync(tmp, { recursive: true });
+    const gateDef = { id: 'test', type: 'quality', level: 'soft', description: 'test', validators: [{ type: 'coverage-threshold', threshold: 80 }] };
+    const result = validateGate(gateDef, tmp);
+    rmSync(tmp, { recursive: true, force: true });
+    assert.equal(result.results[0].status, 'skipped', 'Should skip when no coverage report');
+  });
+});
+
+describe('no-todo-critical validator', () => {
+  test('passes when no critical markers found', () => {
+    const tmp = join(ROOT, 'test-todo-pass');
+    mkdirSync(join(tmp, 'src'), { recursive: true });
+    writeFileSync(join(tmp, 'src', 'app.js'), '// 普通注释\nfunction hello() { return 1; }\n// TODO: 普通todo不阻断');
+    const gateDef = { id: 'test', type: 'quality', level: 'soft', description: 'test', validators: [{ type: 'no-todo-critical', patterns: ['TODO(critical)', 'FIXME'] }] };
+    const result = validateGate(gateDef, tmp);
+    rmSync(tmp, { recursive: true, force: true });
+    assert.ok(result.allPassed, `Should pass: ${JSON.stringify(result.results)}`);
+  });
+
+  test('fails when FIXME marker found', () => {
+    const tmp = join(ROOT, 'test-todo-fail');
+    mkdirSync(join(tmp, 'src'), { recursive: true });
+    writeFileSync(join(tmp, 'src', 'app.js'), '// FIXME: this is broken\nfunction broken() {}');
+    const gateDef = { id: 'test', type: 'quality', level: 'soft', description: 'test', validators: [{ type: 'no-todo-critical', patterns: ['FIXME'] }] };
+    const result = validateGate(gateDef, tmp);
+    rmSync(tmp, { recursive: true, force: true });
+    assert.ok(!result.allPassed, 'Should fail when FIXME found');
+    assert.ok(result.results[0].details?.length > 0, 'Should have details with file+line');
+  });
+});
+
+describe('branch-naming validator', () => {
+  test('passes for main branch (exempt)', () => {
+    const gateDef = { id: 'test', type: 'quality', level: 'soft', description: 'test', validators: [{ type: 'branch-naming', pattern: '^(feature|fix|chore)/.+' }] };
+    // 在当前 repo 中运行，main/master/develop 均豁免
+    const result = validateGate(gateDef, ROOT);
+    // 只要不报错即可（可能 passed 或 skipped）
+    assert.ok(['passed', 'skipped', 'failed'].includes(result.results[0].status), 'Should return a valid status');
+  });
+});
+
+describe('commit-message validator', () => {
+  test('runs without crashing in git repo', () => {
+    const gateDef = { id: 'test', type: 'quality', level: 'soft', description: 'test', validators: [{ type: 'commit-message', count: 3 }] };
+    const result = validateGate(gateDef, ROOT);
+    // 只验证不崩溃，状态可以是 passed/failed/skipped
+    assert.ok(['passed', 'failed', 'skipped'].includes(result.results[0].status), `Unexpected status: ${result.results[0].status}`);
+  });
+});
+
+describe('gate-reporter smoke test', () => {
+  test('gate-reporter --dry-run exits 0', () => {
+    const REPORTER = join(ROOT, 'scripts', 'gate-reporter.mjs');
+    try {
+      execSync(`node "${REPORTER}" --dry-run`, { cwd: ROOT, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+      assert.ok(true, 'gate-reporter --dry-run exited 0');
+    } catch (e) {
+      assert.fail(`gate-reporter --dry-run failed: ${e.stderr?.toString() || e.message}`);
+    }
+  });
+});

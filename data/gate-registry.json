@@ -83,6 +83,16 @@
       "validators": [
         {
           "type": "no-syntax-errors"
+        },
+        {
+          "type": "coverage-threshold",
+          "threshold": 60,
+          "level": "soft"
+        },
+        {
+          "type": "no-todo-critical",
+          "patterns": ["TODO(critical)", "FIXME"],
+          "level": "soft"
         }
       ],
       "dependsOn": [
@@ -100,6 +110,21 @@
       "validators": [
         {
           "type": "test-suite-pass"
+        },
+        {
+          "type": "security-audit",
+          "maxSeverity": "high",
+          "level": "hard"
+        },
+        {
+          "type": "coverage-threshold",
+          "threshold": 80,
+          "level": "hard"
+        },
+        {
+          "type": "commit-message",
+          "count": 5,
+          "level": "soft"
         }
       ],
       "dependsOn": [
@@ -181,8 +206,43 @@
         }
       ],
       "dependsOn": []
+    },
+    {
+      "id": "gate-quality-architecture",
+      "type": "quality",
+      "level": "hard",
+      "description": "架构分层规则检查 — 防止 controller 直接访问 repository 等分层违规",
+      "trigger": "pre-write",
+      "cachePolicy": "on-change",
+      "validators": [
+        {
+          "type": "architecture-layer",
+          "rules": [
+            { "from": "controller", "forbids": ["repository", "dao", "mapper"] },
+            { "from": "web", "forbids": ["repository", "dao", "mapper"] },
+            { "from": "api", "forbids": ["repository", "dao", "mapper"] }
+          ]
+        }
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "gate-quality-branch",
+      "type": "quality",
+      "level": "soft",
+      "description": "分支命名规范检查 — 确保团队分支命名统一",
+      "trigger": "pre-commit",
+      "cachePolicy": "never",
+      "validators": [
+        {
+          "type": "branch-naming",
+          "pattern": "^(feature|fix|chore|hotfix|release|refactor|test)/.+"
+        }
+      ],
+      "dependsOn": []
     }
   ],
-  "version": "1.3.2",
-  "createdAt": "2026-04-20T00:00:00Z"
+  "version": "1.3.3",
+  "createdAt": "2026-04-20T00:00:00Z",
+  "updatedAt": "2026-05-05T00:00:00Z"
 }
