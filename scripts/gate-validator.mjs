@@ -183,7 +183,7 @@ function validateNoSyntaxErrors(validator, projectRoot) {
 
   // Python check: py_compile
   const pyFiles = findFilesRecursive(projectRoot, '*.py', projectRoot)
-    .filter(f => !f.includes('__pycache__') && !f.includes('.venv') && !f.includes('venv') && !f.includes('site-packages')).slice(0, 50);
+    .filter(f => !f.includes('__pycache__') && !f.includes('.venv') && !f.includes('venv') && !f.includes('site-packages') && !f.includes('.pytest_cache') && !f.includes('node_modules')).slice(0, 50);
   for (const file of pyFiles) {
     try {
       execFileSync('python', ['-m', 'py_compile', file], { stdio: 'pipe', timeout: 5000 });
@@ -620,8 +620,16 @@ function validateCoverageThreshold(validator, projectRoot) {
  */
 function validateNoTodoCritical(validator, projectRoot) {
   const patterns = validator.patterns || ['TODO(critical)', 'FIXME', 'HACK'];
-  const excludeDirs = ['node_modules', '.chaos-harness', 'dist', 'build', 'coverage', 'graphify-out', '.git'];
   const includeExts = ['.java', '.js', '.mjs', '.ts', '.tsx', '.py', '.go', '.rs', '.kt'];
+
+  // Prefer scanning src/ only — avoids false positives from tooling scripts and test fixtures
+  // that reference pattern strings as string literals rather than actual TODO markers.
+  const srcDir = join(projectRoot, 'src');
+  const hasSrc = existsSync(srcDir);
+  const scanRoot = hasSrc ? srcDir : projectRoot;
+  const excludeDirs = hasSrc
+    ? ['node_modules', '.chaos-harness', 'dist', 'build', 'coverage', 'graphify-out', '.git']
+    : ['node_modules', '.chaos-harness', 'dist', 'build', 'coverage', 'graphify-out', '.git', 'scripts', 'tests', 'test', '__tests__'];
 
   const findings = [];
 
@@ -652,7 +660,7 @@ function validateNoTodoCritical(validator, projectRoot) {
     }
   }
 
-  scanDir(projectRoot);
+  scanDir(scanRoot);
 
   if (findings.length === 0) {
     return { status: 'passed', scanned: true, patterns };
