@@ -107,6 +107,11 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/task-contract-verify.mjs\"",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/knowledge-update.mjs\"",
+            "async": true
           }
         ]
       },
