@@ -10,8 +10,8 @@
  *   node task-contract.mjs clear
  */
 
-import { appendFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { appendFileSync, unlinkSync } from 'node:fs';
+import path, { join } from 'node:path';
 
 import {
   detectProjectRoot,
@@ -215,12 +215,20 @@ function cmdClear() {
   }
 
   const prevStatus = contract.status;
-  contract.status = 'expired';
-  contract.cleared_at = utcTimestamp();
-  saveContract(projectRoot, contract);
+  const contractId = contract.id;
 
-  writeContractLog({ event: 'contract_cleared', id: contract.id, prev_status: prevStatus });
-  hookPrint(`🗑️  契约 ${contract.id} 已清除（原状态: ${prevStatus}）`);
+  // 写入日志后删除文件
+  writeContractLog({ event: 'contract_cleared', id: contractId, prev_status: prevStatus });
+
+  const contractPath = path.join(projectRoot, '.chaos-harness', 'task-contract.json');
+  try {
+    unlinkSync(contractPath);
+    hookPrint(`🗑️  契约 ${contractId} 已清除（原状态: ${prevStatus}）`);
+  } catch (err) {
+    hookPrint(`⚠️  删除契约文件失败: ${err.message}`);
+    process.exit(1);
+  }
+
   process.exit(0);
 }
 
