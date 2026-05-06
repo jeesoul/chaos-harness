@@ -133,22 +133,104 @@ node scripts/gate-enforcer.mjs gate-w10-testing
 | `ui-compliance` | UI 规范 | 遵守 UI 设计规范 |
 | `custom-script` | 自定义脚本 | 按脚本输出修复 |
 
-### 3. Hooks 硬拦截（自动触发）
+### 3. Task Contract（任务契约）
+
+**事前声明 + 事后验证** — 解决 AI "静默假设然后一路跑下去" 的问题
+
+#### 工作流程
+
+```
+1. AI 声明契约（事前）
+   → /chaos-harness:task-contract declare
+   → 声明：任务描述、影响范围、假设前提、验收标准
+
+2. AI 写代码
+   → PreToolUse Hook 检查契约存在（无契约则阻断）
+   → PostToolUse Hook 自动验证 success_criteria
+
+3. 会话结束
+   → Stop Hook 标记过期契约（2 小时超时）
+   → 学习系统统计契约完成率
+```
+
+#### 验收标准格式
+
+```bash
+# 文件存在检查
+file-exists:src/UserService.java
+
+# 无新增 FIXME
+no-new-fixme
+
+# 自定义标准（待人工确认）
+custom:UserService.createUser() 方法存在
+```
+
+#### 使用示例
+
+```
+# 声明契约
+/chaos-harness:task-contract declare \
+  --desc "实现用户注册功能" \
+  --scope "src/UserService.java,src/UserController.java" \
+  --assume "数据库已连接,JWT 已配置" \
+  --criteria "file-exists:src/UserService.java,no-new-fixme"
+
+# 查看契约状态
+/chaos-harness:task-contract status
+
+# 标记完成
+/chaos-harness:task-contract complete
+
+# 放弃契约
+/chaos-harness:task-contract clear
+```
+
+#### 与 karpathy-skills 的差异
+
+| 特性 | karpathy-skills | Task Contract |
+|------|----------------|---------------|
+| 实现方式 | CLAUDE.md 软提示 | 进程级硬拦截（exit 1） |
+| 可绕过性 | AI 可忽略 | AI 无法绕过 |
+| 验证方式 | 无自动验证 | PostToolUse 自动验证 |
+| 学习系统 | 无 | 契约完成率统计 |
+
+### 4. Hooks 硬拦截（自动触发）
 
 AI 在以下时机会被自动拦截：
 
 ```json
 {
   "SessionStart": "检查项目状态，加载 Gate 配置",
-  "PreToolUse": "AI 写文件前，运行 quality Gates",
-  "PostToolUse": "AI 写文件后，验证结果",
-  "PreCommit": "git commit 前，运行测试和格式检查"
+  "PreToolUse": "AI 写文件前，运行 quality Gates + 检查 Task Contract",
+  "PostToolUse": "AI 写文件后，验证结果 + 验证契约标准",
+  "PreCommit": "git commit 前，运行测试和格式检查",
+  "Stop": "会话结束，标记过期契约 + 自动学习分析"
 }
 ```
 
 **失败时：** exit 1 阻断 + 显示修复建议
 
-### 4. Gate 可视化（CLI 工具）
+### 5. 自学习系统（自动激活）
+
+**Stop Hook 自动触发** — 每次会话结束自动分析
+
+```bash
+# 会话结束时自动运行
+learning-analyzer.mjs
+
+# 分析内容
+- Gate 通过率统计
+- 验证器失败模式
+- 任务契约完成率
+- 声明准确率（scope vs 实际修改文件）
+```
+
+**学习数据存储：**
+- `~/.claude/harness/learning-log.jsonl` — Gate 学习数据
+- `~/.claude/harness/contract-log.jsonl` — 契约学习数据
+
+### 6. Gate 可视化（CLI 工具）
 
 ```bash
 # ASCII 格式（终端）
@@ -161,7 +243,7 @@ node scripts/gate-visualizer.mjs --mermaid
 node scripts/gate-visualizer.mjs --pr-description
 ```
 
-### 5. Gate 报告（CLI 工具）
+### 7. Gate 报告（CLI 工具）
 
 ```bash
 # 生成详细报告
@@ -174,7 +256,7 @@ node scripts/gate-reporter.mjs --json
 node scripts/gate-reporter.mjs --pr-description
 ```
 
-### 6. CI 集成（CLI 工具）
+### 8. CI 集成（CLI 工具）
 
 ```bash
 # 在 CI 中运行所有 quality Gates
@@ -195,7 +277,7 @@ node scripts/ci-gate-check.mjs --gate gate-quality-tests,gate-quality-format
   run: node scripts/ci-gate-check.mjs
 ```
 
-### 7. 团队协作（可选）
+### 9. 团队协作（可选）
 
 创建 `chaos-harness.yaml` 提交到 git，全团队共享规则：
 
@@ -291,6 +373,10 @@ node scripts/gate-visualizer.mjs --pr-description > pr-description.md
 | `/gate-manager override <gate-id>` | 绕过 soft Gate |
 | `/chaos-harness:project-scanner` | 扫描项目结构 |
 | `/chaos-harness:iron-law-enforcer` | 检查铁律违规 |
+| `/chaos-harness:task-contract declare` | 声明任务契约 |
+| `/chaos-harness:task-contract status` | 查看契约状态 |
+| `/chaos-harness:task-contract complete` | 标记契约完成 |
+| `/chaos-harness:task-contract clear` | 放弃当前契约 |
 
 ### CLI 命令（在终端）
 
