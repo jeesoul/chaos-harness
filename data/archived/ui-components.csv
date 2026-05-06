@@ -1,0 +1,61 @@
+id,name,type,height,padding,corner-radius,elevation,focus-ring,min-width,font-size,notes
+C001,Primary Button,button,40,"0 16px",8px,"none",2px solid #3b82f6,auto,14px,Spec
+C002,Secondary Button,button,44,"0 16px",8px,"none",2px solid #3b82f6,auto,14px,Spec
+C003,Ghost Button,button,48,"0 16px",8px,"none",2px solid #3b82f6,auto,14px,Spec
+C004,Danger Button,button,40,"0 16px",8px,"none",2px solid #3b82f6,auto,14px,Spec
+C005,Icon Button,button,44,"0 16px",8px,"none",2px solid #3b82f6,auto,14px,Spec
+C006,Text Input,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C007,Textarea,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C008,Select Dropdown,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C009,Checkbox,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C010,Radio Button,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C011,Toggle Switch,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C012,Search Input,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C013,File Upload,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C014,Date Picker,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C015,Color Picker,input,44,"0 12px",8px,"none",2px solid #3b82f6,100%,14px,Spec
+C016,Card Default,card,auto,"24px",12px,"0 1px 3px rgba(0,0,0,0.12)",2px solid #3b82f6,100%,14px,Spec
+C017,Card Elevated,card,auto,"24px",12px,"0 1px 3px rgba(0,0,0,0.12)",2px solid #3b82f6,100%,14px,Spec
+C018,Card Outlined,card,auto,"24px",12px,"0 1px 3px rgba(0,0,0,0.12)",2px solid #3b82f6,100%,14px,Spec
+C019,Card Filled,card,auto,"24px",12px,"0 1px 3px rgba(0,0,0,0.12)",2px solid #3b82f6,100%,14px,Spec
+C020,Card Interactive,card,auto,"24px",12px,"0 1px 3px rgba(0,0,0,0.12)",2px solid #3b82f6,100%,14px,Spec
+C021,Table Default,table,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C022,Table Compact,table,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C023,Table Striped,table,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C024,Table Hover,table,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C025,Table Sortable,table,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C026,Modal Default,modal,auto,"8px",12px,"0 20px 60px rgba(0,0,0,0.3)",2px solid #3b82f6,100%,14px,Spec
+C027,Modal Fullscreen,modal,auto,"8px",12px,"0 20px 60px rgba(0,0,0,0.3)",2px solid #3b82f6,100%,14px,Spec
+C028,Modal Drawer,modal,auto,"8px",12px,"0 20px 60px rgba(0,0,0,0.3)",2px solid #3b82f6,100%,14px,Spec
+C029,Modal Sheet,modal,auto,"8px",12px,"0 20px 60px rgba(0,0,0,0.3)",2px solid #3b82f6,100%,14px,Spec
+C030,Modal Alert,modal,auto,"8px",12px,"0 20px 60px rgba(0,0,0,0.3)",2px solid #3b82f6,100%,14px,Spec
+C031,Navbar Default,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C032,Navbar Sticky,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C033,Navbar Transparent,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C034,Navbar Minimal,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C035,Navbar Mega,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C036,Sidebar Default,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C037,Sidebar Collapsible,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C038,Sidebar Icon-only,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C039,Sidebar Nested,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C040,Sidebar Floating,nav,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C041,Badge Default,badge,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C042,Badge Dot,badge,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C043,Badge Outline,badge,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C044,Badge Pill,badge,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C045,Badge Status,badge,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C046,Avatar Default,avatar,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C047,Avatar Group,avatar,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C048,Avatar Fallback,avatar,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C049,Avatar Status,avatar,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C050,Avatar Rounded,avatar,auto,"8px",50%,"none",2px solid #3b82f6,100%,14px,Spec
+C051,Progress Bar,progress,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C052,Progress Circle,progress,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C053,Progress Steps,progress,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C054,Progress Linear,progress,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C055,Progress Radial,progress,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C056,Tooltip Default,tooltip,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C057,Tooltip Rich,tooltip,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C058,Tooltip Dark,tooltip,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C059,Tooltip Light,tooltip,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec
+C060,Tooltip Arrow,tooltip,auto,"8px",12px,"none",2px solid #3b82f6,100%,14px,Spec

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * session-start — 会话启动 Hook
- * 注入铁律上下文 + 恢复项目状态 + 自动学习分析
+ * 注入铁律上下文 + 恢复项目状态 + 自动扫描知识图谱 + 自动学习分析
  *
  * 调用: node session-start.mjs
  */
@@ -19,7 +19,10 @@ import {
   printIronLawsContext,
 } from './hook-utils.mjs';
 
-import { spawnSync } from 'node:child_process';
+import { resolveProjectRoot } from './path-utils.mjs';
+import { spawnSync, spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { basename } from 'node:path';
@@ -125,9 +128,9 @@ if (state) {
   hookPrint('这是一个新项目或首次使用 Chaos Harness。');
   hookPrint('');
   hookPrint('**建议操作:**');
-  hookPrint('1. 使用 /chaos-harness:project-scanner 扫描项目');
-  hookPrint('2. 使用 /chaos-harness:version-locker 创建版本');
-  hookPrint('3. 使用 /chaos-harness:harness-generator 生成约束');
+  hookPrint('1. 使用 project-scanner 扫描项目（运行 node scripts/project-scanner.mjs）');
+  hookPrint('2. 使用 /version-locker 创建版本');
+  hookPrint('3. 使用 /harness-generator 生成约束');
   hookPrint('');
   hookPrint("或说 '开始使用 chaos-harness' 进行初始化。");
   hookPrint('</CHAOS_HARNESS_NEW_PROJECT>');
@@ -239,6 +242,35 @@ if (existsSync(OVERDRIVE_STATE)) {
     hookPrint('⚡ 超频模式持续激活中（自 ' + odState.activated_at + '）');
     hookPrint('说 "退出超频" 或 "overdrive off" 关闭');
     hookPrint('</HARNESS_OVERDRIVE_RESUME>');
+  }
+}
+
+// ---- 自动知识图谱扫描 ----
+// 用 resolveProjectRoot（排除插件自身），找到真实用户项目
+const userProjectRoot = resolveProjectRoot();
+if (userProjectRoot) {
+  const knowledgePath = join(userProjectRoot, '.chaos-harness', 'project-knowledge.json');
+  const knowledgeExists = existsSync(knowledgePath);
+
+  const pluginScriptsDir = dirname(fileURLToPath(import.meta.url));
+  const engineScript = join(pluginScriptsDir, 'project-knowledge-engine.mjs');
+
+  if (existsSync(engineScript)) {
+    const mode = knowledgeExists ? '--update' : '--scan';
+    // 非阻塞后台执行，不影响会话启动速度
+    const child = spawn('node', [engineScript, mode, '--project-root', userProjectRoot], {
+      stdio: 'ignore',
+      detached: true,
+    });
+    child.unref();
+
+    if (!knowledgeExists) {
+      hookPrint('');
+      hookPrint('<CHAOS_HARNESS_KNOWLEDGE>');
+      hookPrint(`正在后台生成项目知识图谱: ${userProjectRoot}`);
+      hookPrint('完成后，上下文感知建议和影响分析将自动可用。');
+      hookPrint('</CHAOS_HARNESS_KNOWLEDGE>');
+    }
   }
 }
 

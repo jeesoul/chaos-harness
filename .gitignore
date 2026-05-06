@@ -9,15 +9,20 @@ coverage/
 # Project-specific: 需求文档、参考文档、设计文档、实施计划不提交
 介绍
 参考/
-docs/superpowers/specs/
-docs/superpowers/plans/
+
+# 项目输出文件不提交
+output/
+
+# Graphify 生成的知识图谱（运行时产物，不提交）
+graphify-out/
+# Superpowers 本地计划与规格文档，不提交
+docs/superpowers/
 
 # 设计思想和审计文档不提交
 docs/state-and-association-audit.md
 docs/*审计*.md
 docs/*设计*.md
 docs/*design*.md
-docs/skills-review.md
 
 # CLAUDE.md is local-only, NOT for public repo
 CLAUDE.md
@@ -39,11 +44,17 @@ skills/web-access/references/site-patterns/*.md
 # 开发用 package.json 备份，不提交
 package.dev.json
 
-# Instinct system local data
-instincts/observations.jsonl
-instincts/*.bak
-instincts/clusters/*.json
+# Instinct system local data (全部运行时数据，不提交)
+instincts/
 
 # Eval system runtime data
 evals/results/eval-log.jsonl
-.chaos-harness/retrieval-state.json
+.chaos-harness/
+
+# IDE and editor files
+.claude/
+.idea/
+__pycache__/
+.test-project-v133/
+instincts/instincts.json
+

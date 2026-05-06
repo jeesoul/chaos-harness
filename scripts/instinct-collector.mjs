@@ -66,7 +66,7 @@ function detectIronLawViolations() {
       condition: () => {
         if (toolName === 'Write' || toolName === 'Edit') {
           const filePath = extractFilePath(toolInput);
-          if (filePath && !filePath.includes('output/v') && !filePath.includes('.chaos-harness') && !filePath.includes('instincts/') && !filePath.includes('evals/') && !filePath.includes('schemas/') && !filePath.includes('skills/') && !filePath.includes('scripts/') && !filePath.includes('commands/') && !filePath.includes('hooks/') && !filePath.includes('templates/')) {
+          if (filePath && !filePath.includes('output/v') && !filePath.includes('.chaos-harness') && !filePath.includes('instincts/') && !filePath.includes('evals/') && !filePath.includes('skills/') && !filePath.includes('scripts/') && !filePath.includes('commands/') && !filePath.includes('hooks/')) {
             return { file_pattern: filePath, violation: 'IL001' };
           }
         }

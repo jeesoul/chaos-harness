@@ -18,7 +18,8 @@ import {
   epochMs,
 } from './hook-utils.mjs';
 
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
+import { existsSync, appendFileSync } from 'node:fs';
 
 const PROJECT_ROOT = detectProjectRoot();
 const state = readProjectState(PROJECT_ROOT);
@@ -26,7 +27,6 @@ const state = readProjectState(PROJECT_ROOT);
 if (state) {
   const ts = utcTimestamp();
 
-  // 更新 last_session 和会话计数
   state.last_session = ts;
   state.statistics = state.statistics || {};
   state.statistics.total_sessions = (state.statistics.total_sessions || 0) + 1;
@@ -34,7 +34,6 @@ if (state) {
   const statePath = join(PROJECT_ROOT, '.chaos-harness', 'state.json');
   writeJson(statePath, state);
 
-  // 记录会话结束
   ensureDir(GLOBAL_DATA_DIR);
   appendLog(join(GLOBAL_DATA_DIR, 'plugin-log.json'), {
     event: 'session_end',
@@ -42,6 +41,30 @@ if (state) {
     session_id: epochMs(),
     project_root: PROJECT_ROOT,
   });
+}
+
+// 处理过期的 active 契约
+const contractPath = join(PROJECT_ROOT, '.chaos-harness', 'task-contract.json');
+if (existsSync(contractPath)) {
+  try {
+    const contract = readJson(contractPath, null);
+    if (contract && contract.status === 'active') {
+      const CONTRACT_EXPIRY_MS = 2 * 60 * 60 * 1000;
+      const age = Date.now() - new Date(contract.created_at).getTime();
+      if (age > CONTRACT_EXPIRY_MS) {
+        contract.status = 'expired';
+        contract.expired_at = utcTimestamp();
+        writeJson(contractPath, contract);
+        // 写入学习日志
+        ensureDir(GLOBAL_DATA_DIR);
+        appendFileSync(
+          join(GLOBAL_DATA_DIR, 'contract-log.jsonl'),
+          JSON.stringify({ event: 'contract_expired', id: contract.id, description: contract.task?.description, timestamp: utcTimestamp() }) + '\n',
+          'utf-8'
+        );
+      }
+    }
+  } catch { /* non-critical */ }
 }
 
 process.exit(0);

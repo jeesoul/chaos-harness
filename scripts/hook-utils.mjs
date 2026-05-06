@@ -3,10 +3,11 @@
  * 零依赖 Node.js ES 模块，跨平台兼容
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { homedir, tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -72,6 +73,34 @@ export function readJson(filePath, fallback = []) {
 export function writeJson(filePath, data) {
   const content = JSON.stringify(data, null, 2);
   writeFileSync(filePath, content, 'utf-8');
+}
+
+/** 原子写入 JSON（先写 .tmp 文件，再 rename） */
+export function writeJsonAtomic(filePath, data) {
+  const tmpPath = `${filePath}.tmp.${process.pid}`;
+  const content = JSON.stringify(data, null, 2);
+  writeFileSync(tmpPath, content, 'utf-8');
+  renameSync(tmpPath, filePath);
+}
+
+/** 计算文件的 SHA-256 哈希 */
+export function computeFileHash(filePath) {
+  try {
+    if (!existsSync(filePath)) return null;
+    const content = readFileSync(filePath, 'utf-8');
+    return 'sha256:' + createHash('sha256').update(content).digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+/** 批量计算文件哈希（用于 Gate 缓存） */
+export function computeHashes(filePaths) {
+  const result = {};
+  for (const fp of filePaths) {
+    result[fp] = computeFileHash(fp);
+  }
+  return result;
 }
 
 /** 追加日志条目到 JSON 数组文件 */

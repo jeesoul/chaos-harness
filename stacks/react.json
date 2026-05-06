@@ -1,0 +1,8 @@
+{
+  "name": "react",
+  "test_frameworks": ["jest", "vitest"],
+  "lint_tools": ["eslint", "prettier"],
+  "ui_test": ["playwright", "cypress"],
+  "coverage_tool": "istanbul",
+  "recommended_gates": ["gate-w10-testing", "gate-test-coverage"]
+}

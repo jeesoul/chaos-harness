@@ -1,0 +1,8 @@
+{
+  "name": "java-springboot",
+  "test_frameworks": ["junit", "mockito"],
+  "lint_tools": ["checkstyle", "spotbugs"],
+  "ui_test": ["selenium"],
+  "coverage_tool": "jacoco",
+  "recommended_gates": ["gate-w10-testing", "gate-w09-code-review"]
+}

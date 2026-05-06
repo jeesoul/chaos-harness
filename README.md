@@ -1,421 +1,478 @@
 # Chaos Harness
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.1--%E5%AD%94%E6%98%8EPro-blue.svg">
+  <img src="https://img.shields.io/badge/version-1.3.3-blue.svg">
+  <img src="https://img.shields.io/badge/Claude_Code-Plugin-blue.svg">
+  <img src="https://img.shields.io/badge/CLI-Tools-green.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
 </p>
 
-<p align="center"><strong>确定性 AI Agent 约束框架</strong></p>
-<p align="center"><em>v1.3.1 孔明Pro — 持续学习·评测驱动·Schema工作流·深度防御·战略压缩</em></p>
-<p align="center"><em>Chaos demands order. Harness provides it.</em></p>
+<p align="center"><strong>AI 编程质量检查工具集 — Gate 状态机 + 硬拦截</strong></p>
+<p align="center"><em>可作为 Claude Code 插件使用，也可作为独立 CLI 工具</em></p>
 
 ---
 
-## 一句话定位
+## 这是什么？
 
-> 用代码给 AI 立规矩，让 AI 从"不可控的天才"变成"严谨的工程师"。
+**一个 AI 编程质量检查工具集**，核心功能可作为 Claude Code 插件使用，辅助工具可作为独立 CLI 使用。
 
-## 核心定位
+### 核心问题
 
-AI Agent 在辅助开发时的核心问题是非确定性——可能跳过验证、绕过约束、产生幻觉式交付。传统的自然语言提示词是软性建议，存在语义灰色空间。
+AI 写代码会跳过测试、忽略规范、声称完成但没验证。
 
-Chaos Harness 将约束编码为**铁律（Iron Laws）**——不是文本规则，而是通过 Skills + Hooks 自动执行的硬性检查，消除语义博弈空间。
+### 解决方案
 
-### 三大特性
+- **Gate 状态机** — 11 个检查点，AI 必须通过才能进入下一阶段
+- **Hooks 硬拦截** — SessionStart/PreToolUse/PostToolUse 自动触发，exit 1 阻断
+- **16 种验证器** — 覆盖率、安全审计、架构分层、分支规范、提交规范
+- **双模式使用** — Slash 命令（插件）+ CLI 命令（工具）
 
-| 特性 | 说明 |
-|------|------|
-| **确定性** | 铁律强制执行，行为路径可追溯、可审计 |
-| **可进化** | 自学习闭环：行为记录 → 规则优化 → 能力沉淀 |
-| **可扩展** | 开放插件生态，任意插件继承铁律约束 |
-
-### 适用场景
-
-| 场景 | 传统方式 | Chaos Harness |
-|------|----------|---------------|
-| 修 bug | Agent 说"修好了"，手动验证发现还有问题 | 铁律 IL003 强制提供验证证据，自动跑测试 |
-| 团队协作 | 口头规范，新人容易忘记 | 铁律自动阻断违规操作，规范融入流程 |
-| 开源项目 | Maintainer 手动清理不规范 PR | 铁律自动拦截，贡献者按规范输出 |
+**核心差异化：** 不是提示词，是进程级硬拦截（AI 绕不过去）
 
 ---
 
-## 安装指南
+## 快速开始
 
-### 快速安装
-
-**方式一：GitHub 远程安装**
+### 安装
 
 ```bash
-claude plugins marketplace add github:jeesoul/chaos-harness
+# 作为 Claude Code 插件安装
+git clone https://github.com/jeesoul/chaos-harness.git
+cd chaos-harness
+claude plugins marketplace add "$(pwd)"
 claude plugins install chaos-harness@chaos-harness
-# 重启 Claude Code
+
+# 验证安装
 /chaos-harness:overview
 ```
 
-**方式二：本地安装（推荐）**
+> Windows：路径不能含中文和空格
 
-```bash
-# macOS / Linux
-git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness
-claude plugins marketplace add "$(pwd)"
-claude plugins install chaos-harness@chaos-harness
+### 两种使用方式
 
-# Windows (PowerShell)
-git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness
-claude plugins marketplace add "$(pwd)"
-claude plugins install chaos-harness@chaos-harness
+#### 方式 1：Slash 命令（推荐，在 Claude Code 中）
 
-# Windows (CMD)
-git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness
-claude plugins marketplace add "%CD%"
-claude plugins install chaos-harness@chaos-harness
+```
+# 查看系统概览
+/chaos-harness:overview
+
+# 查看 Gate 状态
+/gate-manager status
+
+# 切换开发阶段
+/gate-manager transition W10_testing
+
+# 重新检查 Gate
+/gate-manager recheck gate-w10-testing
 ```
 
-**Windows 路径注意事项：**
-
-| 问题 | 解决 |
-|------|------|
-| 路径含中文 | 使用纯英文路径，如 `D:\chaos-harness` |
-| 空格 | 路径用双引号包裹 |
-| 转义 | CMD 中使用 `%CD%`，PowerShell 中使用 `$(pwd)` |
-| marketplace 格式 | 必须使用绝对路径，不支持相对路径 |
-
-**验证安装：**
+#### 方式 2：CLI 命令（高级用户、脚本、CI 集成）
 
 ```bash
-# macOS / Linux
-bash install.sh
+# Gate 可视化
+node scripts/gate-visualizer.mjs
+node scripts/gate-visualizer.mjs --mermaid
+node scripts/gate-visualizer.mjs --pr-description
 
-# Windows（双击或 CMD）
-install.bat
+# Gate 报告
+node scripts/gate-reporter.mjs
+node scripts/gate-reporter.mjs --json
+
+# CI 集成
+node scripts/ci-gate-check.mjs
+
+# Gate 执行
+node scripts/gate-enforcer.mjs gate-w10-testing
 ```
-
-> **无需手动配置 settings.json！** 插件安装后，Skills 和 Hooks（hooks.json）会被 Claude Code 插件系统自动加载。
-
-### 卸载
-
-```bash
-claude plugins uninstall chaos-harness@chaos-harness
-claude plugins marketplace remove chaos-harness
-```
-
-### 升级
-
-```bash
-# 1. 拉取最新代码
-cd /path/to/chaos-harness && git pull origin main
-
-# 2. 重新注册 marketplace
-claude plugins marketplace remove chaos-harness
-claude plugins marketplace add "/path/to/chaos-harness"
-
-# 3. 重装
-claude plugins uninstall chaos-harness@chaos-harness
-claude plugins install chaos-harness@chaos-harness
-```
-
-### 版本历史
-
-| 版本 | 主要更新 |
-| 1.3.1 孔明Pro | 持续学习系统 2.0（原子本能+PostToolUse 100% 确定）、评测驱动开发（pass@k + 3 种评分器）、Schema-Driven 工作流（YAML + 依赖图）、深度防御（4 层验证 + PreToolUse 预警）、战略压缩（逻辑边界 + 调用计数阈值）、迭代检索（4 阶段循环）、30 个 Skill、27 个 Command、21 个 Script |
-|------|---------|
-| 1.3.0 孔明 | overdrive 超频模式（14 分钟全流程紧急处理）、P03/P04 强制 Multi-Agent 评审、LP007 Team 退化检测、产品经理增强、测试增强（Playwright+CDP 混合模式）、23 个 Skill、跨平台兼容修复（纯 Node.js API） |
-| 1.2.0 | 自学习闭环、自适应 Harness、Agent Team 铁律、CDP 浏览器自动化 |
-| 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 |
-| 1.0.0 | 核心框架：Skills + Hooks + Templates |
-
----
-
-## 解决什么问题？
-
-| 问题 | 表现 | 解决方案 |
-|------|------|----------|
-| 虚假完成声明 | "已修复" 但无验证 | IL003：强制要求验证证据 |
-| 跳过关键步骤 | "简单修复，跳过测试" | LP004：自动阻断并强制执行 |
-| 绕过约束规则 | "就这一次" | 10+ 绕过话术识别 + 驳回 |
-| 版本混乱 | 文档散落各目录 | IL001：强制版本目录 |
-| 敏感配置误操作 | 直接修改数据库/密钥 | IL005：审批机制拦截 |
-| 紧急任务低效 | Agent 说"我看看" | overdrive：所有 Agent 全速运行，14 分钟全流程 |
-| 多 Agent 退化 | 子 Agent 不干活，主 Agent 代劳 | LP007：强制重新分配，禁止单线程 |
 
 ---
 
 ## 核心能力
 
-### 铁律引擎 (Iron Law Engine)
+### 1. Gate 状态机（11 个检查点）
 
-5 条核心铁律，自动执行，不可绕过：
+#### 阶段 Gates（6 个）— 控制开发流程
 
-| ID | 规则 | 触发场景 |
-|----|------|----------|
-| IL001 | 文档必须在版本目录生成 | 任何文档输出 |
-| IL002 | Harness 生成依赖扫描数据 | 约束生成请求 |
-| IL003 | 完成声明必须附带验证证据 | Stop Hook |
-| IL004 | 版本变更需要用户确认 | 版本号修改 |
-| IL005 | 敏感配置修改需要审批 | 数据库/密钥配置 |
+| Gate | 阶段 | 检查内容 | 使用方式 |
+|------|------|---------|---------|
+| `gate-w01-requirements` | 需求 | 项目扫描，识别技术栈 | `/gate-manager transition W01_requirements` |
+| `gate-w03-architecture` | 架构 | PRD 质量检查 | `/gate-manager transition W03_architecture` |
+| `gate-w08-development` | 开发 | 架构文档存在 | `/gate-manager transition W08_development` |
+| `gate-w09-code-review` | 代码审查 | 至少 1 个 commit | `/gate-manager transition W09_code_review` |
+| `gate-w10-testing` | 测试 | 无语法错误 + 覆盖率 60% | `/gate-manager transition W10_testing` |
+| `gate-w12-release` | 发布 | 测试通过 + 安全审计 + 覆盖率 80% | `/gate-manager transition W12_release` |
 
-扩展铁律支持自定义（`~/.claude/harness/iron-laws.yaml`）。
+#### 质量 Gates（5 个）— 自动拦截
 
-### 偷懒检测 (Laziness Pattern Detection)
-
-| 模式 | 检测条件 | 处置 |
-|------|----------|------|
-| LP001 | 声称完成但无验证 | 阻断 + 要求举证 |
-| LP002 | 跳过根因分析直接修复 | 阻断 + 强制分析 |
-| LP003 | 长时间无产出 | 施压 + 进度要求 |
-| LP004 | 尝试跳过测试 | 阻断 + 强制测试 |
-| LP005 | 擅自更改版本号 | 阻断 + 恢复原版 |
-| LP006 | 自动处理高风险配置 | 阻断 + 用户审批 |
-| LP007 | Team 阶段主 Agent 代劳 | 阻断 + 强制重新分配 |
-
-### 钩子生态 (Hook System)
-
-| Hook | 触发时机 | 功能 |
-|------|----------|------|
-| SessionStart | 会话开始 | 注入铁律 + 恢复状态 + 智能推荐 + 学习分析 |
-| PreToolUse | 工具调用前 | 铁律预检 + 意图分析预警（intent-analyzer） |
-| PostToolUse | 工具调用后 | 本能收集（instinct-collector）+ 评测采集（eval-collector）+ 偷懒检测 |
-| Stop | 回合结束 | 完成声明分析 + 偷懒检测 |
-| PreCompact | 对话压缩前 | 保存关键上下文 + Team 退化检测 |
-| Overdrive | 全局检测 | 超频模式激活 + 大模型效率指令注入 |
-
-### 智能场景感知 (Auto Context)
-
-后台自动运行，监测文件操作并推荐对应 Skill：
-
-| 操作 | 推荐 |
-|------|------|
-| 写 Vue/React 组件 | 加载对应模板铁律 |
-| 写 PRD/需求文档 | product-lifecycle + prd-validator |
-| 写测试文件 | test-assistant |
-| P03 设计完成 | 推荐 Multi-Agent 设计评审 |
-| P04 技术完成 | 推荐 Multi-Agent 技术评审 |
-
-### 超频模式 (Overdrive)
-
-当遇到紧急任务时，一键激活最高优先级处理模式：
-
-- **触发词**：紧急、超频、overdrive、立刻解决、线上问题
-- **适用范围**：bug 修复 / 需求变更 / 架构修改 / 测试调整 / 运维事故
-- **效率保障**：零铺垫、不解释、快速拍板、最小上下文
-- **时间目标**：14 分钟完成定位→决策→执行→验证全流程
-- **Agent 配置**：自动分配 3+ Agent 并行处理，主 Agent 只做协调
-- **监督加速**：空闲阈值减半（1/2/3/5 分钟快速响应）
-- **铁律策略**：跳过前置扫描，保留底线验证（版本/验证/安全不可跳过）
-
-
-### 持续学习系统 2.0 (Instinct System)
-
-从行为记录进化为原子本能学习，通过 PostToolUse 钩子 100% 确定性采集：
-
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 观测方式 | Stop 钩子（概率性） | PostToolUse 钩子（100% 确定） |
-| 学习单元 | 完整技能 | 原子本能（instincts/） |
-| 置信度 | 无 | 0.3-0.9 加权评分 |
-| 演进 | 直接到技能 | 本能 → 聚类 → 技能/命令/Agent |
-| 分享 | 无 | 导出/导入本能 JSON |
-
-### 评测驱动开发 (Eval Harness)
-
-评测驱动开发（pass@k 指标 + 3 种评分器）：
-
-| 特性 | 说明 |
-|------|------|
-| 指标 | pass@1（首次通过）、pass@3（3 次通过）、pass^3（平均通过） |
-| 评分器 | 代码评分（自动执行）、模型评分（AI 评估）、人工评分（用户确认） |
-| 存储 | 本地 evals/ 目录 + 可选云端同步 |
-| 追踪 | eval-collector Hook 自动记录测试结果 |
-
-### Schema-Driven 工作流
-
-YAML 定义工作流 + 依赖图 + 自定义验证：
-
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 工作流定义 | 硬编码 12 阶段 | YAML Schema + 依赖图（Kahn 拓扑排序） |
-| 阶段管理 | 固定流程 | 动态解析 + 自定义验证脚本 |
-| 自定义 | 无 | schemas/custom/ 目录 |
-| 模板 | 无 | default + product-lifecycle |
-
-### 深度防御 (Defense-in-Depth)
-
-4 层验证框架，消除约束灰色空间：
-
-| 层级 | 检查内容 | 实现 |
-|------|----------|------|
-| L1 入口层 | 参数验证、权限检查 | PreToolUse Hook（intent-analyzer） |
-| L2 业务层 | 铁律合规、逻辑验证 | iron-law-enforcer |
-| L3 环境层 | 依赖完整性、版本兼容性 | project-scanner |
-| L4 调试层 | 失败诊断、根因分析 | learning-analyzer |
-
-### 战略压缩 (Strategic Compact)
-
-逻辑边界压缩 + 工具调用计数阈值检测：
-
-| 阈值 | 行为 |
-|------|------|
-| 50 次警告 | 压缩子 Agent 上下文，只传递必要信息 |
-| 100 次强制 | 主 Agent 保存状态快照，重新分配简化任务 |
-| 150 次 PreCompact | 保存关键决策后重启上下文 |
-
-### 自适应工作流
-
-12 阶段流程，按项目规模自动裁剪：
-
-| 阶段 | 名称 | Small | Medium | Large |
-|------|------|-------|--------|-------|
-| W01 | 需求理解 | ✅ | ✅ | ✅ |
-| W02 | 技术调研 | ❌ | ✅ | ✅ |
-| W03 | 架构设计 | ✅ | ✅ | ✅ |
-| W04 | 详细设计 | ❌ | ✅ | ✅ |
-| W05 | 编码实现 | ✅ | ✅ | ✅ |
-| W06 | 代码审查 | ❌ | ❌ | ✅ |
-| W07 | 集成测试 | ❌ | ✅ | ✅ |
-| W08 | 文档生成 | ✅ | ✅ | ✅ |
-| W09 | 发布准备 | ✅ | ✅ | ✅ |
-| W10 | 上线部署 | ✅ | ✅ | ✅ |
-| W11 | 回归验证 | ✅ | ✅ | ✅ |
-| W12 | 复盘总结 | ✅ | ✅ | ✅ |
-
----
-
-## 命令速查
-
-| 命令 | 功能 |
-|------|------|
-| `/chaos-harness:overview` | 系统概览：铁律状态、学习进度、项目统计 |
-| `/chaos-harness:overdrive` | 超频模式：最高优先级紧急任务，所有 Agent 全速运行 |
-| `/chaos-harness:project-scanner` | 项目扫描：类型检测、技术栈分析 |
-| `/chaos-harness:version-locker` | 版本管理：锁定、创建、变更追踪 |
-| `/chaos-harness:harness-generator` | 约束生成：基于扫描数据生成专属 Harness |
-| `/chaos-harness:workflow-supervisor` | 工作流编排：阶段控制、进度监控 |
-| `/chaos-harness:agent-team-orchestrator` | Agent Team 编排：自动并行、监督防懒 |
-| `/chaos-harness:iron-law-enforcer` | 铁律执行：自定义规则、绕过检测 |
-| `/chaos-harness:collaboration-reviewer` | 多 Agent 评审：自动启动、多视角汇总 |
-| `/chaos-harness:hooks-manager` | 钩子配置：启用/禁用、日志查看 |
-| `/chaos-harness:plugin-manager` | 插件管理：第三方接入、约束配置 |
-| `/chaos-harness:project-state` | 状态持久化：进度保存、会话恢复 |
-| `/chaos-harness:auto-toolkit-installer` | 工具链检测：自动安装依赖工具 |
-| `/chaos-harness:learning-analyzer` | 自学习分析：失败模式识别、规则优化 |
-| `/chaos-harness:product-lifecycle` | 产品全生命周期：需求→原型→开发→测试→发布 |
-| `/chaos-harness:product-manager` | 产品经理：需求池/Kano/竞品分析/用户故事 |
-| `/chaos-harness:prd-validator` | PRD 质量检查：验收标准/可追溯性 |
-| `/chaos-harness:test-assistant` | 测试助手：用例/E2E/覆盖率/回归对比 |
-| `/chaos-harness:visual-regression` | 可视化回归：CDP 截图对比 |
-| `/chaos-harness:ui-generator` | UI 生成：从 PRD 生成前端界面 |
-| `/chaos-harness:adaptive-harness` | 自适应优化：从学习数据强化铁律 |
-| `/chaos-harness:web-access` | 联网操作：搜索/抓取/CDP 浏览器自动化 |
-| `/chaos-harness:instinct-system` | 直觉系统：原子本能 + 置信度演进 + 导出分享 |
-| `/chaos-harness:eval-harness` | 评测系统：pass@k 指标 + 能力/回归评测 + 3 种评分器 |
-| `/chaos-harness:iterative-retrieval` | 迭代检索：4 阶段检索循环 + 上下文优化 |
-| `/chaos-harness:schema-workflow` | Schema 工作流：YAML 定义 + 依赖图 + 自定义验证 |
-| `/chaos-harness:defense-in-depth` | 深度防御：4 层验证框架（入口→业务→环境→调试） |
-| `/chaos-harness:strategic-compact` | 战略压缩：逻辑边界 + 工具调用计数阈值（50/100/150） |
-
-### 智能触发（无需记住命令）
-
-| 你说... | 自动推荐 |
-|--------|---------|
-| "紧急"、"超频"、"立刻解决" | **overdrive**（最高优先级，直接激活） |
-| "需求"、"PRD"、"原型" | product-lifecycle |
-| "PRD检查"、"PRD质量" | prd-validator |
-| "需求分析"、"竞品分析"、"Kano" | product-manager |
-| "测试用例"、"E2E"、"覆盖率" | test-assistant |
-| "视觉回归"、"截图对比" | visual-regression |
-| "生成界面"、"UI生成" | ui-generator |
-| "自适应优化"、"强化铁律" | adaptive-harness |
-| "搜索"、"CDP"、"浏览器" | web-access |
-| "扫描项目" | project-scanner |
-| "版本"、"v0.1" | version-locker |
-| "工作流"、"阶段" | workflow-supervisor |
-| "铁律"、"约束" | iron-law-enforcer |
-| "学习记录"、"自学习" | learning-analyzer |
-| "评审"、"审查" | collaboration-reviewer |
-| "继续"、"恢复" | project-state |
-| "直觉"、"本能"、"instinct"、"置信度" | instinct-system |
-| "评测"、"pass@k"、"回归评测"、"能力评测" | eval-harness |
-| "迭代检索"、"上下文优化" | iterative-retrieval |
-| "工作流"、"Schema"、"阶段依赖" | schema-workflow |
-| "深度防御"、"多层验证" | defense-in-depth |
-| "压缩"、"上下文优化"、"strategic" | strategic-compact |
-
----
-
-## 产品全生命周期
-
-10 阶段研发流程，从需求到发布：
-
-```
-P01 需求收集 → P02 需求分析 → P03 原型设计 → P04 技术方案 → P05 开发规划
-     ↓
-P10 迭代优化 ← P09 验收交付 ← P08 集成测试 ← P07 后端开发 ← P06 前端开发
-```
-
-| 阶段 | 名称 | 输出 |
-|------|------|------|
-| P01 | 需求收集 | 需求池 |
-| P02 | 需求分析 | PRD、MVP 范围 |
-| P03 | 原型设计 | 原型、交互流程 |
-| P04 | 技术方案 | 架构设计、API 设计 |
-| P05 | 开发规划 | 开发计划 |
-| P06 | 前端开发 | 前端代码 |
-| P07 | 后端开发 | 后端代码 |
-| P08 | 集成测试 | 测试报告 |
-| P09 | 验收交付 | 发布包 |
-| P10 | 迭代优化 | 迭代计划 |
-
-P03/P04 阶段完成后强制 Multi-Agent 评审（IL-TEAM001）。
-
-产品专属铁律：IL-PRD001-003, IL-TECH001-003, IL-PLAN001-003, IL-FE001-003, IL-BE001-004, IL-TEST001-003, IL-RELEASE001-003。
-
----
-
-## 用户角色指南
-
-| 角色 | 主导阶段 | 推荐命令 |
+| Gate | 触发时机 | 检查内容 |
 |------|---------|---------|
-| 产品经理 | P01, P02, P03, P10 | product-lifecycle, product-manager, prd-validator |
-| 售前工程师 | P01, P02, P03 | product-lifecycle |
-| 解决方案架构师 | P04, P05 | harness-generator |
-| UI 设计师 | P03 | product-lifecycle, ui-generator |
-| 前端开发 | P06 | 对应模板铁律 |
-| 后端开发 | P07 | 对应模板铁律 |
-| 测试工程师 | P08 | test-assistant, visual-regression |
-| 运维工程师 | P09 | workflow-supervisor |
-| **所有角色** | **紧急情况** | **overdrive** |
+| `gate-quality-iron-law` | AI 写文件前 | 铁律检查 |
+| `gate-quality-tests` | git commit 前 | 测试套件通过 |
+| `gate-quality-format` | git commit 前 | 代码格式检查 |
+| `gate-quality-ui` | AI 写文件前 | UI 规范检查 |
+| `gate-quality-architecture` | AI 写文件前 | 架构分层检查 |
+
+### 2. 16 种验证器（生产级）
+
+| 验证器 | 检查内容 | 失败时的修复建议 |
+|--------|---------|-----------------|
+| `coverage-threshold` | 覆盖率达标 | 📊 运行测试生成覆盖率报告 |
+| `security-audit` | 安全漏洞检查 | 🔒 运行 npm audit fix |
+| `architecture-layer` | 架构分层检查 | 🏗️ Controller → Service → Repository |
+| `branch-naming` | 分支命名规范 | 🌿 使用 feature/xxx 格式 |
+| `commit-message` | 提交信息规范 | 💬 使用 feat: xxx 格式 |
+| `no-todo-critical` | 无 FIXME/TODO(critical) | 📝 解决代码中的关键 TODO |
+| `no-syntax-errors` | 无语法错误 | 🔧 运行 lint 工具 |
+| `test-suite-pass` | 测试套件通过 | 🧪 修复失败的测试 |
+| `prd-quality-check` | PRD 文档质量 | 📋 补充验收标准、性能指标 |
+| `git-has-commits` | 至少 N 个 commit | 提交代码 |
+| `iron-law-check` | 铁律检查 | 遵守项目铁律 |
+| `file-exists` | 文件存在检查 | 创建必需文件 |
+| `project-scan` | 项目扫描 | 自动执行 |
+| `format-check` | 代码格式 | 运行格式化工具 |
+| `ui-compliance` | UI 规范 | 遵守 UI 设计规范 |
+| `custom-script` | 自定义脚本 | 按脚本输出修复 |
+
+### 3. Task Contract（任务契约）
+
+**事前声明 + 事后验证** — 解决 AI "静默假设然后一路跑下去" 的问题
+
+#### 工作流程
+
+```
+1. AI 声明契约（事前）
+   → /chaos-harness:task-contract declare
+   → 声明：任务描述、影响范围、假设前提、验收标准
+
+2. AI 写代码
+   → PreToolUse Hook 检查契约存在（无契约则阻断）
+   → PostToolUse Hook 自动验证 success_criteria
+
+3. 会话结束
+   → Stop Hook 标记过期契约（2 小时超时）
+   → 学习系统统计契约完成率
+```
+
+#### 验收标准格式
+
+```bash
+# 文件存在检查
+file-exists:src/UserService.java
+
+# 无新增 FIXME
+no-new-fixme
+
+# 自定义标准（待人工确认）
+custom:UserService.createUser() 方法存在
+```
+
+#### 使用示例
+
+```
+# 声明契约
+/chaos-harness:task-contract declare \
+  --desc "实现用户注册功能" \
+  --scope "src/UserService.java,src/UserController.java" \
+  --assume "数据库已连接,JWT 已配置" \
+  --criteria "file-exists:src/UserService.java,no-new-fixme"
+
+# 查看契约状态
+/chaos-harness:task-contract status
+
+# 标记完成
+/chaos-harness:task-contract complete
+
+# 放弃契约
+/chaos-harness:task-contract clear
+```
+
+#### 与 karpathy-skills 的差异
+
+| 特性 | karpathy-skills | Task Contract |
+|------|----------------|---------------|
+| 实现方式 | CLAUDE.md 软提示 | 进程级硬拦截（exit 1） |
+| 可绕过性 | AI 可忽略 | AI 无法绕过 |
+| 验证方式 | 无自动验证 | PostToolUse 自动验证 |
+| 学习系统 | 无 | 契约完成率统计 |
+
+### 4. Hooks 硬拦截（自动触发）
+
+AI 在以下时机会被自动拦截：
+
+```json
+{
+  "SessionStart": "检查项目状态，加载 Gate 配置",
+  "PreToolUse": "AI 写文件前，运行 quality Gates + 检查 Task Contract",
+  "PostToolUse": "AI 写文件后，验证结果 + 验证契约标准",
+  "PreCommit": "git commit 前，运行测试和格式检查",
+  "Stop": "会话结束，标记过期契约 + 自动学习分析"
+}
+```
+
+**失败时：** exit 1 阻断 + 显示修复建议
+
+### 5. 自学习系统（自动激活）
+
+**Stop Hook 自动触发** — 每次会话结束自动分析
+
+```bash
+# 会话结束时自动运行
+learning-analyzer.mjs
+
+# 分析内容
+- Gate 通过率统计
+- 验证器失败模式
+- 任务契约完成率
+- 声明准确率（scope vs 实际修改文件）
+```
+
+**学习数据存储：**
+- `~/.claude/harness/learning-log.jsonl` — Gate 学习数据
+- `~/.claude/harness/contract-log.jsonl` — 契约学习数据
+
+### 6. Gate 可视化（CLI 工具）
+
+```bash
+# ASCII 格式（终端）
+node scripts/gate-visualizer.mjs
+
+# Mermaid 格式（可嵌入 Markdown）
+node scripts/gate-visualizer.mjs --mermaid
+
+# PR 描述格式
+node scripts/gate-visualizer.mjs --pr-description
+```
+
+### 7. Gate 报告（CLI 工具）
+
+```bash
+# 生成详细报告
+node scripts/gate-reporter.mjs
+
+# JSON 格式
+node scripts/gate-reporter.mjs --json
+
+# 仅生成 PR 描述
+node scripts/gate-reporter.mjs --pr-description
+```
+
+### 8. CI 集成（CLI 工具）
+
+```bash
+# 在 CI 中运行所有 quality Gates
+node scripts/ci-gate-check.mjs
+
+# 预览将检查哪些 Gates
+node scripts/ci-gate-check.mjs --dry-run
+
+# 只检查指定 Gates
+node scripts/ci-gate-check.mjs --gate gate-quality-tests,gate-quality-format
+```
+
+**GitHub Actions 示例：**
+
+```yaml
+# .github/workflows/ci.yml
+- name: Chaos Harness Gate Check
+  run: node scripts/ci-gate-check.mjs
+```
+
+### 9. 团队协作（可选）
+
+创建 `chaos-harness.yaml` 提交到 git，全团队共享规则：
+
+```yaml
+# chaos-harness.yaml
+version: "1.3.3"
+
+gates:
+  coverage-threshold: 80
+  security-audit: high
+  branch-naming: "^(feature|fix|chore)/.+"
+
+team:
+  enforce_branch_naming: true
+  shared_iron_laws: true
+```
 
 ---
 
-## 自动化工具链
+## 使用场景
 
-通过 `/chaos-harness:auto-toolkit-installer` 自动检测并安装：
+### 场景 1：在 Claude Code 中使用（插件模式）
 
-| 工具 | 用途 |
+```
+# 1. 初始化项目
+/gate-manager transition W01_requirements
+→ 自动扫描项目，识别技术栈
+
+# 2. AI 写 PRD 文档
+→ 自动保存到 output/v1.0.0/W01_requirements/
+
+# 3. 进入架构阶段
+/gate-manager transition W03_architecture
+→ 检查 PRD 质量
+
+# 4. AI 写代码
+→ PreToolUse Hook 自动触发 quality Gates
+→ 失败时显示修复建议
+
+# 5. 查看当前状态
+/gate-manager status
+
+# 6. 手动检查某个 Gate
+/gate-manager recheck gate-quality-tests
+```
+
+### 场景 2：在 CI/CD 中使用（CLI 模式）
+
+```yaml
+# .github/workflows/ci.yml
+jobs:
+  gate-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      
+      - name: Gate Check
+        run: node scripts/ci-gate-check.mjs
+      
+      - name: Generate Report
+        if: failure()
+        run: node scripts/gate-reporter.mjs --pr-description
+```
+
+### 场景 3：本地开发（混合模式）
+
+```bash
+# 使用 Slash 命令（在 Claude Code 中）
+/gate-manager status
+
+# 使用 CLI 命令（在终端）
+node scripts/gate-visualizer.mjs
+node scripts/gate-reporter.mjs
+
+# 生成 PR 描述
+node scripts/gate-visualizer.mjs --pr-description > pr-description.md
+```
+
+---
+
+## 核心命令
+
+### Slash 命令（在 Claude Code 中）
+
+| 命令 | 用途 |
 |------|------|
-| skill-creator | 自动创建业务场景专属 Skill |
-| superpowers-chrome | Chrome DevTools MCP - 浏览器自动化 |
-| ui-ux-pro-max | UI/UX 设计评审 + Playwright 测试 |
-| webapp-testing | Playwright 自动化测试 |
-| web-access | CDP 浏览器自动化 - 搜索/抓取/登录态 |
+| `/chaos-harness:overview` | 查看系统概览 |
+| `/gate-manager status` | 查看所有 Gate 状态 |
+| `/gate-manager status <gate-id>` | 查看单个 Gate 详情 |
+| `/gate-manager transition <stage>` | 切换开发阶段 |
+| `/gate-manager recheck <gate-id>` | 重新检查 Gate |
+| `/gate-manager override <gate-id>` | 绕过 soft Gate |
+| `/chaos-harness:project-scanner` | 扫描项目结构 |
+| `/chaos-harness:iron-law-enforcer` | 检查铁律违规 |
+| `/chaos-harness:task-contract declare` | 声明任务契约 |
+| `/chaos-harness:task-contract status` | 查看契约状态 |
+| `/chaos-harness:task-contract complete` | 标记契约完成 |
+| `/chaos-harness:task-contract clear` | 放弃当前契约 |
 
-### 镜像加速（国内）
+### CLI 命令（在终端）
 
-| 类型 | 官方源 | 镜像源 |
-|------|--------|--------|
-| GitHub | github.com | kgithub.com / ghproxy.com |
-| npm | registry.npmjs.org | registry.npmmirror.com |
-| Playwright | playwright.azureedge.net | npmmirror.com/mirrors/playwright |
+| 命令 | 用途 |
+|------|------|
+| `node scripts/gate-visualizer.mjs` | Gate 可视化（ASCII） |
+| `node scripts/gate-visualizer.mjs --mermaid` | Gate 可视化（Mermaid） |
+| `node scripts/gate-visualizer.mjs --pr-description` | 生成 PR 描述 |
+| `node scripts/gate-reporter.mjs` | 生成详细报告 |
+| `node scripts/gate-reporter.mjs --json` | JSON 格式报告 |
+| `node scripts/ci-gate-check.mjs` | CI 集成检查 |
+| `node scripts/gate-enforcer.mjs <gate-id>` | 运行单个 Gate |
 
 ---
 
-## 许可证
+## 可选增强功能
 
-[MIT](LICENSE) — 开源免费
+以下功能需要额外依赖（Python），作为可选增强：
+
+### 项目知识引擎
+
+扫描代码结构、依赖约束、JPA 实体。
+
+```
+/chaos-harness:graphify generate
+```
+
+### 需求影响分析
+
+输入需求，输出影响范围 / 复用建议。
+
+```
+/chaos-harness:impact-analyzer
+```
 
 ---
 
-<p align="center"><strong>Chaos demands order. Harness provides it.</strong></p>
+## 架构
+
+```
+使用方式
+├── Slash 命令（Claude Code 插件）
+│   └── /gate-manager status
+│       └── 调用 → node scripts/gate-machine.mjs --status
+│
+├── CLI 命令（独立工具）
+│   ├── node scripts/gate-visualizer.mjs
+│   ├── node scripts/gate-reporter.mjs
+│   └── node scripts/ci-gate-check.mjs
+│
+└── Hooks（自动触发）
+    ├── SessionStart → gate-machine.mjs
+    ├── PreToolUse → gate-enforcer.mjs
+    └── PostToolUse → learning-update.mjs
+```
+
+---
+
+## 文档
+
+- **[核心总结](docs/CORE-SUMMARY.md)** — 核心能力、使用场景、命令速查
+- **[使用文档](docs/USAGE.md)** — 按角色（产品经理/架构师/开发/QA）的使用指南
+- **[项目记忆](CLAUDE.md)** — 项目定位、版本历史、设计原则
+
+---
+
+## 与其他工具的区别
+
+| 对比 | 提示词工程 | Cursor Rules | Chaos Harness |
+|------|-----------|--------------|---------------|
+| **约束方式** | 软性建议 | 软性建议 | 硬拦截（exit 1） |
+| **AI 能否绕过** | ✅ 能 | ✅ 能 | ❌ 不能 |
+| **验证时机** | 无 | 无 | 事前拦截 |
+| **使用方式** | 提示词 | 配置文件 | 插件 + CLI |
+| **团队共享** | 难 | 文件共享 | git 提交 |
+| **失败诊断** | 无 | 无 | 修复建议 + 命令 |
+| **CI 集成** | 难 | 难 | 原生支持 |
+
+---
+
+## 升级
+
+```bash
+git checkout v1.3.3 && git pull origin v1.3.3
+claude plugins marketplace remove chaos-harness
+claude plugins marketplace add "$(pwd)"
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins install chaos-harness@chaos-harness
+```
+
+---
+
+## License
+
+MIT © jeesoul
+
+---
+
+**GitHub:** https://github.com/jeesoul/chaos-harness

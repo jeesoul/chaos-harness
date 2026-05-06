@@ -1,69 +1,85 @@
 ---
 name: project-scanner
-description: "项目扫描器。**当用户提到项目类型、技术栈、环境检测时自动触发**。触发词：扫描项目、分析项目、项目类型、技术栈检测、项目结构、环境状态"
+description: "项目扫描与分析 — 识别项目类型、技术栈、目录结构、依赖、测试框架、代码质量基线。触发词：扫描项目、分析项目、project scan、项目类型检测、技术栈识别"
 license: MIT
+version: "1.3.2"
 ---
 
-# 项目扫描哲学
+# Project Scanner v1.3.2
 
-## 核心思维
+自动扫描目标项目，输出结构化分析结果到 `.chaos-harness/scan-result.json`，供 Gate 状态机和其他 Skills 消费。
 
-**不了解项目就生成约束 = 盲人摸象。**
+## 何时使用
 
-扫描的核心不是步骤，而是回答三个问题：
+- 用户说"扫描项目"、"分析项目"
+- Harness 生成前需要项目类型识别（IL002 前置条件）
+- Gate W01_requirements 进入时自动触发
+- 用户切换了正在工作的项目目录
 
-1. **这是什么项目？** — 通过配置文件判断类型
-2. **运行环境是什么？** — 必须实际执行命令验证，不得假设
-3. **项目规模有多大？** — 统计数据支撑后续阶段裁剪
+## 使用方法
 
-## 扫描流程
+```bash
+# 扫描当前目录
+node <plugin-root>/scripts/project-scanner.mjs
 
-1. **检测项目类型** — Glob 查找关键配置文件：`pom.xml`、`build.gradle`、`package.json`、`requirements.txt`、`pyproject.toml`
-2. **读取配置** — 提取项目名称、版本、依赖、构建工具
-3. **实际执行环境检测** — 必须执行 `java -version`、`node --version`、`python --version`，不得假设
-4. **统计项目结构** — 文件数量、主要目录
-5. **输出报告** — 格式化的扫描报告，写入状态
+# 扫描指定目录
+node <plugin-root>/scripts/project-scanner.mjs --root /path/to/project
 
-## 项目类型判断规则
-
-| 检测到的文件/依赖 | 项目类型 | 置信度 |
-|------------------|---------|--------|
-| pom.xml | java-maven | 95% |
-| pom.xml + Spring Boot parent | java-spring | 98% |
-| build.gradle | java-gradle | 95% |
-| package.json | node | 95% |
-| package.json + vue (^2.) | vue2 | 98% |
-| package.json + vue (^3.) | vue3 | 98% |
-| package.json + react | react | 98% |
-| package.json + next | next-js | 98% |
-| requirements.txt | python | 90% |
-
-**Legacy 标记**：
-- JDK 8 + Spring Boot 2.x → `java-spring-legacy`
-- JDK 17+ + Spring Boot 3.x → `java-spring`
-
-## 铁律
-
-- **IL002**: NO HARNESS WITHOUT SCAN RESULTS
-- **IL003**: 环境检测必须实际执行，不得假设
-
-## 扫描报告格式
-
-```markdown
-# 项目扫描报告
-
-- 项目类型: {type}
-- 置信度: {confidence}%
-- 构建工具: {build}
-- JDK/Node/Python 实际版本: {version}
-- 文件数: {count}
-- 发现的问题: {问题}
+# 详细模式（输出完整报告）
+node <plugin-root>/scripts/project-scanner.mjs --verbose
 ```
 
-## References 索引
+## 扫描输出
 
-| 文件 | 何时加载 |
+结果写入 `.chaos-harness/scan-result.json`：
+
+```json
+{
+  "scanned_at": "2026-04-23T10:00:00Z",
+  "project_root": "/path/to/project",
+  "project_type": "java-spring",
+  "language": "Java",
+  "framework": "Spring Boot 3.2",
+  "build_tool": "Maven",
+  "test_framework": "JUnit 5",
+  "has_ci": true,
+  "directories": { "source": "src/main/java", "test": "src/test/java", "resources": "src/main/resources" },
+  "dependency_count": 42,
+  "source_file_count": 156,
+  "test_file_count": 38,
+  "test_coverage_estimate": "low",
+  "key_files": ["pom.xml", "application.yml"],
+  "warnings": [],
+  "harness_template": "java-spring"
+}
+```
+
+## 支持的项目类型
+
+| 类型 | 识别信号 | 对应 Harness 模板 |
+|------|----------|-------------------|
+| java-spring | pom.xml + spring-boot | java-spring |
+| java-spring-legacy | pom.xml + javax.* | java-spring-legacy |
+| java-maven | pom.xml（无 spring-boot） | java-maven |
+| java-gradle | build.gradle | java-gradle |
+| vue3 | package.json + vue@3 | vue3 |
+| vue2 | package.json + vue@2 | vue2 |
+| react | package.json + react | react |
+| next-js | package.json + next | react |
+| node-express | package.json + express | node-express |
+| python-fastapi | requirements.txt/ pyproject.toml + fastapi | python-fastapi |
+| python-django | requirements.txt/ pyproject.toml + django | python-django |
+| typescript-plugin | package.json + claude code plugin | generic |
+| unknown | 无匹配 | generic |
+
+## Gate 集成
+
+Gate W01_requirements 在 transition 时自动运行此扫描，将结果写入 state.json 的 `scan_result` 字段。后续 Skill（harness-generator、ui-generator 等）读取 `scan_result` 而不需要用户手动触发。
+
+## References
+
+| 文件 | 何时读取 |
 |------|---------|
-| `shared/state-helpers.md` | 需要状态管理函数时 |
-| `.chaos-harness/state.json` | 读取已有扫描结果时 |
-| `output/{version}/scan-result.json` | 查看历史扫描报告时 |
+| `.chaos-harness/scan-result.json` | 读取最近扫描结果时 |
+| `scripts/project-scanner.mjs` | 手动触发扫描时 |
+| `stacks/*.yaml` | 读取技术栈适配配置时 |

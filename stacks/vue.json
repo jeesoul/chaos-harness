@@ -1,0 +1,8 @@
+{
+  "name": "vue",
+  "test_frameworks": ["vitest", "jest"],
+  "lint_tools": ["eslint-plugin-vue", "prettier"],
+  "ui_test": ["playwright", "cypress"],
+  "coverage_tool": "v8",
+  "recommended_gates": ["gate-w10-testing", "gate-test-coverage"]
+}

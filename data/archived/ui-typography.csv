@@ -1,0 +1,58 @@
+id,heading_font,body_font,category,use_case,max_font_size,min_font_size,line_height,letter_spacing,notes
+T001,Inter,Inter,sans-serif,SaaS dashboard,48px,14px,1.40,-0.02em,Curated pairing
+T002,Poppins,Roboto,serif-sans,Landing page,52px,15px,1.50,0,Curated pairing
+T003,Montserrat,Open Sans,monospace,Blog,56px,16px,1.60,0,Curated pairing
+T004,Playfair Display,Lato,display,E-commerce,60px,14px,1.70,-0.02em,Curated pairing
+T005,Roboto,Source Sans Pro,system,Portfolio,64px,15px,1.80,0,Curated pairing
+T006,Open Sans,Nunito,sans-serif,Admin panel,68px,16px,1.40,0,Curated pairing
+T007,Lato,PT Sans,serif-sans,Mobile app,72px,14px,1.50,-0.02em,Curated pairing
+T008,Raleway,Work Sans,monospace,Editorial,76px,15px,1.60,0,Curated pairing
+T009,Nunito,Rubik,display,Documentation,48px,16px,1.70,0,Curated pairing
+T010,Oswald,Barlow,system,Startup website,52px,14px,1.80,-0.02em,Curated pairing
+T011,Merriweather,Karla,sans-serif,Enterprise app,56px,15px,1.40,0,Curated pairing
+T012,Lora,Heebo,serif-sans,Creative portfolio,60px,16px,1.50,0,Curated pairing
+T013,PT Sans,Manrope,monospace,News site,64px,14px,1.60,-0.02em,Curated pairing
+T014,Fira Sans,DM Sans,display,Academic paper,68px,15px,1.70,0,Curated pairing
+T015,Work Sans,Libre Franklin,system,Magazine,72px,16px,1.80,0,Curated pairing
+T016,Rubik,Mulish,sans-serif,SaaS dashboard,76px,14px,1.40,-0.02em,Curated pairing
+T017,Barlow,Fira Sans,serif-sans,Landing page,48px,15px,1.50,0,Curated pairing
+T018,Inconsolata,Quicksand,monospace,Blog,52px,16px,1.60,0,Curated pairing
+T019,Source Sans Pro,Raleway,display,E-commerce,56px,14px,1.70,-0.02em,Curated pairing
+T020,Quicksand,Merriweather,system,Portfolio,60px,15px,1.80,0,Curated pairing
+T021,Josefin Sans,Lora,sans-serif,Admin panel,64px,16px,1.40,0,Curated pairing
+T022,Karla,PT Serif,serif-sans,Mobile app,68px,14px,1.50,-0.02em,Curated pairing
+T023,Mukta,Bitter,monospace,Editorial,72px,15px,1.60,0,Curated pairing
+T024,Heebo,Crimson Text,display,Documentation,76px,16px,1.70,0,Curated pairing
+T025,Manrope,EB Garamond,system,Startup website,48px,14px,1.80,-0.02em,Curated pairing
+T026,DM Sans,Spectral,sans-serif,Enterprise app,52px,15px,1.40,0,Curated pairing
+T027,Space Grotesk,Literata,serif-sans,Creative portfolio,56px,16px,1.50,0,Curated pairing
+T028,Sora,Arvo,monospace,News site,60px,14px,1.60,-0.02em,Curated pairing
+T029,Plus Jakarta Sans,Zilla Slab,display,Academic paper,64px,15px,1.70,0,Curated pairing
+T030,Outfit,Vollkorn,system,Magazine,68px,16px,1.80,0,Curated pairing
+T031,Inter,Inter,sans-serif,SaaS dashboard,72px,14px,1.40,-0.02em,Curated pairing
+T032,Poppins,Roboto,serif-sans,Landing page,76px,15px,1.50,0,Curated pairing
+T033,Montserrat,Open Sans,monospace,Blog,48px,16px,1.60,0,Curated pairing
+T034,Playfair Display,Lato,display,E-commerce,52px,14px,1.70,-0.02em,Curated pairing
+T035,Roboto,Source Sans Pro,system,Portfolio,56px,15px,1.80,0,Curated pairing
+T036,Open Sans,Nunito,sans-serif,Admin panel,60px,16px,1.40,0,Curated pairing
+T037,Lato,PT Sans,serif-sans,Mobile app,64px,14px,1.50,-0.02em,Curated pairing
+T038,Raleway,Work Sans,monospace,Editorial,68px,15px,1.60,0,Curated pairing
+T039,Nunito,Rubik,display,Documentation,72px,16px,1.70,0,Curated pairing
+T040,Oswald,Barlow,system,Startup website,76px,14px,1.80,-0.02em,Curated pairing
+T041,Merriweather,Karla,sans-serif,Enterprise app,48px,15px,1.40,0,Curated pairing
+T042,Lora,Heebo,serif-sans,Creative portfolio,52px,16px,1.50,0,Curated pairing
+T043,PT Sans,Manrope,monospace,News site,56px,14px,1.60,-0.02em,Curated pairing
+T044,Fira Sans,DM Sans,display,Academic paper,60px,15px,1.70,0,Curated pairing
+T045,Work Sans,Libre Franklin,system,Magazine,64px,16px,1.80,0,Curated pairing
+T046,Rubik,Mulish,sans-serif,SaaS dashboard,68px,14px,1.40,-0.02em,Curated pairing
+T047,Barlow,Fira Sans,serif-sans,Landing page,72px,15px,1.50,0,Curated pairing
+T048,Inconsolata,Quicksand,monospace,Blog,76px,16px,1.60,0,Curated pairing
+T049,Source Sans Pro,Raleway,display,E-commerce,48px,14px,1.70,-0.02em,Curated pairing
+T050,Quicksand,Merriweather,system,Portfolio,52px,15px,1.80,0,Curated pairing
+T051,Josefin Sans,Lora,sans-serif,Admin panel,56px,16px,1.40,0,Curated pairing
+T052,Karla,PT Serif,serif-sans,Mobile app,60px,14px,1.50,-0.02em,Curated pairing
+T053,Mukta,Bitter,monospace,Editorial,64px,15px,1.60,0,Curated pairing
+T054,Heebo,Crimson Text,display,Documentation,68px,16px,1.70,0,Curated pairing
+T055,Manrope,EB Garamond,system,Startup website,72px,14px,1.80,-0.02em,Curated pairing
+T056,DM Sans,Spectral,sans-serif,Enterprise app,76px,15px,1.40,0,Curated pairing
+T057,Space Grotesk,Literata,serif-sans,Creative portfolio,48px,16px,1.50,0,Curated pairing

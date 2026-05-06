@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // eval-utils.mjs — 评测系统 CRUD 工具库
 import { readFileSync, writeFileSync, existsSync, cpSync, mkdirSync } from 'fs';
-import { execSync } from 'child_process';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -160,16 +159,6 @@ function calculatePassAtK(evalEntry) {
   }
 
   evalEntry.status = total > 0 && evalEntry.pass_at_1 === 1.0 ? 'passed' : 'failed';
-}
-
-// 代码评分器（确定性检查）
-export function codeScorer(command) {
-  try {
-    const output = execSync(command, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
-    return { result: 'PASS', score: 1.0, details: output.trim() };
-  } catch (e) {
-    return { result: 'FAIL', score: 0.0, details: e.stderr?.trim() || e.message };
-  }
 }
 
 // 评测报告生成

@@ -2,7 +2,7 @@
 name: ui-generator
 description: "从需求直接生成可运行的前端界面。触发词：生成界面、UI生成、生成组件、生成页面"
 license: MIT
-version: "1.3.0"
+version: "1.3.2"
 ---
 
 # UI Generator
@@ -15,7 +15,7 @@ version: "1.3.0"
 
 ## 前置检查
 
-1. **项目扫描检查**（IL002）：读取 `.chaos-harness/scan-result.json`，确认存在扫描结果。如无，停止并提示先运行 `/chaos-harness:project-scanner`。
+1. **项目扫描检查**（IL002）：读取 `.chaos-harness/scan-result.json`，确认存在扫描结果。如无，停止并提示先运行 `node <plugin-root>/scripts/project-scanner.mjs`。
 2. **框架检测**：读取项目根目录 `package.json`，识别前端框架：
    - `"vue": "^3."` → Vue3
    - `"vue": "^2."` → Vue2
@@ -211,6 +211,6 @@ updated: 2026-04-14
 |------|---------|
 | `output/{version}/docs/PRD.md` | 读取用户故事和 MVP 范围时 |
 | `.chaos-harness/scan-result.json` | 检测前端框架时 |
-| `skills/product-lifecycle/SKILL.md` | 了解 P03 阶段上下文时 |
+| `skills/product-manager/SKILL.md` | 了解产品生命周期上下文时 |
 | `skills/web-access/SKILL.md` | 执行 CDP 预览验证时 |
 | `references/ui-patterns/` | 复用已验证的 UI 模式时 |

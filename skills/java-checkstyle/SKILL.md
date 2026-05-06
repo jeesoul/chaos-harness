@@ -9,7 +9,7 @@ license: MIT
 1. 使用 Edit 工具追加到 `~/.claude/harness/iron-law-log.json`
 2. 使用 Write 工具追加到 `output/{version}/effectiveness-log.md`
 
-调用 `shared/state-helpers.md` 中的函数：
+调用 `~/.claude/harness/iron-law-log.json` 中的函数：
 - Log-Iron-Law-Trigger(ironLawId, context, action)
 
 不写入状态 = 违规未被记录，无法追踪改进

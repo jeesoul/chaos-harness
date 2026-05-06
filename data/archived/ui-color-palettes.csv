@@ -1,0 +1,162 @@
+id,name,background,text,accent,secondary,mood,stack,use_case,notes
+P001,Ocean Deep,#0f172a,#ffffff,#3b82f6,#64748b,cool,tailwind,dashboard,Curated palette
+P002,Forest Canopy,#1a2e0a,#f0fdf4,#22c55e,#4ade80,natural,tailwind,wellness,Curated palette
+P003,Desert Rose,#2e1a1a,#fff1f2,#f43f5e,#fdba74,warm,tailwind,ecommerce,Curated palette
+P004,Midnight City,#1a1a2e,#f8fafc,#8b5cf6,#818cf8,dark,tailwind,SaaS app,Curated palette
+P005,Arctic Dawn,#e8f0f8,#0f172a,#06b6d4,#7dd3fc,light,custom,landing page,Curated palette
+P006,Coral Garden,#2e0f1a,#ffffff,#ec4899,#f9a8d4,warm,tailwind,lifestyle,Curated palette
+P007,Autumn Woods,#2e1a0f,#fff7ed,#f97316,#fcd34d,warm,tailwind,blog,Curated palette
+P008,Spring Meadow,#0f2e1a,#f0fdf4,#4ade80,#86efac,fresh,tailwind,health,Curated palette
+P009,Summer Sky,#1a2e2e,#f0f9ff,#0ea5e9,#7dd3fc,cool,tailwind,travel,Curated palette
+P010,Winter Night,#0f1a2e,#ffffff,#6366f1,#a5b4fc,dark,tailwind,enterprise,Curated palette
+P011,Ruby Wine,#2e0a1a,#fef2f2,#e11d48,#fca5a5,warm,tailwind,luxury,Curated palette
+P012,Golden Hour,#2e2a0f,#fefce8,#eab308,#fde68a,warm,tailwind,food,Curated palette
+P013,Silver Lining,#e8e8e8,#0f172a,#64748b,#94a3b8,neutral,custom,corporate,Curated palette
+P014,Bronze Sunset,#2e1f0f,#fff7ed,#b45309,#fcd34d,warm,tailwind,travel,Curated palette
+P015,Copper Dawn,#2e220f,#fff7ed,#d97706,#fde68a,warm,tailwind,food,Curated palette
+P016,Pearl Harbor,#f0f0f0,#0f172a,#a1a1aa,#d4d4d4,neutral,custom,portfolio,Curated palette
+P017,Jade Garden,#0f2e1f,#f0fdf4,#10b981,#5eead4,natural,tailwind,eco,Curated palette
+P018,Amber Road,#2e220f,#fff7ed,#d97706,#fde68a,warm,tailwind,travel,Curated palette
+P019,Sapphire Bay,#0f1a2e,#f0f9ff,#0ea5e9,#7dd3fc,cool,tailwind,travel,Curated palette
+P020,Emerald Dream,#0f2e0f,#f0fdf4,#10b981,#5eead4,natural,tailwind,eco,Curated palette
+P021,Crimson Fire,#0f172a,#ffffff,#3b82f6,#64748b,professional,tailwind,dashboard,Auto-generated palette
+P022,Midnight Blue,#1e293b,#f8fafc,#8b5cf6,#94a3b8,warm,material,landing page,Auto-generated palette
+P023,Forest Green,#0a192f,#e2e8f0,#ec4899,#a1a1aa,cool,ant-design,ecommerce,Auto-generated palette
+P024,Golden Sunset,#1a1a2e,#f1f5f9,#f43f5e,#71717a,energetic,chakra,SaaS app,Auto-generated palette
+P025,Royal Purple,#16213e,#cbd5e1,#f97316,#525252,calm,bootstrap,mobile app,Auto-generated palette
+P026,Coral Reef,#ffffff,#0f172a,#eab308,#e2e8f0,bold,custom,portfolio,Auto-generated palette
+P027,Steel Gray,#f8fafc,#1e293b,#22c55e,#cbd5e1,minimal,fluent,blog,Auto-generated palette
+P028,Lime Zest,#f1f5f9,#334155,#14b8a6,#d1d5db,luxury,carbon,admin panel,Auto-generated palette
+P029,Cherry Blossom,#e8e8e8,#475569,#06b6d4,#d4d4d8,playful,tailwind,startup,Auto-generated palette
+P030,Deep Ocean,#fafafa,#64748b,#6366f1,#e5e7eb,serious,material,enterprise,Auto-generated palette
+P031,Emerald City,#0f172a,#3b82f6,#ef4444,#fca5a5,modern,ant-design,dashboard,Auto-generated palette
+P032,Amber Glow,#1e1b4b,#8b5cf6,#a855f7,#c084fc,retro,chakra,landing page,Auto-generated palette
+P033,Sapphire Night,#172554,#ec4899,#d946ef,#f9a8d4,natural,bootstrap,ecommerce,Auto-generated palette
+P034,Rose Garden,#0c4a6e,#f43f5e,#f43f5e,#fdba74,tech,custom,SaaS app,Auto-generated palette
+P035,Silver Moon,#164e63,#f97316,#fb923c,#fcd34d,creative,fluent,mobile app,Auto-generated palette
+P036,Turquoise Bay,#14532d,#eab308,#facc15,#86efac,professional,carbon,portfolio,Auto-generated palette
+P037,Magenta Dream,#3f6212,#22c55e,#4ade80,#5eead4,warm,tailwind,blog,Auto-generated palette
+P038,Olive Branch,#713f12,#14b8a6,#2dd4bf,#7dd3fc,cool,material,admin panel,Auto-generated palette
+P039,Peach Blossom,#854d0e,#06b6d4,#38bdf8,#a5b4fc,energetic,ant-design,startup,Auto-generated palette
+P040,Lavender Field,#78350f,#6366f1,#818cf8,#fbbf24,calm,chakra,enterprise,Auto-generated palette
+P041,Charcoal Dark,#fef2f2,#ffffff,#3b82f6,#64748b,bold,bootstrap,dashboard,Auto-generated palette
+P042,Ivory Cream,#fef3c7,#f8fafc,#8b5cf6,#94a3b8,minimal,custom,landing page,Auto-generated palette
+P043,Teal Wave,#fefce8,#e2e8f0,#ec4899,#a1a1aa,luxury,fluent,ecommerce,Auto-generated palette
+P044,Burgundy Wine,#f0fdf4,#f1f5f9,#f43f5e,#71717a,playful,carbon,SaaS app,Auto-generated palette
+P045,Sky Blue,#f0f9ff,#cbd5e1,#f97316,#525252,serious,tailwind,mobile app,Auto-generated palette
+P046,Mustard Yellow,#fdf4ff,#0f172a,#eab308,#e2e8f0,modern,material,portfolio,Auto-generated palette
+P047,Plum Rich,#fdf2f8,#1e293b,#22c55e,#cbd5e1,retro,ant-design,blog,Auto-generated palette
+P048,Mint Fresh,#fff1f2,#334155,#14b8a6,#d1d5db,natural,chakra,admin panel,Auto-generated palette
+P049,Copper Shine,#fff7ed,#475569,#06b6d4,#d4d4d8,tech,bootstrap,startup,Auto-generated palette
+P050,Ruby Red,#ecfeff,#64748b,#6366f1,#e5e7eb,creative,custom,enterprise,Auto-generated palette
+P051,Pearl White,#0f172a,#3b82f6,#ef4444,#fca5a5,professional,fluent,dashboard,Auto-generated palette
+P052,Jet Black,#1e293b,#8b5cf6,#a855f7,#c084fc,warm,carbon,landing page,Auto-generated palette
+P053,Sand Dune,#0a192f,#ec4899,#d946ef,#f9a8d4,cool,tailwind,ecommerce,Auto-generated palette
+P054,Moss Green,#1a1a2e,#f43f5e,#f43f5e,#fdba74,energetic,material,SaaS app,Auto-generated palette
+P055,Flamingo Pink,#16213e,#f97316,#fb923c,#fcd34d,calm,ant-design,mobile app,Auto-generated palette
+P056,Arctic Blue,#ffffff,#eab308,#facc15,#86efac,bold,chakra,portfolio,Auto-generated palette
+P057,Desert Orange,#f8fafc,#22c55e,#4ade80,#5eead4,minimal,bootstrap,blog,Auto-generated palette
+P058,Jade Stone,#f1f5f9,#14b8a6,#2dd4bf,#7dd3fc,luxury,custom,admin panel,Auto-generated palette
+P059,Violet Haze,#e8e8e8,#06b6d4,#38bdf8,#a5b4fc,playful,fluent,startup,Auto-generated palette
+P060,Bronze Age,#fafafa,#6366f1,#818cf8,#fbbf24,serious,carbon,enterprise,Auto-generated palette
+P061,Snow White,#0f172a,#ffffff,#3b82f6,#64748b,modern,tailwind,dashboard,Auto-generated palette
+P062,Obsidian,#1e1b4b,#f8fafc,#8b5cf6,#94a3b8,retro,material,landing page,Auto-generated palette
+P063,Canyon Red,#172554,#e2e8f0,#ec4899,#a1a1aa,natural,ant-design,ecommerce,Auto-generated palette
+P064,River Blue,#0c4a6e,#f1f5f9,#f43f5e,#71717a,tech,chakra,SaaS app,Auto-generated palette
+P065,Meadow Green,#164e63,#cbd5e1,#f97316,#525252,creative,bootstrap,mobile app,Auto-generated palette
+P066,Sunflower,#14532d,#0f172a,#eab308,#e2e8f0,professional,custom,portfolio,Auto-generated palette
+P067,Grapevine,#3f6212,#1e293b,#22c55e,#cbd5e1,warm,fluent,blog,Auto-generated palette
+P068,Cloud Gray,#713f12,#334155,#14b8a6,#d1d5db,cool,carbon,admin panel,Auto-generated palette
+P069,Coral Pink,#854d0e,#475569,#06b6d4,#d4d4d8,energetic,tailwind,startup,Auto-generated palette
+P070,Navy Depth,#78350f,#64748b,#6366f1,#e5e7eb,calm,material,enterprise,Auto-generated palette
+P071,Autumn Leaf,#fef2f2,#3b82f6,#ef4444,#fca5a5,bold,ant-design,dashboard,Auto-generated palette
+P072,Spring Bud,#fef3c7,#8b5cf6,#a855f7,#c084fc,minimal,chakra,landing page,Auto-generated palette
+P073,Winter Frost,#fefce8,#ec4899,#d946ef,#f9a8d4,luxury,bootstrap,ecommerce,Auto-generated palette
+P074,Summer Heat,#f0fdf4,#f43f5e,#f43f5e,#fdba74,playful,custom,SaaS app,Auto-generated palette
+P075,Twilight Purple,#f0f9ff,#f97316,#fb923c,#fcd34d,serious,fluent,mobile app,Auto-generated palette
+P076,Dawn Pink,#fdf4ff,#eab308,#facc15,#86efac,modern,carbon,portfolio,Auto-generated palette
+P077,Dusk Orange,#fdf2f8,#22c55e,#4ade80,#5eead4,retro,tailwind,blog,Auto-generated palette
+P078,Storm Gray,#fff1f2,#14b8a6,#2dd4bf,#7dd3fc,natural,material,admin panel,Auto-generated palette
+P079,Rain Blue,#fff7ed,#06b6d4,#38bdf8,#a5b4fc,tech,ant-design,startup,Auto-generated palette
+P080,Sunset Gold,#ecfeff,#6366f1,#818cf8,#fbbf24,creative,chakra,enterprise,Auto-generated palette
+P081,Moonlight Silver,#0f172a,#ffffff,#3b82f6,#64748b,professional,bootstrap,dashboard,Auto-generated palette
+P082,Starlight White,#1e293b,#f8fafc,#8b5cf6,#94a3b8,warm,custom,landing page,Auto-generated palette
+P083,Comet Tail,#0a192f,#e2e8f0,#ec4899,#a1a1aa,cool,fluent,ecommerce,Auto-generated palette
+P084,Nebula Pink,#1a1a2e,#f1f5f9,#f43f5e,#71717a,energetic,carbon,SaaS app,Auto-generated palette
+P085,Galaxy Blue,#16213e,#cbd5e1,#f97316,#525252,calm,tailwind,mobile app,Auto-generated palette
+P086,Mars Red,#ffffff,#0f172a,#eab308,#e2e8f0,bold,material,portfolio,Auto-generated palette
+P087,Venus Green,#f8fafc,#1e293b,#22c55e,#cbd5e1,minimal,ant-design,blog,Auto-generated palette
+P088,Saturn Ring,#f1f5f9,#334155,#14b8a6,#d1d5db,luxury,chakra,admin panel,Auto-generated palette
+P089,Jupiter Storm,#e8e8e8,#475569,#06b6d4,#d4d4d8,playful,bootstrap,startup,Auto-generated palette
+P090,Mercury Gray,#fafafa,#64748b,#6366f1,#e5e7eb,serious,custom,enterprise,Auto-generated palette
+P091,Aurora Borealis,#0f172a,#3b82f6,#ef4444,#fca5a5,modern,fluent,dashboard,Auto-generated palette
+P092,Solar Flare,#1e1b4b,#8b5cf6,#a855f7,#c084fc,retro,carbon,landing page,Auto-generated palette
+P093,Lunar Eclipse,#172554,#ec4899,#d946ef,#f9a8d4,natural,tailwind,ecommerce,Auto-generated palette
+P094,Cosmic Dust,#0c4a6e,#f43f5e,#f43f5e,#fdba74,tech,material,SaaS app,Auto-generated palette
+P095,Orbit Blue,#164e63,#f97316,#fb923c,#fcd34d,creative,ant-design,mobile app,Auto-generated palette
+P096,Pixel Green,#14532d,#eab308,#facc15,#86efac,professional,chakra,portfolio,Auto-generated palette
+P097,Code Blue,#3f6212,#22c55e,#4ade80,#5eead4,warm,bootstrap,blog,Auto-generated palette
+P098,Debug Red,#713f12,#14b8a6,#2dd4bf,#7dd3fc,cool,custom,admin panel,Auto-generated palette
+P099,Deploy Gold,#854d0e,#06b6d4,#38bdf8,#a5b4fc,energetic,fluent,startup,Auto-generated palette
+P100,Server Gray,#78350f,#6366f1,#818cf8,#fbbf24,calm,carbon,enterprise,Auto-generated palette
+P101,Terminal Black,#fef2f2,#ffffff,#3b82f6,#64748b,bold,tailwind,dashboard,Auto-generated palette
+P102,Matrix Green,#fef3c7,#f8fafc,#8b5cf6,#94a3b8,minimal,material,landing page,Auto-generated palette
+P103,Cyber Yellow,#fefce8,#e2e8f0,#ec4899,#a1a1aa,luxury,ant-design,ecommerce,Auto-generated palette
+P104,Hack Purple,#f0fdf4,#f1f5f9,#f43f5e,#71717a,playful,chakra,SaaS app,Auto-generated palette
+P105,Data White,#f0f9ff,#cbd5e1,#f97316,#525252,serious,bootstrap,mobile app,Auto-generated palette
+P106,Cloud Native,#fdf4ff,#0f172a,#eab308,#e2e8f0,modern,custom,portfolio,Auto-generated palette
+P107,API Orange,#fdf2f8,#1e293b,#22c55e,#cbd5e1,retro,fluent,blog,Auto-generated palette
+P108,DB Green,#fff1f2,#334155,#14b8a6,#d1d5db,natural,carbon,admin panel,Auto-generated palette
+P109,Cache Blue,#fff7ed,#475569,#06b6d4,#d4d4d8,tech,tailwind,startup,Auto-generated palette
+P110,Queue Purple,#ecfeff,#64748b,#6366f1,#e5e7eb,creative,material,enterprise,Auto-generated palette
+P111,Kubernetes Red,#0f172a,#3b82f6,#ef4444,#fca5a5,professional,ant-design,dashboard,Auto-generated palette
+P112,Docker Blue,#1e293b,#8b5cf6,#a855f7,#c084fc,warm,chakra,landing page,Auto-generated palette
+P113,Git Green,#0a192f,#ec4899,#d946ef,#f9a8d4,cool,bootstrap,ecommerce,Auto-generated palette
+P114,CI Orange,#1a1a2e,#f43f5e,#f43f5e,#fdba74,energetic,custom,SaaS app,Auto-generated palette
+P115,CD Purple,#16213e,#f97316,#fb923c,#fcd34d,calm,fluent,mobile app,Auto-generated palette
+P116,Agile Blue,#ffffff,#eab308,#facc15,#86efac,bold,carbon,portfolio,Auto-generated palette
+P117,Scrum Green,#f8fafc,#22c55e,#4ade80,#5eead4,minimal,tailwind,blog,Auto-generated palette
+P118,Kanban Yellow,#f1f5f9,#14b8a6,#2dd4bf,#7dd3fc,luxury,material,admin panel,Auto-generated palette
+P119,Sprint Red,#e8e8e8,#06b6d4,#38bdf8,#a5b4fc,playful,ant-design,startup,Auto-generated palette
+P120,Release Gold,#fafafa,#6366f1,#818cf8,#fbbf24,serious,chakra,enterprise,Auto-generated palette
+P121,Startup Orange,#0f172a,#ffffff,#3b82f6,#64748b,modern,bootstrap,dashboard,Auto-generated palette
+P122,Enterprise Blue,#1e1b4b,#f8fafc,#8b5cf6,#94a3b8,retro,custom,landing page,Auto-generated palette
+P123,SaaS Purple,#172554,#e2e8f0,#ec4899,#a1a1aa,natural,fluent,ecommerce,Auto-generated palette
+P124,Fintech Green,#0c4a6e,#f1f5f9,#f43f5e,#71717a,tech,carbon,SaaS app,Auto-generated palette
+P125,Healthcare Teal,#164e63,#cbd5e1,#f97316,#525252,creative,tailwind,mobile app,Auto-generated palette
+P126,EduTech Blue,#14532d,#0f172a,#eab308,#e2e8f0,professional,material,portfolio,Auto-generated palette
+P127,PropTech Gray,#3f6212,#1e293b,#22c55e,#cbd5e1,warm,ant-design,blog,Auto-generated palette
+P128,FoodTech Orange,#713f12,#334155,#14b8a6,#d1d5db,cool,chakra,admin panel,Auto-generated palette
+P129,Retail Red,#854d0e,#475569,#06b6d4,#d4d4d8,energetic,bootstrap,startup,Auto-generated palette
+P130,Travel Teal,#78350f,#64748b,#6366f1,#e5e7eb,calm,custom,enterprise,Auto-generated palette
+P131,Gaming Purple,#fef2f2,#3b82f6,#ef4444,#fca5a5,bold,fluent,dashboard,Auto-generated palette
+P132,Social Pink,#fef3c7,#8b5cf6,#a855f7,#c084fc,minimal,carbon,landing page,Auto-generated palette
+P133,Dating Red,#fefce8,#ec4899,#d946ef,#f9a8d4,luxury,tailwind,ecommerce,Auto-generated palette
+P134,Fitness Green,#f0fdf4,#f43f5e,#f43f5e,#fdba74,playful,material,SaaS app,Auto-generated palette
+P135,Music Blue,#f0f9ff,#f97316,#fb923c,#fcd34d,serious,ant-design,mobile app,Auto-generated palette
+P136,Photo Orange,#fdf4ff,#eab308,#facc15,#86efac,modern,chakra,portfolio,Auto-generated palette
+P137,Video Purple,#fdf2f8,#22c55e,#4ade80,#5eead4,retro,bootstrap,blog,Auto-generated palette
+P138,Podcast Blue,#fff1f2,#14b8a6,#2dd4bf,#7dd3fc,natural,custom,admin panel,Auto-generated palette
+P139,Blog Gray,#fff7ed,#06b6d4,#38bdf8,#a5b4fc,tech,fluent,startup,Auto-generated palette
+P140,News Red,#ecfeff,#6366f1,#818cf8,#fbbf24,creative,carbon,enterprise,Auto-generated palette
+P141,Weather Blue,#0f172a,#ffffff,#3b82f6,#64748b,professional,tailwind,dashboard,Auto-generated palette
+P142,Map Green,#1e293b,#f8fafc,#8b5cf6,#94a3b8,warm,material,landing page,Auto-generated palette
+P143,Calc White,#0a192f,#e2e8f0,#ec4899,#a1a1aa,cool,ant-design,ecommerce,Auto-generated palette
+P144,Note Yellow,#1a1a2e,#f1f5f9,#f43f5e,#71717a,energetic,chakra,SaaS app,Auto-generated palette
+P145,Task Blue,#16213e,#cbd5e1,#f97316,#525252,calm,bootstrap,mobile app,Auto-generated palette
+P146,Calendar Red,#ffffff,#0f172a,#eab308,#e2e8f0,bold,custom,portfolio,Auto-generated palette
+P147,Clock Orange,#f8fafc,#1e293b,#22c55e,#cbd5e1,minimal,fluent,blog,Auto-generated palette
+P148,Timer Green,#f1f5f9,#334155,#14b8a6,#d1d5db,luxury,carbon,admin panel,Auto-generated palette
+P149,Alarm Purple,#e8e8e8,#475569,#06b6d4,#d4d4d8,playful,tailwind,startup,Auto-generated palette
+P150,Reminder Blue,#fafafa,#64748b,#6366f1,#e5e7eb,serious,material,enterprise,Auto-generated palette
+P151,Bookmark Red,#0f172a,#3b82f6,#ef4444,#fca5a5,modern,ant-design,dashboard,Auto-generated palette
+P152,Tag Orange,#1e1b4b,#8b5cf6,#a855f7,#c084fc,retro,chakra,landing page,Auto-generated palette
+P153,Category Blue,#172554,#ec4899,#d946ef,#f9a8d4,natural,bootstrap,ecommerce,Auto-generated palette
+P154,Filter Gray,#0c4a6e,#f43f5e,#f43f5e,#fdba74,tech,custom,SaaS app,Auto-generated palette
+P155,Sort White,#164e63,#f97316,#fb923c,#fcd34d,creative,fluent,mobile app,Auto-generated palette
+P156,Search Blue,#14532d,#eab308,#facc15,#86efac,professional,carbon,portfolio,Auto-generated palette
+P157,Find Green,#3f6212,#22c55e,#4ade80,#5eead4,warm,tailwind,blog,Auto-generated palette
+P158,Replace Red,#713f12,#14b8a6,#2dd4bf,#7dd3fc,cool,material,admin panel,Auto-generated palette
+P159,Undo Orange,#854d0e,#06b6d4,#38bdf8,#a5b4fc,energetic,ant-design,startup,Auto-generated palette
+P160,Redo Blue,#78350f,#6366f1,#818cf8,#fbbf24,calm,chakra,enterprise,Auto-generated palette
+P161,Save Green,#fef2f2,#ffffff,#3b82f6,#64748b,bold,bootstrap,dashboard,Auto-generated palette

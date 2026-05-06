@@ -1,5 +1,5 @@
 ---
-description: Scan project structure, detect project type, analyze environment and dependencies
+description: Scan and analyze project — detect type, tech stack, dependencies, test framework
 ---
 
 USER INSTRUCTION (overrides all skill-loading behaviors):
@@ -10,4 +10,4 @@ Load the skill by running this bash command to find the file, then read it:
 find ~/.claude/plugins/cache/chaos-harness -name "SKILL.md" -path "*/project-scanner/*" 2>/dev/null | head -1
 ```
 
-Read the file path returned above, then follow its instructions exactly.
+Then read the SKILL.md file with the Read tool and follow its instructions.

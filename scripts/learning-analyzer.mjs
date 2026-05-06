@@ -17,7 +17,7 @@ import {
 } from './hook-utils.mjs';
 
 import { join } from 'node:path';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { getAllInstincts, clusterInstincts } from './instinct-utils.mjs';
 
 ensureDir(GLOBAL_DATA_DIR);
@@ -109,6 +109,29 @@ for (const { type, count } of systemicIssues) {
   });
 }
 
+// ---- 新增：分析任务契约数据 ----
+
+function analyzeContracts() {
+  const logPath = join(GLOBAL_DATA_DIR, 'contract-log.jsonl');
+  if (!existsSync(logPath)) return { total: 0, declared: 0, completed: 0, expired: 0, completionRate: null, avgCriteriaPassed: null };
+  try {
+    const lines = readFileSync(logPath, 'utf-8').split('\n').filter(Boolean);
+    const events = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    const declared = events.filter(e => e.event === 'contract_declared').length;
+    const completed = events.filter(e => e.event === 'contract_completed');
+    const expired = events.filter(e => e.event === 'contract_expired').length;
+    const completionRate = declared > 0 ? (completed.length / declared * 100).toFixed(1) : null;
+    const avgCriteriaPassed = completed.length > 0
+      ? (completed.reduce((sum, e) => sum + (e.criteria_passed || 0), 0) / completed.length).toFixed(1)
+      : null;
+    return { total: events.length, declared, completed: completed.length, expired, completionRate, avgCriteriaPassed };
+  } catch {
+    return { total: 0, declared: 0, completed: 0, expired: 0, completionRate: null, avgCriteriaPassed: null };
+  }
+}
+
+const contractAnalysis = analyzeContracts();
+
 // ---- 新增：分析直觉数据 ----
 
 function analyzeInstincts() {
@@ -146,6 +169,7 @@ const reportLines = [
   `- 铁律触发记录: ${ironLogs.length} 条`,
   `- 偷懒检测记录: ${lazyLogs.length} 条`,
   `- 学习操作记录: ${learnLogs.length} 条`,
+  `- 任务契约记录: ${contractAnalysis.declared} 声明 / ${contractAnalysis.completed} 完成 / ${contractAnalysis.expired} 过期`,
   ``,
   `## 直觉系统分析`,
   ``,
@@ -171,6 +195,18 @@ for (const cluster of instinctAnalysis.clusters) {
 
 if (instinctAnalysis.clusters.length === 0) {
   reportLines.push('暂无聚类，继续观测中。');
+}
+
+reportLines.push('', '## 任务契约分析', '');
+if (contractAnalysis.declared === 0) {
+  reportLines.push('暂无契约数据。使用 /chaos-harness:task-contract declare 开始声明任务契约。');
+} else {
+  reportLines.push(`- 声明总数: ${contractAnalysis.declared}`);
+  reportLines.push(`- 完成率: ${contractAnalysis.completionRate !== null ? contractAnalysis.completionRate + '%' : 'N/A'}`);
+  reportLines.push(`- 过期率: ${contractAnalysis.declared > 0 ? (contractAnalysis.expired / contractAnalysis.declared * 100).toFixed(1) + '%' : 'N/A'}`);
+  if (contractAnalysis.avgCriteriaPassed !== null) {
+    reportLines.push(`- 平均验收通过项: ${contractAnalysis.avgCriteriaPassed}`);
+  }
 }
 
 reportLines.push('', '## 铁律触发统计', '');

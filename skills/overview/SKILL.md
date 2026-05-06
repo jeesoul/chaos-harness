@@ -2,10 +2,10 @@
 name: overview
 description: "Chaos Harness 系统概览。当用户明确询问 chaos-harness 功能时使用。"
 license: MIT
-version: "1.3.1"
+version: "1.3.2"
 ---
 
-# Chaos Harness v1.3.1 孔明Pro
+# Chaos Harness v1.3.2 Gate
 
 > 运筹帷幄，决胜千里；以智御局，以律治心。
 > **Chaos demands order. Harness provides it.**
@@ -20,103 +20,34 @@ version: "1.3.1"
 | IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
 | IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（29 个）
+## 可用 Skills（15 个）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
 | iron-law-enforcer | 铁律、约束、违规 | 始终激活 |
-| workflow-supervisor | 工作流、阶段、进度 | 12 阶段工作流管理 |
-| agent-team-orchestrator | 并行、多agent、协作 | Agent Team 编排（含设计/技术评审） |
-| collaboration-reviewer | 评审、审查 | 多 Agent 协作评审 |
-| project-scanner | 扫描、分析项目 | 项目类型/环境检测 |
+| gate-manager | Gate、阶段、验证、过渡 | Gate 状态机管理 |
+| project-scanner | 扫描项目、分析项目、项目类型 | 项目类型/技术栈/目录/依赖扫描 |
+| dev-intelligence | 分析项目、质量检查、Gate 配置 | BM25 搜索引擎 + 知识库 |
+| harness-generator | 生成Harness、创建约束 | 基于扫描生成铁律配置 |
 | version-locker | 版本、锁定 | 版本管理和锁定 |
-| harness-generator | 生成约束 | 基于扫描生成铁律 |
-| learning-analyzer | 学习分析、自学习 | 失败模式发现、铁律优化 |
-| product-lifecycle | PRD、需求、原型 | 产品全生命周期（含强制评审） |
-| product-manager | 需求分析、竞品分析、Kano | 产品经理工作助手 |
-| prd-validator | PRD检查、PRD验证 | PRD 质量检查器 |
-| test-assistant | 测试用例、E2E、覆盖率 | 测试工程师工作助手 |
-| visual-regression | 视觉回归、截图对比 | 可视化回归测试（CDP） |
-| java-checkstyle | Java 项目 | Java 代码规范 |
-| project-state | 继续、恢复 | 会话持久化 |
 | hooks-manager | 钩子、hooks | 查看钩子状态 |
-| plugin-manager | 插件、配置 | 插件和铁律管理 |
-| auto-toolkit-installer | 工具链、安装 | 自动化工具检测安装 |
-| auto-context | 后台自动 | 智能场景感知 |
-| ui-generator | 生成界面、UI生成 | 从 PRD 生成可运行的前端界面 |
-| adaptive-harness | 自适应优化、应用建议 | 从学习数据自动强化铁律 |
-| web-access | 搜索、网页、CDP、浏览器 | 联网操作与 CDP 浏览器自动化 |
-| overdrive | 紧急、超频、立刻解决 | 最高优先级、所有 Agent 全速运行 |
-| instinct-system | 直觉、本能、置信度、instinct | 持续学习系统 2.0（原子本能 + 置信度演进） |
-| eval-harness | 评测、pass@k、回归、能力、评分器、eval | 评测驱动开发（pass@k + 能力/回归 + 三种评分器） |
-| iterative-retrieval | 迭代检索、上下文优化、检索循环、iterative | 4 阶段检索循环（DISPATCH/EVALUATE/REFINE/LOOP） |
-| schema-workflow | 工作流、Schema、依赖图、阶段 | Schema-Driven 工作流（YAML 定义 + 依赖图 + 自定义验证） |
-| defense-in-depth | 深度防御、多层验证、defense | 4 层验证框架（入口→业务→环境→调试） |
-| strategic-compact | 压缩、上下文优化、strategic、compact | 逻辑边界压缩 + 工具调用计数阈值检测 |
+| project-state | 继续、恢复 | 会话持久化 |
+| java-checkstyle | Java 项目 | Java 代码规范 |
+| ui-generator | 生成界面、UI 生成 | 从 PRD 生成可运行的前端界面 |
+| ui-ux-intelligence | 设计、UI、UX、配色、字体、排版 | 161 色板、50 风格、57 字体、60 组件、40 动画、50 UX 指南 |
+| web-access | 搜索、网页、CDP | 联网操作与浏览器自动化 |
+| overdrive | 紧急、超频、立刻解决 | 最高优先级、全速运行 |
+| product-manager | 需求分析、竞品分析、Kano | 产品经理工作助手 |
+| overview | chaos-harness | 系统概览（当前 skill） |
 
-## 持续学习系统 2.0
+## Gate 状态机
 
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 观测方式 | Stop 钩子 | PostToolUse 钩子（100% 确定性） |
-| 学习单元 | 完整技能 | 原子本能 |
-| 置信度 | 无 | 0.3-0.9 加权评分 |
-| 演进 | 直接到技能 | 本能 → 聚类 → 技能/命令/Agent |
-| 分享 | 无 | 导出/导入本能 |
-
-## 评测驱动开发
-
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 评测类型 | 无 | 能力 + 回归 |
-| 指标 | 无 | pass@1 / pass@3 / pass^3 |
-| 评分器 | 无 | 代码 + 模型 + 人工 |
-| 存储 | 无 | 本地 evals/ + 可选云端 |
-| 自动追踪 | 无 | eval-collector Hook |
-
-## Schema-Driven 工作流系统
-
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 工作流定义 | 硬编码 12 阶段 | YAML Schema + 依赖图 |
-| 阶段管理 | 固定流程 | 动态解析 + 验证 |
-| 自定义 | 无 | schemas/custom/ 目录 |
-| 模板 | 无 | default + product-lifecycle |
-
-## 约束增强系统
-
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 铁律预警 | 事后检查 | PreToolUse 主动预警 |
-| 禁止理由表 | 无 | 每条铁律对应反驳话术 |
-| 审查机制 | 单一 | 两阶段（规范→质量） |
-| 多层验证 | 无 | 4 层防御框架 |
-| 上下文压缩 | 随机自动 | 逻辑边界 + 调用计数阈值 |
-
-## 协调层增强
-
-| 特性 | v1.3.0 | v1.3.1 |
-|------|--------|--------|
-| 检索集成 | 无 | iterative-retrieval 4 阶段循环 |
-| 本能反馈 | 无 | Agent 执行经验自动记录 |
-| 评测集成 | 无 | 评审基于 pass@k 数据 |
-| 快速确认 | 仅超频模式 | 简单变更自动快速确认 |
-| 压缩感知 | 无 | 工具调用计数阈值自适应 |
-
-## 插件系统
-
-外部插件必须接受铁律约束：
-
-```yaml
-# ~/.claude/harness/plugins.yaml
-plugins:
-  - name: superpowers
-    enabled: true
-    stages: [W01, W03, W08]
-    iron_laws: inherit
-```
+11 Gates（6 stage + 5 quality），10 种验证器：
+- `file-exists` `project-scan` `git-has-commits` `no-syntax-errors` `test-suite-pass` `lint-check` `iron-law-check` `ui-quality-check` `prd-quality-check` `script`
 
 ## 防绕过
+
+## 铁律检查表
 
 | 借口 | 反驳 |
 |------|------|
@@ -124,6 +55,7 @@ plugins:
 | "跳过测试" | 测试是基本验证 |
 | "就这一次" | 每次例外都是先例 |
 | "老项目" | 老项目更需要约束 |
+| "我已经了解项目结构" | 主观了解不够，需要扫描数据确认。使用 `/project-scanner` 快速扫描 |
 
 ## 偷懒模式
 
