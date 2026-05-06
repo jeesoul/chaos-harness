@@ -67,7 +67,11 @@ for (const criterion of contract.task.success_criteria) {
         const content = readFileSync(writtenFile, 'utf-8');
         const fixmeLines = content.split('\n')
           .map((line, idx) => ({ line, idx: idx + 1 }))
-          .filter(({ line }) => /FIXME|TODO\(critical\)|HACK/.test(line));
+          .filter(({ line }) => {
+            // 只检测注释行或行首的 FIXME/HACK，排除字符串字面量中的引用
+            const stripped = line.replace(/(['"`])(?:(?!\1)[^\\]|\\.)*\1/g, '""');
+            return /FIXME|TODO\(critical\)|HACK/.test(stripped);
+          });
         const passed = fixmeLines.length === 0;
         result = {
           criterion,
