@@ -460,12 +460,39 @@ node scripts/gate-visualizer.mjs --pr-description > pr-description.md
 ## 升级
 
 ```bash
-git checkout v1.3.3 && git pull origin v1.3.3
+# 1. 拉取最新代码
+cd /path/to/chaos-harness
+git pull origin main
+
+# 2. 重新注册插件（让 Claude Code 加载新文件）
 claude plugins marketplace remove chaos-harness
 claude plugins marketplace add "$(pwd)"
 claude plugins uninstall chaos-harness@chaos-harness
 claude plugins install chaos-harness@chaos-harness
+
+# 3. 重启 Claude Code，验证版本
+/chaos-harness:overview
 ```
+
+> Windows 用 `%CD%` 替代 `$(pwd)`
+
+---
+
+## 卸载
+
+```bash
+# 卸载插件
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins marketplace remove chaos-harness
+
+# 可选：删除本地仓库
+rm -rf /path/to/chaos-harness
+
+# 可选：清理运行时数据（学习日志、契约记录等）
+rm -rf ~/.claude/harness/
+```
+
+> 卸载后重启 Claude Code 生效。运行时数据（`~/.claude/harness/`）保留了学习记录，如需完全清除手动删除。
 
 ---
 
