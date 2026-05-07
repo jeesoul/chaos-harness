@@ -37,6 +37,47 @@ claude plugins install chaos-harness@chaos-harness
 
 安装后，Gate 状态机、知识图谱和 Hooks 自动拦截即刻生效，无需额外配置。
 
+> Windows：路径不能含中文和空格，用 `%CD%` 替代 `$(pwd)`
+
+---
+
+## 升级
+
+```bash
+# 1. 拉取最新代码
+cd /path/to/chaos-harness
+git pull origin main
+
+# 2. 重新注册插件
+claude plugins marketplace remove chaos-harness
+claude plugins marketplace add "$(pwd)"
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins install chaos-harness@chaos-harness
+
+# 3. 重启 Claude Code，验证版本
+/chaos-harness:overview
+```
+
+升级不会丢失运行时数据（学习日志、契约记录、Gate 状态等保存在 `~/.claude/harness/`）。
+
+---
+
+## 卸载
+
+```bash
+# 卸载插件
+claude plugins uninstall chaos-harness@chaos-harness
+claude plugins marketplace remove chaos-harness
+
+# 可选：删除本地仓库
+rm -rf /path/to/chaos-harness
+
+# 可选：清理运行时数据
+rm -rf ~/.claude/harness/
+```
+
+卸载后重启 Claude Code 生效。
+
 ---
 
 ## 项目知识引擎
