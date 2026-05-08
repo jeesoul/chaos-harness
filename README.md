@@ -3,31 +3,34 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.3.3-blue.svg">
   <img src="https://img.shields.io/badge/Claude_Code-Plugin-blue.svg">
-  <img src="https://img.shields.io/badge/CLI-Tools-green.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
 </p>
 
-<p align="center"><strong>AI 编程质量检查工具集 — Gate 状态机 + 硬拦截</strong></p>
-<p align="center"><em>可作为 Claude Code 插件使用，也可作为独立 CLI 工具</em></p>
+<p align="center"><strong>AI 编程协作增强系统 — 对 AI 编程行为的全程管控</strong></p>
+<p align="center"><em>事前声明 · 事中硬拦截 · 事后验证 · 持续学习</em></p>
 
 ---
 
 ## 这是什么？
 
-**一个 AI 编程质量检查工具集**，核心功能可作为 Claude Code 插件使用，辅助工具可作为独立 CLI 使用。
+**一个 Claude Code 插件**，通过 Gate 状态机 + Hooks 硬拦截管控 AI 的编程行为，配合 Task Contract 和自学习系统形成完整闭环。
+
+```
+声明意图（事前）→ Gate 硬拦截（事中）→ 验证结果（事后）→ 学习积累（持续）
+```
 
 ### 核心问题
 
-AI 写代码会跳过测试、忽略规范、声称完成但没验证。
+AI 写代码会静默假设、跳过验证、声称完成但没有真正做到。
 
 ### 解决方案
 
 - **Gate 状态机** — 11 个检查点，AI 必须通过才能进入下一阶段
-- **Hooks 硬拦截** — SessionStart/PreToolUse/PostToolUse 自动触发，exit 1 阻断
-- **16 种验证器** — 覆盖率、安全审计、架构分层、分支规范、提交规范
-- **双模式使用** — Slash 命令（插件）+ CLI 命令（工具）
+- **Hooks 硬拦截** — PreToolUse exit 1 阻断，AI 绕不过去
+- **Task Contract** — 写代码前声明意图和验收标准，事后自动验证
+- **自学习系统** — 每次会话自动分析行为模式，持续积累项目经验
 
-**核心差异化：** 不是提示词，是进程级硬拦截（AI 绕不过去）
+**核心差异化：** 不是提示词软约束，是进程级硬拦截 + 闭环验证
 
 ---
 
