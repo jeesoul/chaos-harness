@@ -13,7 +13,7 @@
 
 ## 这是什么？
 
-**一个 Claude Code 插件**，通过 Gate 状态机 + Hooks 硬拦截管控 AI 的编程行为，配合 Task Contract 和自学习系统形成完整闭环。
+**一个 Claude Code 插件**，通过 Gate 状态机 + Hooks 硬拦截对 AI 的编程行为实施全程管控，配合 Task Contract 和自学习系统形成完整闭环。
 
 ```
 声明意图（事前）→ Gate 硬拦截（事中）→ 验证结果（事后）→ 学习积累（持续）
@@ -21,16 +21,19 @@
 
 ### 核心问题
 
-AI 写代码会静默假设、跳过验证、声称完成但没有真正做到。
+AI 写代码有三个顽固问题：
+- **静默假设** — 没有明确前提就开始写，出错了才发现假设错了
+- **跳过验证** — 声称完成但没有真正检查，"应该能跑"代替实际运行
+- **无法约束** — 提示词是建议，AI 可以忽略，没有强制执行机制
 
 ### 解决方案
 
-- **Gate 状态机** — 11 个检查点，AI 必须通过才能进入下一阶段
-- **Hooks 硬拦截** — PreToolUse exit 1 阻断，AI 绕不过去
-- **Task Contract** — 写代码前声明意图和验收标准，事后自动验证
-- **自学习系统** — 每次会话自动分析行为模式，持续积累项目经验
+- **Gate 状态机** — 13 个检查点（6 阶段 + 7 质量），AI 必须通过才能进入下一阶段
+- **Hooks 硬拦截** — PreToolUse exit 1 阻断，AI 绕不过去，不是建议是强制
+- **Task Contract** — 写代码前声明意图和验收标准，PostToolUse 自动逐条验证
+- **自学习系统** — 每次会话结束自动分析行为模式，契约完成率 + Gate 通过率持续积累
 
-**核心差异化：** 不是提示词软约束，是进程级硬拦截 + 闭环验证
+**核心差异化：** 不是提示词软约束，是进程级硬拦截（exit 1）+ 闭环验证，AI 无法绕过
 
 ---
 
@@ -92,9 +95,9 @@ node scripts/gate-enforcer.mjs gate-w10-testing
 
 ## 核心能力
 
-### 1. Gate 状态机（11 个检查点）
+### 1. Gate 状态机（13 个检查点）
 
-#### 阶段 Gates（6 个）— 控制开发流程
+#### 阶段 Gates（6 个）— 控制开发流程，hard 级别，不可绕过
 
 | Gate | 阶段 | 检查内容 | 使用方式 |
 |------|------|---------|---------|
@@ -105,15 +108,17 @@ node scripts/gate-enforcer.mjs gate-w10-testing
 | `gate-w10-testing` | 测试 | 无语法错误 + 覆盖率 60% | `/gate-manager transition W10_testing` |
 | `gate-w12-release` | 发布 | 测试通过 + 安全审计 + 覆盖率 80% | `/gate-manager transition W12_release` |
 
-#### 质量 Gates（5 个）— 自动拦截
+#### 质量 Gates（7 个）— 自动拦截，AI 写文件 / commit 前强制触发
 
 | Gate | 触发时机 | 检查内容 |
 |------|---------|---------|
-| `gate-quality-iron-law` | AI 写文件前 | 铁律检查 |
+| `gate-quality-iron-law` | AI 写文件前 | 铁律检查（IL001-IL005） |
 | `gate-quality-tests` | git commit 前 | 测试套件通过 |
 | `gate-quality-format` | git commit 前 | 代码格式检查 |
 | `gate-quality-ui` | AI 写文件前 | UI 规范检查 |
-| `gate-quality-architecture` | AI 写文件前 | 架构分层检查 |
+| `gate-quality-architecture` | AI 写文件前 | 架构分层检查（Controller → Service → Repository） |
+| `gate-quality-branch` | 阶段切换时 | 分支命名规范（feature/fix/chore/hotfix/release/refactor） |
+| `gate-intelligence-check` | 阶段切换时 | 智能建议 — 推荐 Gate 配置和常见反模式 |
 
 ### 2. 16 种验证器（生产级）
 
@@ -450,11 +455,13 @@ node scripts/gate-visualizer.mjs --pr-description > pr-description.md
 
 | 对比 | 提示词工程 | Cursor Rules | Chaos Harness |
 |------|-----------|--------------|---------------|
-| **约束方式** | 软性建议 | 软性建议 | 硬拦截（exit 1） |
+| **约束方式** | 软性建议 | 软性建议 | 进程级硬拦截（exit 1） |
 | **AI 能否绕过** | ✅ 能 | ✅ 能 | ❌ 不能 |
-| **验证时机** | 无 | 无 | 事前拦截 |
+| **事前声明** | 无 | 无 | Task Contract 强制声明 |
+| **验证时机** | 无 | 无 | 事前拦截 + 事后自动验证 |
+| **学习积累** | 无 | 无 | 每次会话自动分析，持续积累 |
 | **使用方式** | 提示词 | 配置文件 | 插件 + CLI |
-| **团队共享** | 难 | 文件共享 | git 提交 |
+| **团队共享** | 难 | 文件共享 | git 提交，全团队统一 |
 | **失败诊断** | 无 | 无 | 修复建议 + 命令 |
 | **CI 集成** | 难 | 难 | 原生支持 |
 
