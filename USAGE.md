@@ -1,6 +1,6 @@
 # Chaos Harness 使用指南
 
-> v1.3.2 Gate — 按角色快速上手
+> v1.4.0 Loop & Wiki — 按角色快速上手
 
 ---
 
@@ -12,6 +12,7 @@
 - [开发工程师](#开发工程师)
 - [QA 测试工程师](#qa-测试工程师)
 - [项目经理](#项目经理)
+- [Loop / Wiki / Resume（v1.4.0 新）](#loop--wiki--resumev140-新)
 - [通用命令速查](#通用命令速查)
 - [超频模式](#超频模式)
 - [故障恢复](#故障恢复)
@@ -24,6 +25,14 @@
 # 本地安装
 git clone https://github.com/jeesoul/chaos-harness.git
 cd chaos-harness
+git checkout v1.4.0-loop-wiki
+
+# v1.4.0 统一跨平台入口
+node scripts/install.mjs            # 任意平台
+# 或包装脚本
+bash install.sh                     # Linux/macOS/Git Bash
+install.bat                         # Windows cmd
+
 claude plugins marketplace add "$(pwd)"
 claude plugins install chaos-harness@chaos-harness
 
@@ -31,7 +40,9 @@ claude plugins install chaos-harness@chaos-harness
 /chaos-harness:overview
 ```
 
-安装后，Gate 状态机和 Hooks 自动拦截即刻生效，无需额外配置。
+> **Windows + Git 提示：** `scripts/git-detector.mjs` 会自动定位 `Program Files\Git`、scoop、chocolatey、WSL 的 git，无需手动配置 PATH。
+
+安装后，Gate 状态机、Loop Engine、Hooks 拦截即刻生效，无需额外配置。
 
 ---
 
@@ -125,7 +136,7 @@ claude plugins install chaos-harness@chaos-harness
 | `/gate-manager status` | 查看当前阶段和质量 Gate |
 | `/chaos-harness:overdrive` | 紧急任务超频模式 |
 | `/chaos-harness:dev-intelligence --query "代码规范"` | 搜索最佳实践 |
-| 自然语言："继续"、"恢复" | project-state 恢复进度 |
+| 自然语言："继续"、"恢复" | resume 恢复进度 |
 
 ### Hook 自动拦截
 
@@ -191,15 +202,15 @@ claude plugins install chaos-harness@chaos-harness
 
 1. **进度查看** — gate-manager 实时显示各阶段状态
 2. **阶段切换** — 自动触发 Gate 验证和智能建议
-3. **状态恢复** — project-state 恢复中断的会话
+3. **状态恢复** — resume / snapshot 恢复中断的会话（v1.4.0 增强）
 
 ### 常用命令
 
 | 命令 | 说明 |
 |------|------|
 | `/gate-manager status` | 全阶段进度仪表盘 |
-| `/chaos-harness:project-state` | 项目状态恢复 |
-| 自然语言："当前进度"、"Gate 状态" | gate-manager |
+| `/resume` | v1.4 检测中断点并输出 resume 提示 |
+| 自然语言："当前进度"、"上次进度" | gate-manager / resume |
 
 ### 阶段流转
 
@@ -208,6 +219,66 @@ W01 需求 → W03 架构 → W08 开发 → W09 审查 → W10 测试 → W12 �
 ```
 
 每个阶段切换都自动执行对应 Gate 验证。
+
+---
+
+## Loop / Wiki / Resume（v1.4.0 新）
+
+### Loop Engine
+
+每次工具调用自动产生 observe → decide → act → reflect 四帧，写入 `loop/journal.jsonl`，cursor 原子推进。
+
+```bash
+node scripts/loop-cursor.mjs read           # 当前位置（session_id, tick, last_frame）
+node scripts/loop-journal.mjs tail --n 20   # 最近 20 帧
+node scripts/loop-engine.mjs status         # 综合视图
+```
+
+**为什么有用：** 任何时刻你都能知道"chaos-harness 现在做到第几步、上次做了什么、为什么这么做"。
+
+### Project Wiki
+
+可寻址、可链接、可演化的长期记忆。
+
+```bash
+# 新增 pattern / decision / incident
+node scripts/wiki-indexer.mjs add --type pattern --title "..." --tags "a,b"
+
+# 重建索引（含双向链接自动补全）
+node scripts/wiki-indexer.mjs build
+
+# 校验所有 frontmatter
+node scripts/wiki-indexer.mjs validate
+
+# 搜索（pure Node，零依赖）
+node scripts/wiki-search.mjs query "关键词" --type pattern --limit 5
+```
+
+Wiki 与 `dev-intelligence` 集成：自然语言"搜索 xxx" 自动同时搜 CSV 知识库和 Wiki。
+
+### Resume / Snapshot
+
+```bash
+# 检测上次是否中断（exit 0=clean, exit 10=needs resume）
+node scripts/resume.mjs
+
+# 手动写当前会话快照
+node scripts/snapshot.mjs write --status in-progress --title "..."
+
+# 列最近 5 个会话
+node scripts/snapshot.mjs latest
+
+# 读 last.md 全文
+node scripts/snapshot.mjs read
+```
+
+**断电场景**：
+
+1. 你在某个任务中途强制重启电脑
+2. 重启后打开 Claude Code
+3. SessionStart hook 自动调用 `resume.mjs`
+4. 输出 "🔄 previous session was interrupted" + 最近 5 frames + 当前 task
+5. 你直接说"继续" 即可
 
 ---
 
@@ -224,7 +295,7 @@ W01 需求 → W03 架构 → W08 开发 → W09 审查 → W10 测试 → W12 �
 | `/chaos-harness:overdrive` | 超频模式 |
 | `/chaos-harness:product-manager` | 产品经理 |
 | `/chaos-harness:dev-intelligence` | 智能建议 |
-| `/chaos-harness:project-state` | 状态恢复 |
+| `/resume` | 状态恢复 |
 
 ### 自然语言触发
 
@@ -234,7 +305,7 @@ W01 需求 → W03 架构 → W08 开发 → W09 审查 → W10 测试 → W12 �
 | "Gate 状态"、"阶段切换" | gate-manager |
 | "搜索"、"质量检查" | dev-intelligence |
 | "PRD"、"需求" | product-manager |
-| "继续"、"恢复" | project-state |
+| "继续"、"恢复" | resume |
 
 ### CLI 命令
 
@@ -284,7 +355,7 @@ node scripts/dev-intelligence.mjs --persist --key "decision" --value "use vitest
 /gate-manager override <gate-id> --reason "原因"
 
 # 恢复会话状态
-/chaos-harness:project-state
+/resume
 ```
 
 ### 常见问题
@@ -293,5 +364,5 @@ node scripts/dev-intelligence.mjs --persist --key "decision" --value "use vitest
 |------|------|
 | Gate 阻断无法继续 | 查看阻断原因，修复后 recheck |
 | Hook 报错 | 检查 `hooks/hooks.json` 配置 |
-| 状态丢失 | 使用 `/chaos-harness:project-state` 恢复 |
+| 状态丢失 | 使用 `/resume` 恢复 |
 | 版本号不一致 | 运行 `install.sh` 或 `install.bat` 检查 |

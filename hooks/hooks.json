@@ -6,6 +6,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/resume.mjs\"",
+            "async": false
+          },
+          {
+            "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-machine.mjs\" --session-start --root \"${CLAUDE_PLUGIN_ROOT}\"",
             "async": false
           }
@@ -18,6 +23,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/loop-engine.mjs\" tick --frame observe --tool Write",
+            "async": true
+          },
+          {
+            "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-iron-law --root \"${CLAUDE_PLUGIN_ROOT}\"",
             "async": false
           },
@@ -25,12 +35,22 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/iron-law-check.mjs\"",
             "async": false
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/loop-engine.mjs\" tick --frame decide --gate gate-quality-iron-law --status passed",
+            "async": true
           }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/loop-engine.mjs\" tick --frame observe --tool Bash",
+            "async": true
+          },
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-tests --root \"${CLAUDE_PLUGIN_ROOT}\"",
@@ -61,41 +81,11 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/learning-update.mjs\"",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/project-pattern-writer.mjs\"",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/workflow-track.mjs\"",
-            "async": true
-          }
-        ]
-      },
-      {
         "matcher": "Write|Edit|Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/instinct-collector.mjs\"",
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/dev-intelligence.mjs\" --session-context --root \"${CLAUDE_PLUGIN_ROOT}\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/post-write-dispatcher.mjs\"",
             "async": true
           }
         ]
@@ -117,6 +107,16 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/loop-engine.mjs\" tick --frame reflect --turn-id end_turn",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/snapshot.mjs\" write --status in-progress",
+            "async": true
+          },
+          {
+            "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/stop.mjs\"",
             "async": false
           },
@@ -132,6 +132,11 @@
       {
         "matcher": ".*",
         "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/snapshot.mjs\" write --status compacted",
+            "async": false
+          },
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/pre-compact.mjs\"",

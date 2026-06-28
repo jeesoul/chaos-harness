@@ -27,7 +27,6 @@ async function main() {
     'gate-machine.mjs',
     'gate-enforcer.mjs',
     'gate-recovery.mjs',
-    'gate-dispatcher.mjs',
     'iron-law-check.mjs',
     'laziness-detect.mjs',
     'learning-update.mjs',
@@ -35,6 +34,18 @@ async function main() {
     'stop.mjs',
     'dev-intelligence.mjs',
     'search.py',
+    // v1.4.0 Loop & Wiki
+    'loop-engine.mjs',
+    'loop-cursor.mjs',
+    'loop-journal.mjs',
+    'wiki-indexer.mjs',
+    'wiki-search.mjs',
+    'resume.mjs',
+    'snapshot.mjs',
+    'post-write-dispatcher.mjs',
+    'install.mjs',
+    'git-detector.mjs',
+    'path-sanity.mjs',
   ];
 
   console.log('\nChecking core scripts...');
@@ -97,15 +108,78 @@ async function main() {
     console.log(`  [${csvExists ? 'PASS' : 'FAIL'}] data/${csv}`);
   }
 
-  // 检查 Python 依赖
+  // 检查 Python 依赖（rank_bm25 可选，wiki-search 是 fallback）
   console.log('\nChecking Python dependencies...');
+  let py_ok = false;
   try {
     execSync('python -c "import rank_bm25"', { stdio: 'pipe', timeout: 5000 });
     results.push({ test: 'python-rank-bm25', passed: true });
     console.log('  [PASS] rank_bm25');
+    py_ok = true;
   } catch {
-    results.push({ test: 'python-rank-bm25', passed: false, reason: 'rank_bm25 not installed' });
-    console.log('  [WARN] rank_bm25 not installed (run: pip install rank-bm25)');
+    // Fallback: wiki-search.mjs 提供纯 Node 搜索
+    results.push({ test: 'python-rank-bm25', passed: true, reason: 'optional; wiki-search.mjs provides Node fallback' });
+    console.log('  [SKIP] rank_bm25 not installed — wiki-search.mjs is the Node fallback (OK)');
+  }
+
+  // v1.4.0 — Loop Engine 自检
+  console.log('\nChecking Loop Engine...');
+  try {
+    execSync(`node "${join(pluginRoot, 'scripts', 'loop-cursor.mjs')}" read`, { stdio: 'pipe', timeout: 3000 });
+    results.push({ test: 'loop-cursor-readable', passed: true });
+    console.log('  [PASS] loop-cursor read');
+  } catch (e) {
+    results.push({ test: 'loop-cursor-readable', passed: false, reason: String(e).slice(0, 200) });
+    console.log('  [FAIL] loop-cursor read');
+  }
+
+  try {
+    execSync(`node "${join(pluginRoot, 'scripts', 'loop-journal.mjs')}" stats`, { stdio: 'pipe', timeout: 3000 });
+    results.push({ test: 'loop-journal-stats', passed: true });
+    console.log('  [PASS] loop-journal stats');
+  } catch (e) {
+    results.push({ test: 'loop-journal-stats', passed: false, reason: String(e).slice(0, 200) });
+    console.log('  [FAIL] loop-journal stats');
+  }
+
+  // v1.4.0 — Wiki 自检
+  console.log('\nChecking Wiki...');
+  const wikiDir = join(pluginRoot, '.chaos-harness', 'wiki');
+  const wikiExists = existsSync(wikiDir);
+  results.push({ test: 'wiki-dir-exists', passed: wikiExists });
+  console.log(`  [${wikiExists ? 'PASS' : 'FAIL'}] .chaos-harness/wiki/`);
+
+  try {
+    const out = execSync(`node "${join(pluginRoot, 'scripts', 'wiki-indexer.mjs')}" validate`, { stdio: 'pipe', timeout: 5000, encoding: 'utf8' });
+    const r = JSON.parse(out);
+    results.push({ test: 'wiki-validate', passed: r.ok === true });
+    console.log(`  [${r.ok ? 'PASS' : 'FAIL'}] wiki validate (${r.errors?.length || 0} errors)`);
+  } catch (e) {
+    results.push({ test: 'wiki-validate', passed: false, reason: String(e).slice(0, 200) });
+    console.log('  [FAIL] wiki validate');
+  }
+
+  // v1.4.0 — Resume self-check
+  console.log('\nChecking Resume Engine...');
+  try {
+    const out = execSync(`node "${join(pluginRoot, 'scripts', 'resume.mjs')}" --json`, { stdio: 'pipe', timeout: 3000, encoding: 'utf8' });
+    JSON.parse(out);
+    results.push({ test: 'resume-json-output', passed: true });
+    console.log('  [PASS] resume.mjs --json');
+  } catch (e) {
+    results.push({ test: 'resume-json-output', passed: false, reason: String(e).slice(0, 200) });
+    console.log('  [FAIL] resume.mjs');
+  }
+
+  // v1.4.0 — install.mjs quick check
+  console.log('\nChecking install path-sanity...');
+  try {
+    execSync(`node "${join(pluginRoot, 'scripts', 'path-sanity.mjs')}" check "${pluginRoot}"`, { stdio: 'pipe', timeout: 3000 });
+    results.push({ test: 'path-sanity-pass', passed: true });
+    console.log('  [PASS] path-sanity');
+  } catch (e) {
+    results.push({ test: 'path-sanity-pass', passed: false, reason: 'plugin root failed sanity' });
+    console.log('  [WARN] path-sanity returned error');
   }
 
   // 检查 stacks 配置

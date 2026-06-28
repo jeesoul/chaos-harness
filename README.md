@@ -1,15 +1,25 @@
 # Chaos Harness
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.2--Gate-blue.svg">
+  <img src="https://img.shields.io/badge/version-1.4.0--Loop%26Wiki-blueviolet.svg">
   <img src="https://img.shields.io/badge/license-MIT-green.svg">
+  <img src="https://img.shields.io/badge/tests-82%2F82%20%2B%2013%2F13-success.svg">
 </p>
 
-<p align="center"><strong>Gate 状态机 + 硬拦截 — AI 开发流程操作系统</strong></p>
-<p align="center"><em>v1.3.2 — 真验证·可追溯·自学习·数据驱动</em></p>
-<p align="center"><em>Chaos demands order. Harness provides it.</em></p>
+<p align="center"><strong>Gate 状态机 + Loop Engine + Project Wiki — AI 开发流程操作系统</strong></p>
+<p align="center"><em>v1.4.0 Loop & Wiki — Loops persist. Wiki remembers. Chaos resumes.</em></p>
 
 ---
+
+## v1.4.0 新能力一句话总结
+
+| 能力 | 一句话 |
+|------|--------|
+| **Loop Engine** | 把 hooks 链升级为 observe→decide→act→reflect 四帧循环，cursor + WAL 持久化 |
+| **Project Wiki** | Karpathy 式可寻址记忆，patterns / decisions / incidents / sessions 自动双向链接 |
+| **Resume Engine** | 断电/重启后自动检测中断点，SessionStart 输出可读 resume 提示 |
+| **统一安装** | `scripts/install.mjs` 跨平台入口，自动探测 Windows 含空格 Git 路径 |
+| **Skill 精简** | 15 → 12，PostToolUse 4 hook → 1 dispatcher |
 
 ## 一句话定位
 
@@ -99,13 +109,12 @@ claude plugins marketplace remove chaos-harness
 
 ### 升级
 
-**当前版本：v1.3.2 Gate**
+**当前版本：v1.4.0 Loop & Wiki**
 
 ```bash
-# 1. 切换到 v1.3.2 分支并拉取最新代码
+# 1. 切换到 v1.4.0 分支并拉取最新代码
 cd /path/to/chaos-harness
-git checkout v1.3.2
-git pull origin v1.3.2
+git checkout v1.4.0-loop-wiki
 
 # 2. 重新注册 marketplace
 claude plugins marketplace remove chaos-harness
@@ -115,20 +124,23 @@ claude plugins marketplace add "/path/to/chaos-harness"
 claude plugins uninstall chaos-harness@chaos-harness
 claude plugins install chaos-harness@chaos-harness
 
-# 4. 验证
-bash install.sh   # Linux/macOS
-install.bat       # Windows
+# 4. 验证（v1.4.0 跨平台统一入口）
+node scripts/install.mjs
+# 或者：
+bash install.sh    # Linux/macOS / Git Bash
+install.bat        # Windows cmd
 ```
 
-> **注意：** 所有迭代在 `v1.3.2` 分支进行，升级时不要切换到 main 或其他分支。
+> **注意：** 所有迭代在 `v1.4.0-loop-wiki` 分支进行。
 
 ### 版本历史
 
 | 版本 | 主要更新 |
 |------|---------|
-| **1.3.2 Gate** | **Gate 状态机 + 硬拦截**：10 Gates（6 阶段 + 4 质量）、分级策略（hard/soft）、真验证（6 种验证器）、BM25 智能引擎、6 CSV 知识库、5 技术栈适配、自学习闭环、13 Skills、USAGE.md 角色文档 |
-| 1.3.1 孔明Pro | 持续学习系统 2.0、评测驱动开发、Schema-Driven 工作流、深度防御、战略压缩、30 Skills |
-| 1.3.0 孔明 | overdrive 超频模式、P03/P04 强制 Multi-Agent 评审、产品经理增强、23 Skills |
+| **1.4.0 Loop & Wiki** | **Loop Engine（四帧循环）+ Project Wiki（可寻址记忆）+ Resume Engine（断电恢复）+ 统一跨平台安装 + Skill 瘦身（15→12）+ Hook 单一分发** |
+| 1.3.2 Gate | Gate 状态机 + 硬拦截：10 Gates、分级策略、6 验证器、BM25 智能引擎、6 CSV 知识库 |
+| 1.3.1 孔明Pro | 持续学习系统 2.0、评测驱动开发、Schema-Driven 工作流 |
+| 1.3.0 孔明 | overdrive 超频模式、P03/P04 强制 Multi-Agent 评审 |
 | 1.2.0 | 自学习闭环、Agent Team 铁律、CDP 浏览器自动化 |
 | 1.1.0 | Java SpringBoot 铁律、角色支持、跨平台修复 |
 | 1.0.0 | 核心框架：Skills + Hooks + Templates |
@@ -136,7 +148,7 @@ install.bat       # Windows
 
 ## Gate 状态机
 
-v1.3.2 拳头产品。15 个 Gates，6 种验证器，分级执行。
+v1.3.2 引入，v1.4.0 集成 Loop frame。10 个 Gates，7 种验证器，分级执行。
 
 ### 阶段 Gates（6 个）
 
@@ -190,6 +202,98 @@ v1.3.2 拳头产品。15 个 Gates，6 种验证器，分级执行。
 | IL003 | 完成声明必须附带验证证据 | Stop Hook |
 | IL004 | 版本变更需要用户确认 | 版本号修改 |
 | IL005 | 敏感配置修改需要审批 | 数据库/密钥配置 |
+
+---
+
+## Loop Engine (v1.4.0 新)
+
+四帧循环：每次工具调用都会写入四个 frame，cursor 原子推进，journal 永不修改只追加。
+
+| Frame | 何时 | 内容 |
+|-------|------|------|
+| observe | PreToolUse | 工具名 + 输入摘要 |
+| decide  | PreToolUse | Gate 检查结果 + 决策 |
+| act     | PostToolUse | 工具退出码 |
+| reflect | Stop | 复盘 + 下一步建议 |
+
+文件：
+
+```
+.chaos-harness/loop/
+├── cursor.json    (原子写入的会话游标)
+└── journal.jsonl  (WAL，超 4MB 滚动)
+```
+
+CLI：
+
+```bash
+node scripts/loop-cursor.mjs read       # 当前位置
+node scripts/loop-journal.mjs tail --n 20
+node scripts/loop-engine.mjs status     # 综合视图
+```
+
+---
+
+## Project Wiki (v1.4.0 新)
+
+Karpathy 风格可寻址、可链接、可演化的长期记忆。
+
+```
+.chaos-harness/wiki/
+├── index.md            (自动生成的总目录)
+├── patterns/           (代码/Gate/UI 模式)
+├── decisions/          (ADR 风格决策)
+├── incidents/          (事故/反模式)
+└── sessions/           (每次会话快照)
+    └── last.md         (最新一份，resume 用)
+```
+
+每条 .md 含 frontmatter：
+
+```yaml
+---
+id: pat-001
+type: pattern|decision|incident|session
+title: "..."
+tags: [a, b]
+links: [pat-002, dec-005]   # 双向链接由 indexer 自动维护
+created/updated: ISO8601
+confidence: 0.0-1.0
+status: draft|promoted|archived
+---
+```
+
+CLI：
+
+```bash
+node scripts/wiki-indexer.mjs build         # 重建索引 + 双向链接
+node scripts/wiki-indexer.mjs add --type pattern --title "..." --tags "a,b"
+node scripts/wiki-indexer.mjs validate
+node scripts/wiki-search.mjs query "关键词" --limit 5
+```
+
+Wiki 自动接入 `dev-intelligence` 搜索（PostToolUse 时增量更新）。
+
+---
+
+## Resume Engine (v1.4.0 新)
+
+任何中断后下次启动都能精准恢复到 task 粒度。
+
+机制：
+
+1. Stop / PreCompact 时写 `wiki/sessions/<id>.md` + 复制为 `last.md`
+2. SessionStart 时 `scripts/resume.mjs` 检测 cursor.last_frame
+3. 若不是 `reflect`（说明上次没正常关闭）→ exit 10 + 输出可读 resume 提示
+
+CLI：
+
+```bash
+node scripts/resume.mjs            # 检测并输出（exit 0=clean, 10=needs resume）
+node scripts/resume.mjs --json     # JSON 输出
+node scripts/snapshot.mjs latest   # 列最近 5 个会话快照
+node scripts/snapshot.mjs read     # 读 last.md
+```
 
 ---
 
@@ -250,14 +354,25 @@ Vue · React · Spring Boot · FastAPI · Generic
 
 ## 安装
 
+### v1.4.0 跨平台统一安装
+
 ```bash
-# 远程安装
+# 远程
 claude plugins marketplace add github:jeesoul/chaos-harness
 claude plugins install chaos-harness@chaos-harness
 
-# 本地安装
+# 本地
 git clone https://github.com/jeesoul/chaos-harness.git
 cd chaos-harness
+git checkout v1.4.0-loop-wiki
+
+# 跨平台统一入口（推荐）
+node scripts/install.mjs
+
+# 或包装脚本
+bash install.sh    # Linux/macOS/Git Bash
+install.bat        # Windows cmd
+
 claude plugins marketplace add "$(pwd)"
 claude plugins install chaos-harness@chaos-harness
 
@@ -265,7 +380,9 @@ claude plugins install chaos-harness@chaos-harness
 /chaos-harness:overview
 ```
 
-> Windows 注意：路径不能含中文和空格。使用 `$(pwd)` (PowerShell) 或 `"%CD%"` (CMD)。
+> **Windows + Git 提示：** v1.4.0 的 `scripts/git-detector.mjs` 会自动探测
+> `C:\Program Files\Git\`、scoop、chocolatey、WSL 中的 git 二进制；
+> 安装路径含中文会被 `path-sanity.mjs` 拒绝并给出明确错误。
 
 ---
 
@@ -276,15 +393,14 @@ claude plugins install chaos-harness@chaos-harness
 | `/gate-manager status` | Gate 状态仪表盘 |
 | `/gate-manager recheck <id>` | 手动重新验证 |
 | `/gate-manager override <id> --reason "xxx"` | 绕过 soft Gate |
+| `/resume` | v1.4 检测中断 + 输出 resume 提示 |
 | `/chaos-harness:overdrive` | 超频模式 |
 | `/chaos-harness:product-manager` | 产品经理 |
-| `/chaos-harness:dev-intelligence` | 智能建议 |
+| `/chaos-harness:dev-intelligence` | 智能建议 + Wiki 搜索 |
 | `/chaos-harness:overview` | 项目总览 |
 | `/chaos-harness:iron-law-enforcer` | 铁律执行 |
-| `/chaos-harness:project-state` | 状态恢复 |
 | `/chaos-harness:version-locker` | 版本管理 |
-| `/chaos-harness:harness-generator` | 约束生成 |
-| `/chaos-harness:hooks-manager` | 钩子管理 |
+| `/chaos-harness:harness-generator` | 扫描 + 约束生成 |
 | `/chaos-harness:java-checkstyle` | Java 代码规范检查 |
 | `/chaos-harness:ui-generator` | UI 生成工具 |
 | `/chaos-harness:web-access` | 浏览器自动化 |
@@ -294,29 +410,29 @@ claude plugins install chaos-harness@chaos-harness
 | 你说... | 自动触发 |
 |--------|---------|
 | "紧急"、"超频" | overdrive |
-| "Gate 状态"、"阶段切换" | gate-manager |
+| "Gate 状态"、"阶段切换"、"钩子"、"hooks" | gate-manager |
 | "搜索"、"质量检查" | dev-intelligence |
 | "PRD"、"需求" | product-manager |
-| "继续"、"恢复" | project-state |
+| "继续"、"恢复"、"上次进度" | resume |
 
 ---
 
-## 技能清单
+## 技能清单（v1.4.0 共 12 个）
 
 ### 核心（8 个）
 
 | Skill | 说明 |
 |-------|------|
-| `gate-manager` | Gate 状态机交互层 |
-| `dev-intelligence` | BM25 智能建议引擎 |
-| `iron-law-enforcer` | 铁律执行 |
-| `overdrive` | 应急超频模式 |
 | `overview` | 项目总览入口 |
-| `project-state` | 状态持久化 |
+| `gate-manager` | **v1.4 合并：Gate 状态机 + Hooks 管理** |
+| `dev-intelligence` | BM25 + Wiki 搜索引擎 |
+| `iron-law-enforcer` | 铁律执行 |
+| `harness-generator` | **v1.4 合并：扫描 + 约束生成** |
 | `version-locker` | 版本管理 |
-| `harness-generator` | 约束生成 |
+| `resume` | **v1.4 新：断电恢复 + 会话快照** |
+| `overdrive` | 应急超频模式 |
 
-### 可选（5 个）
+### 可选（4 个）
 
 | Skill | 说明 |
 |-------|------|
@@ -324,7 +440,6 @@ claude plugins install chaos-harness@chaos-harness
 | `java-checkstyle` | Java 代码规范检查 |
 | `ui-generator` | UI 生成工具 |
 | `web-access` | 浏览器自动化 |
-| `hooks-manager` | 钩子管理 |
 
 ---
 
@@ -332,7 +447,8 @@ claude plugins install chaos-harness@chaos-harness
 
 | 版本 | 主要更新 |
 |------|---------|
-| **1.3.2 Gate** | Gate 状态机 10 Gates · 6 种验证器 · BM25 智能引擎 · 6 个 CSV 知识库 · 5 技术栈适配 · 自学习闭环 · 13 Skills |
+| **1.4.0 Loop & Wiki** | Loop Engine 四帧循环 · Project Wiki（可寻址记忆 + 双向链接）· Resume Engine（断电恢复）· 跨平台统一安装（含 Windows Git 路径探测）· Skill 瘦身 15→12 · PostToolUse 单一 dispatcher · 82+13 测试全通过 |
+| 1.3.2 Gate | Gate 状态机 10 Gates · 6 种验证器 · BM25 智能引擎 · 6 个 CSV 知识库 · 5 技术栈适配 · 自学习闭环 · 13 Skills |
 | 1.3.1 孔明Pro | 持续学习系统 · 评测驱动 · Schema-Driven 工作流 · 深度防御 · 战略压缩 · 30 Skills |
 | 1.3.0 孔明 | overdrive 超频模式 · LP007 退化检测 · P03/P04 强制评审 · 23 Skills |
 | 1.2.0 | 自学习闭环 · Agent Team 铁律 · CDP 浏览器 |
@@ -346,4 +462,4 @@ claude plugins install chaos-harness@chaos-harness
 
 ---
 
-<p align="center"><strong>Chaos demands order. Harness provides it.</strong></p>
+<p align="center"><strong>Loops persist. Wiki remembers. Chaos resumes.</strong></p>

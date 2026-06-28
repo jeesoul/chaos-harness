@@ -9,8 +9,9 @@ coverage/
 # Project-specific: 需求文档、参考文档、设计文档、实施计划不提交
 介绍
 参考/
-# Superpowers 本地计划与规格文档，不提交
+# Superpowers 本地计划与规格文档，不提交（v1.4.0 起，正式 spec 例外）
 docs/superpowers/
+!docs/superpowers/specs/2026-06-29-v140-*.md
 
 # 设计思想和审计文档不提交
 docs/state-and-association-audit.md
@@ -59,3 +60,8 @@ node_modules/
 *.tmp.*
 .DS_Store
 Thumbs.db
+
+.chaos-harness/dispatcher-debounce.json
+.chaos-harness/loop/cursor.json
+.chaos-harness/config.json
+.chaos-harness/self-test-result.json

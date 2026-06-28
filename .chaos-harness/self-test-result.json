@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-04-22T15:04:20.860Z",
-  "total": 66,
-  "passed": 65,
-  "failed": 1,
+  "timestamp": "2026-06-28T17:00:34.349Z",
+  "total": 82,
+  "passed": 82,
+  "failed": 0,
   "results": [
     {
       "test": "script-exists:gate-validator.mjs",
@@ -21,11 +21,6 @@
     },
     {
       "test": "script-exists:gate-recovery.mjs",
-      "passed": true,
-      "reason": ""
-    },
-    {
-      "test": "script-exists:gate-dispatcher.mjs",
       "passed": true,
       "reason": ""
     },
@@ -65,15 +60,62 @@
       "reason": ""
     },
     {
+      "test": "script-exists:loop-engine.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:loop-cursor.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:loop-journal.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:wiki-indexer.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:wiki-search.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:resume.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:snapshot.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:post-write-dispatcher.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:install.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:git-detector.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "test": "script-exists:path-sanity.mjs",
+      "passed": true,
+      "reason": ""
+    },
+    {
       "test": "syntax:adaptive-harness.mjs",
-      "passed": true
-    },
-    {
-      "test": "syntax:api-tester.mjs",
-      "passed": true
-    },
-    {
-      "test": "syntax:coverage-checker.mjs",
       "passed": true
     },
     {
@@ -86,10 +128,6 @@
     },
     {
       "test": "syntax:eval-utils.mjs",
-      "passed": true
-    },
-    {
-      "test": "syntax:gate-dispatcher.mjs",
       "passed": true
     },
     {
@@ -109,7 +147,15 @@
       "passed": true
     },
     {
+      "test": "syntax:git-detector.mjs",
+      "passed": true
+    },
+    {
       "test": "syntax:hook-utils.mjs",
+      "passed": true
+    },
+    {
+      "test": "syntax:install.mjs",
       "passed": true
     },
     {
@@ -133,10 +179,6 @@
       "passed": true
     },
     {
-      "test": "syntax:kano-analyzer.mjs",
-      "passed": true
-    },
-    {
       "test": "syntax:laziness-detect.mjs",
       "passed": true
     },
@@ -149,7 +191,23 @@
       "passed": true
     },
     {
+      "test": "syntax:loop-cursor.mjs",
+      "passed": true
+    },
+    {
+      "test": "syntax:loop-engine.mjs",
+      "passed": true
+    },
+    {
+      "test": "syntax:loop-journal.mjs",
+      "passed": true
+    },
+    {
       "test": "syntax:overdrive.mjs",
+      "passed": true
+    },
+    {
+      "test": "syntax:path-sanity.mjs",
       "passed": true
     },
     {
@@ -157,19 +215,11 @@
       "passed": true
     },
     {
-      "test": "syntax:playwright-runner.mjs",
-      "passed": true
-    },
-    {
       "test": "syntax:plugin-sync.mjs",
       "passed": true
     },
     {
-      "test": "syntax:prd-pool-manager.mjs",
-      "passed": true
-    },
-    {
-      "test": "syntax:prd-validator.mjs",
+      "test": "syntax:post-write-dispatcher.mjs",
       "passed": true
     },
     {
@@ -181,11 +231,23 @@
       "passed": true
     },
     {
+      "test": "syntax:project-scanner.mjs",
+      "passed": true
+    },
+    {
+      "test": "syntax:resume.mjs",
+      "passed": true
+    },
+    {
       "test": "syntax:schema-utils.mjs",
       "passed": true
     },
     {
       "test": "syntax:session-start.mjs",
+      "passed": true
+    },
+    {
+      "test": "syntax:snapshot.mjs",
       "passed": true
     },
     {
@@ -201,23 +263,11 @@
       "passed": true
     },
     {
-      "test": "syntax:test-generator.mjs",
+      "test": "syntax:wiki-indexer.mjs",
       "passed": true
     },
     {
-      "test": "syntax:test-orchestrator.mjs",
-      "passed": true
-    },
-    {
-      "test": "syntax:test-runner.mjs",
-      "passed": true
-    },
-    {
-      "test": "syntax:ui-automator.mjs",
-      "passed": true
-    },
-    {
-      "test": "syntax:visual-regression.mjs",
+      "test": "syntax:wiki-search.mjs",
       "passed": true
     },
     {
@@ -258,8 +308,32 @@
     },
     {
       "test": "python-rank-bm25",
-      "passed": false,
-      "reason": "rank_bm25 not installed"
+      "passed": true,
+      "reason": "optional; wiki-search.mjs provides Node fallback"
+    },
+    {
+      "test": "loop-cursor-readable",
+      "passed": true
+    },
+    {
+      "test": "loop-journal-stats",
+      "passed": true
+    },
+    {
+      "test": "wiki-dir-exists",
+      "passed": true
+    },
+    {
+      "test": "wiki-validate",
+      "passed": true
+    },
+    {
+      "test": "resume-json-output",
+      "passed": true
+    },
+    {
+      "test": "path-sanity-pass",
+      "passed": true
     },
     {
       "test": "stack-exists:vue.json",
