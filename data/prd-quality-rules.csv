@@ -1,0 +1,11 @@
+id,rule_name,keywords,level,check_description,example_fail,example_pass
+PQR01,acceptance-criteria,验收标准 Acceptance Criteria,hard,PRD 必须包含验收标准章节,无验收标准章节的 PRD,包含 ## 验收标准 章节的 PRD
+PQR02,user-story,作为 我可以 以便 As a I want so that,hard,用户故事三要素完整,系统应该有登录功能,作为用户我可以登录以便保护隐私
+PQR03,dependency-annotation,依赖 Dependency 前置条件 Prerequisite,soft,外部和内部依赖已标注,未标注依赖的 PRD,标注了外部 API 依赖的 PRD
+PQR04,risk-assessment,高风险 high-risk 回滚 rollback,hard,高风险功能有回滚方案,支付功能变更无回滚方案,高风险功能包含 ## 回滚方案
+PQR05,mvp-scope,MVP 最小可行,soft,MVP 范围与完整范围已区分,未区分 MVP 的 PRD,有明确 MVP 范围表格的 PRD
+PQR06,terminology,术语 Glossary 定义,soft,术语表存在且使用一致,同一概念用不同术语,全文统一使用用户画像
+PQR07,success-metrics,成功指标 指标 KPI 目标,hard,成功指标可量化且数据来源明确,提升用户体验,DAU 提升 10% 来自埋点数据
+PQR08,stakeholder,干系人 利益相关方 影响,soft,干系人已识别和影响分析,未识别受影响的团队,列出受影响的 3 个团队
+PQR09,non-functional,性能 安全 兼容性 可靠,soft,非功能需求已描述,只描述功能需求,响应时间 < 200ms 支持 1000 并发
+PQR10,edge-cases,边界 异常 极端情况,soft,边界情况和异常流程已考虑,只描述主流程,包含 ## 异常处理 章节

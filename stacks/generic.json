@@ -1,0 +1,8 @@
+{
+  "name": "generic",
+  "test_frameworks": ["vitest", "jest", "pytest"],
+  "lint_tools": ["eslint", "prettier"],
+  "ui_test": ["playwright"],
+  "coverage_tool": "auto-detect",
+  "recommended_gates": ["gate-w10-testing", "gate-quality-tests", "gate-quality-format"]
+}

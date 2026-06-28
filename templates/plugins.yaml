@@ -1,0 +1,168 @@
+# Chaos Harness 插件配置
+#
+# Harness 核心不可禁用，所有插件必须接受铁律约束
+#
+
+# ===========================================
+# Harness 核心配置（不可修改）
+# ===========================================
+harness:
+  version: "1.0.0"
+
+  # 核心组件（始终启用）
+  core:
+    iron_laws: required      # 铁律始终启用
+    supervisor: required     # 监督始终启用
+    version_lock: required   # 版本锁定始终启用
+
+  # 核心 Skills
+  skills:
+    - project-scanner
+    - version-locker
+    - harness-generator
+    - workflow-supervisor
+    - iron-law-enforcer
+    - plugin-manager
+
+# ===========================================
+# 外部插件配置
+# ===========================================
+plugins:
+  # 插件示例 - 用户可按需配置
+  # 来源格式：
+  # - github:owner/repo
+  # - npm:package-name
+  # - local:/path
+  # - url:https://...
+
+  example-plugin:
+    enabled: false
+    source: github:example/plugin
+    version: ">=1.0.0"
+
+    # 在哪些阶段使用
+    stages:
+      - W01_requirements_design
+      - W03_architecture_design
+      - W08_development
+
+    # 激活的 skills
+    skills:
+      - example-skill-1
+      - example-skill-2
+
+    # Harness 约束注入
+    constraints:
+      enforce_iron_laws: true     # 必须遵守铁律
+      enforce_version_lock: true  # 必须在版本目录下
+      enforce_verification: true  # 必须提供验证证据
+      enforce_supervisor: true    # 接受监督
+
+# ===========================================
+# 阶段 - 插件映射
+# ===========================================
+stage_plugins:
+  # W01: 需求设计
+  W01_requirements_design:
+    required:
+      - harness:project-scanner
+    optional: []
+
+  # W02: 需求评审
+  W02_requirements_review:
+    required:
+      - harness:iron-law-enforcer
+    optional: []
+
+  # W03: 架构设计
+  W03_architecture_design:
+    required:
+      - harness:harness-generator
+    optional: []
+
+  # W06: API 设计
+  W06_api_design:
+    required:
+      - harness:iron-law-enforcer
+    optional: []
+
+  # W08: 开发实现
+  W08_development:
+    required:
+      - harness:iron-law-enforcer
+      - harness:workflow-supervisor
+    optional: []
+
+  # W09: 代码审查
+  W09_code_review:
+    required:
+      - harness:iron-law-enforcer
+    optional: []
+
+  # W10: 测试验证
+  W10_testing:
+    required:
+      - harness:iron-law-enforcer
+    optional: []
+
+# ===========================================
+# 插件执行优先级
+# ===========================================
+priority:
+  harness: 1000      # Harness 最高优先级
+  custom: 100        # 自定义插件最低
+
+# ===========================================
+# 铁律传递配置
+# ===========================================
+iron_law_propagation:
+  # 所有插件必须接受核心铁律
+  core_iron_laws:
+    - IL001
+    - IL002
+    - IL003
+    - IL004
+    - IL005
+
+  # 用户自定义铁律传递方式
+  custom_iron_laws:
+    inherit: true    # 插件继承用户自定义铁律
+    enforce: warn    # warn = 警告, block = 阻止
+
+# ===========================================
+# 插件沙箱配置
+# ===========================================
+sandbox:
+  # 插件执行限制
+  max_execution_time: 300  # 秒
+  max_memory: 512          # MB
+
+  # 文件系统访问
+  file_access:
+    allowed:
+      - version_dir        # 版本目录
+      - temp_dir           # 临时目录
+    denied:
+      - system_files
+      - credentials
+
+  # 网络访问
+  network_access:
+    allowed: true
+    domains:
+      - "*.github.com"
+      - "*.npmjs.org"
+
+# ===========================================
+# 用户自定义插件
+# ===========================================
+custom_plugins: []
+# 示例:
+# custom_plugins:
+#   - name: my-custom-plugin
+#     enabled: true
+#     source: local:~/.claude/plugins/my-plugin
+#     stages:
+#       - W08_development
+#     constraints:
+#       enforce_iron_laws: true

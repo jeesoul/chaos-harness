@@ -1,0 +1,14 @@
+{
+  "id": "gate-quality-iron-law",
+  "status": "passed",
+  "lastChecked": "2026-06-28T16:38:44.485Z",
+  "fileHashes": {},
+  "result": {
+    "results": [
+      {
+        "type": "iron-law-check",
+        "status": "passed"
+      }
+    ]
+  }
+}

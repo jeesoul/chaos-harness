@@ -1,0 +1,16 @@
+id,rule_name,trigger_signal,severity,detection_method,fix_command,description
+IL01,no-docs-without-version,Write to output/ without version dir,critical,path regex,move to version dir,文档必须在版本目录下
+IL02,no-harness-without-scan,Creating harness without project scan,critical,file check,run project scan first,Harness 需要项目扫描数据
+IL03,no-completion-claims-without-verification,Completion claim in markdown without test evidence,critical,content analysis,add test evidence,完成声明需要实际验证
+IL04,no-version-changes-without-consent,Version change without user consent,critical,git diff,revert version change,版本变更需要用户确认
+IL05,no-high-risk-config-mods,High-risk config modification without approval,critical,content analysis,add approval record,敏感配置修改需要批准
+IL06,skip-tests-on-ci,CI config excludes tests,critical,file check,enable test step in CI,不要跳过 CI 测试
+IL07,direct-production-deploy,Deploy to production without staging,high,content analysis,add staging step,不要直接部署生产环境
+IL08,hardcoded-secrets,Secrets in source code,critical,regex scan,move to env vars,不要硬编码密钥
+IL09,no-error-handling,API endpoint without error handling,medium,AST check,add try-catch,API 必须有错误处理
+IL10,missing-input-validation,User input without validation,high,AST check,add validation,用户输入必须验证
+IL11,no-rollback-plan,High-risk feature without rollback plan,high,content analysis,add rollback section,高风险功能必须有回滚方案
+IL12,skip-code-review,Merge without code review,high,git check,require PR review,合入前必须代码审查
+IL13,no-logging,Operation without logging,medium,AST check,add log statement,关键操作必须有日志
+IL14,large-pr,PR with >500 lines changed,medium,git diff,split into smaller PRs,PR 不应超过 500 行
+IL15,no-backward-compat,Breaking API change without migration,high,content check,add migration guide,破坏性变更需要迁移方案

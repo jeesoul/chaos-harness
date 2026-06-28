@@ -1,0 +1,148 @@
+identity:
+  name: node-express-harness
+  version: "1.0.0"
+  createdAt: "2026-04-02"
+  createdBy: scanner
+  suitableFor:
+    - node-express
+    - express-js
+    - node-js
+    - javascript
+    - typescript
+  confidenceThreshold: 0.8
+
+selfCheck:
+  activationConditions:
+    - field: "projectType.type"
+      operator: "equals"
+      value: "node-express"
+      description: "Project is Node.js Express"
+    - field: "buildTool.name"
+      operator: "contains"
+      value: "npm"
+      description: "Uses npm or npm-like package manager"
+  warningConditions:
+    - field: "nodeVersion"
+      operator: "matches"
+      value: "^(10|12|14)\\."
+      description: "Legacy Node.js version detected"
+    - field: "package.json"
+      operator: "notExists"
+      description: "No package.json found"
+  changeMonitor:
+    watchedFiles:
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "src/**/*.js"
+      - "src/**/*.ts"
+    threshold: 3
+  redFlags:
+    - thought: "I'll just npm install --force"
+      reality: "--force masks dependency conflicts. Resolve properly or document the risk."
+      ironLawRef: "IL005"
+      persuasionPrinciple: "authority"
+    - thought: "TypeScript types are optional"
+      reality: "Types prevent runtime errors. Add them for maintainability."
+      persuasionPrinciple: "socialProof"
+    - thought: "I'll skip the lock file commit"
+      reality: "Lock files ensure reproducible builds. Always commit package-lock.json."
+      ironLawRef: "IL004"
+      persuasionPrinciple: "authority"
+    - thought: "console.log is fine for logging"
+      reality: "Use a proper logger (winston, pino). console.log in production is bad practice."
+      persuasionPrinciple: "socialProof"
+
+ironLaws:
+  - id: "IL001"
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    enforcement: block
+    violationAction: "Require version directory selection before generating documents"
+  - id: "IL002"
+    rule: "NO HARNESS WITHOUT SCAN RESULTS"
+    enforcement: block
+    violationAction: "Run scanner first to gather project information"
+  - id: "IL003"
+    rule: "NO ENVIRONMENT CLAIMS WITHOUT ACTUAL EXECUTION"
+    enforcement: block
+    violationAction: "Execute environment checks before reporting status"
+  - id: "IL004"
+    rule: "NO WORKFLOW STEP SKIP WITHOUT EXPLICIT USER CONSENT"
+    enforcement: warn
+    violationAction: "Log skipped step and require user acknowledgment"
+  - id: "IL005"
+    rule: "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE"
+    enforcement: block
+    violationAction: "Require verification step before marking complete"
+  - id: "IL006"
+    rule: "package.json CHANGES MUST SYNC LOCK FILE"
+    enforcement: block
+    violationAction: "Require npm install after package.json modifications"
+    loopholes:
+      - pattern: "I'll update package.json manually"
+        rebuttal: "Manual edits without npm install cause drift. Run npm install."
+      - pattern: "lock file will update later"
+        rebuttal: "Later = never. Update immediately after change."
+
+loopholeClosure:
+  - pattern: "just a small npm package"
+    rebuttal: "Small packages can have big vulnerabilities. Check dependencies."
+  - pattern: "npm install is fast enough"
+    rebuttal: "Fast ≠ correct. Check for peer dependency warnings."
+  - pattern: "I'll ignore the vulnerabilities"
+    rebuttal: "Vulnerabilities don't ignore you. Run npm audit. Fix or document."
+  - pattern: "devDependencies don't matter"
+    rebuttal: "Dev dependencies can compromise build pipeline. Audit all."
+
+recommendations:
+  - id: "R001"
+    rule: "Use npm audit to check for vulnerabilities"
+    skipCondition: "User explicitly accepts risk"
+  - id: "R002"
+    rule: "Commit package-lock.json for reproducible builds"
+    skipCondition: "Library project (not application)"
+  - id: "R003"
+    rule: "Use TypeScript for type safety"
+    skipCondition: "Existing JavaScript-only codebase"
+  - id: "R004"
+    rule: "Run tests with npm test before committing"
+    skipCondition: "No test script configured"
+
+dynamicRules:
+  privateRepositories: []
+  buildCommands:
+    standard: "npm install"
+    withTests: "npm test"
+  testFramework:
+    primary: "Jest"
+    mock: "Sinon"
+  inferredCodeStyle:
+    namingConvention:
+      className: "PascalCase"
+      functionName: "camelCase"
+      constantName: "SCREAMING_SNAKE_CASE"
+    importStyle: "esm"
+
+antiBypass:
+  - id: "AB001"
+    excuse: "This is a simple modification"
+    rebuttal: "Simple modifications still need tests. npm test takes seconds."
+    ironLawRef: "IL003"
+    persuasionPrinciple: "authority"
+  - id: "AB002"
+    excuse: "User didn't specify version, I'll use latest"
+    rebuttal: "User didn't specify = use existing. Version changes need explicit consent."
+    ironLawRef: "IL004"
+    persuasionPrinciple: "commitment"
+  - id: "AB003"
+    excuse: "This is a simple bug fix"
+    rebuttal: "Simple bugs have root causes. Analyze first, fix second."
+    ironLawRef: "IL002"
+    persuasionPrinciple: "authority"
+  - id: "AB004"
+    excuse: "package-lock.json is auto-generated, no need to commit"
+    rebuttal: "Auto-generated ≠ skippable. Lock files ensure reproducible builds for your team."
+    ironLawRef: "IL006"
+    persuasionPrinciple: "unity"
+
+effectivenessLog: "version-logs/effectiveness.md"

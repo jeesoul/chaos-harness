@@ -1,0 +1,16 @@
+id,stack,test_type,framework_detection,test_command,coverage_threshold,ui_strategy,description
+TP01,vue,unit,deps.vitest,npx vitest run --coverage,70,playwright,Vue 单元测试策略
+TP02,vue,component,deps.vitest,npx vitest run --coverage,65,playwright,Vue 组件测试策略
+TP03,vue,e2e,file:playwright.config.ts,npx playwright test,0,playwright,Vue E2E 测试策略
+TP04,react,unit,deps.jest,npx jest --coverage,75,cypress,React 单元测试策略
+TP05,react,component,deps.jest,npx jest --coverage,70,cypress,React 组件测试策略
+TP06,react,e2e,file:cypress.config.js,npx cypress run,0,cypress,React E2E 测试策略
+TP07,java-springboot,unit,file:pom.xml,mvn test,80,selenium,Spring Boot 单元测试策略
+TP08,java-springboot,integration,file:pom.xml,mvn verify,70,selenium,Spring Boot 集成测试策略
+TP09,python-fastapi,unit,file:pytest.ini,pytest --cov,85,playwright,FastAPI 单元测试策略
+TP10,python-fastapi,integration,file:pytest.ini,pytest --cov,80,playwright,FastAPI 集成测试策略
+TP11,generic,unit,file:package.json,npx vitest run --coverage,60,playwright,通用单元测试策略
+TP12,generic,api,deps.supertest,npx jest,0,playwright,通用 API 测试策略
+TP13,generic,e2e,file:playwright.config.ts,npx playwright test,0,playwright,通用 E2E 测试策略
+TP14,generic,lint,deps.eslint,npx eslint .,0,none,代码质量检查策略
+TP15,vue,lint,deps.eslint,npx eslint . --ext .vue .js,0,none,Vue 代码规范检查策略

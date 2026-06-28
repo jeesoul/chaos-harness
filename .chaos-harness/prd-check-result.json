@@ -1,0 +1,50 @@
+{
+  "file": "skills/overview/SKILL.md",
+  "timestamp": "2026-04-22T13:38:30.212Z",
+  "checks": [
+    {
+      "id": "PQC01",
+      "name": "验收标准存在",
+      "level": "hard",
+      "status": "FAIL",
+      "reason": "未找到\"验收标准\"或\"Acceptance Criteria\"章节"
+    },
+    {
+      "id": "PQC02",
+      "name": "用户故事三要素",
+      "level": "hard",
+      "status": "FAIL",
+      "reason": "未找到\"作为...我可以...以便...\"格式的用户故事"
+    },
+    {
+      "id": "PQC03",
+      "name": "依赖标注",
+      "level": "soft",
+      "status": "PASS"
+    },
+    {
+      "id": "PQC04",
+      "name": "风险评估",
+      "level": "hard",
+      "status": "FAIL",
+      "reason": "第 21 行标记为高风险但无回滚方案"
+    },
+    {
+      "id": "PQC05",
+      "name": "MVP 范围明确",
+      "level": "soft",
+      "status": "WARN",
+      "reason": "未找到 MVP 相关内容"
+    },
+    {
+      "id": "PQC06",
+      "name": "术语一致",
+      "level": "soft",
+      "status": "WARN",
+      "reason": "未找到术语表 (Glossary) 章节"
+    }
+  ],
+  "passed": false,
+  "hardFails": 3,
+  "warnings": 2
+}

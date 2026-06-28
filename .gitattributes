@@ -1,0 +1,5 @@
+# Skills and commands use LF line endings (required for Claude Code plugin skill registration)
+# CRLF prevents skill content from being delivered via Skill tool
+*.md text eol=lf
+skills/**/SKILL.md text eol=lf
+commands/*.md text eol=lf

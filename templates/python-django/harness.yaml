@@ -1,0 +1,153 @@
+identity:
+  name: python-django-harness
+  version: "1.0.0"
+  createdAt: "2026-04-02"
+  createdBy: scanner
+  suitableFor:
+    - python-django
+    - Django
+    - Python
+  confidenceThreshold: 0.80
+
+selfCheck:
+  activationConditions:
+    - field: "projectType"
+      operator: "equals"
+      value: "python-django"
+      description: "Project type must be python-django"
+    - field: "pythonVersion"
+      operator: "matches"
+      value: "^(3\\.(9|10|11|12))"
+      description: "Python version must be 3.9, 3.10, 3.11, or 3.12"
+  warningConditions:
+    - field: "projectType.confidence"
+      operator: "matches"
+      value: "^0\\.[0-7]"
+      description: "Low confidence, recommend manual review"
+    - field: "requirements.txt"
+      operator: "notExists"
+      description: "No requirements.txt found"
+    - field: "djangoVersion"
+      operator: "matches"
+      value: "^[12]\\."
+      description: "Django version < 3, upgrade recommended"
+  changeMonitor:
+    watchedFiles:
+      - "requirements.txt"
+      - "pyproject.toml"
+      - "**/*.py"
+      - "settings.py"
+      - "urls.py"
+    threshold: 0.20
+  redFlags:
+    - thought: "SECRET_KEY can go in settings.py for now"
+      reality: "NEVER commit SECRET_KEY. Use environment variables. Security is non-negotiable."
+      ironLawRef: "IL007"
+      persuasionPrinciple: "authority"
+    - thought: "I'll skip virtual environment for this quick fix"
+      reality: "Quick fixes need isolation too. Virtual environments prevent dependency hell."
+      ironLawRef: "IL006"
+      persuasionPrinciple: "scarcity"
+    - thought: "Django migrations can wait"
+      reality: "Migrations are part of the change. Run them now or document why delayed."
+      ironLawRef: "IL005"
+      persuasionPrinciple: "commitment"
+    - thought: "I'll use print() for debugging"
+      reality: "Use logging or django-debug-toolbar. print() in production is unacceptable."
+      persuasionPrinciple: "socialProof"
+
+ironLaws:
+  - id: "IL001"
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    enforcement: block
+    violationAction: "Require version directory selection before generating documents"
+  - id: "IL002"
+    rule: "NO HARNESS WITHOUT SCAN RESULTS"
+    enforcement: block
+    violationAction: "Run scanner first to gather project information"
+  - id: "IL003"
+    rule: "NO ENVIRONMENT CLAIMS WITHOUT ACTUAL EXECUTION"
+    enforcement: block
+    violationAction: "Execute environment checks before reporting status"
+  - id: "IL004"
+    rule: "NO WORKFLOW STEP SKIP WITHOUT EXPLICIT USER CONSENT"
+    enforcement: warn
+    violationAction: "Log skipped step and require user acknowledgment"
+  - id: "IL005"
+    rule: "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE"
+    enforcement: block
+    violationAction: "Require verification step before marking complete"
+  - id: "IL006"
+    rule: "VIRTUAL ENVIRONMENT CONFIG MUST NOT BE COMMITTED"
+    enforcement: block
+    violationAction: "Block venv/node_modules from commit"
+    loopholes:
+      - pattern: "I need the venv for CI"
+        rebuttal: "CI recreates from requirements.txt. venv is local only."
+      - pattern: "It's in .gitignore already"
+        rebuttal: "Check it stays there. Never force-add venv."
+  - id: "IL007"
+    rule: "DJANGO SETTINGS SECRET_KEY MUST NOT BE HARDCODED"
+    enforcement: block
+    violationAction: "Block sensitive information exposure"
+    loopholes:
+      - pattern: "it's just for development"
+        rebuttal: "Development settings get committed. Use env vars everywhere."
+      - pattern: "I'll change it before production"
+        rebuttal: "Before production = never. Do it right the first time."
+
+loopholeClosure:
+  - pattern: "just for development"
+    rebuttal: "Development code gets deployed. Security rules apply everywhere."
+  - pattern: "I'll add requirements.txt later"
+    rebuttal: "Later = never. Document dependencies now."
+  - pattern: "venv is needed in the repo"
+    rebuttal: "venv is NEVER needed in repo. requirements.txt is the source of truth."
+  - pattern: "SECRET_KEY in .env won't work locally"
+    rebuttal: "It will. Use python-dotenv. No excuses for hardcoded secrets."
+
+recommendations:
+  - id: "R001"
+    rule: "Use pytest for running tests"
+    skipCondition: "User explicitly says skip"
+  - id: "R002"
+    rule: "Unit test coverage should be >= 60%"
+    skipCondition: "Legacy project without test framework"
+  - id: "R003"
+    rule: "Use flake8 or black for code style checking"
+    skipCondition: "User explicitly says skip"
+  - id: "R004"
+    rule: "Configure Django DEBUG=False in production"
+    skipCondition: "Development environment configuration"
+  - id: "R005"
+    rule: "Use django-debug-toolbar for query optimization"
+    skipCondition: "Production environment"
+
+antiBypass:
+  - id: "AB001"
+    excuse: "This is a simple modification, doesn't need testing"
+    rebuttal: "Simple modifications also need validation to prevent regressions."
+    ironLawRef: "IL003"
+    persuasionPrinciple: "authority"
+  - id: "AB002"
+    excuse: "User didn't specify version, I'll use the latest"
+    rebuttal: "User didn't specify = version unchanged."
+    ironLawRef: "IL001"
+    persuasionPrinciple: "commitment"
+  - id: "AB003"
+    excuse: "This bug is simple, just change one line"
+    rebuttal: "Simple bugs have root causes. Not analyzing leads to repeated bugs."
+    ironLawRef: "IL002"
+    persuasionPrinciple: "authority"
+  - id: "AB004"
+    excuse: "SECRET_KEY in code is convenient for debugging"
+    rebuttal: "Sensitive information MUST use environment variables to prevent security risks."
+    ironLawRef: "IL007"
+    persuasionPrinciple: "authority"
+  - id: "AB005"
+    excuse: "venv folder also needs to be committed"
+    rebuttal: "Virtual environment should NOT be committed. Use requirements.txt to manage dependencies."
+    ironLawRef: "IL006"
+    persuasionPrinciple: "socialProof"
+
+effectivenessLog: "version-logs/effectiveness.md"

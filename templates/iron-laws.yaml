@@ -1,0 +1,204 @@
+# Chaos Harness 自定义铁律配置
+#
+# 用户可以在此文件中定义自己的铁律
+# 铁律是不可协商的规则，所有插件必须遵守
+#
+# 铁律 ID 命名规范：
+# - IL001-IL099: 核心铁律（保留，不可使用）
+# - IL-C001-IL-C099: 用户自定义
+# - IL-T001-IL-T099: 团队铁律
+# - IL-P001-IL-P099: 项目铁律
+# - IL-J001-IL-J099: Java 栈特定
+# - IL-N001-IL-N099: Node 栈特定
+
+# ===========================================
+# 核心铁律（只读，仅供参考）
+# ===========================================
+core_iron_laws:
+  IL001:
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    description: "所有文档必须在版本目录下生成"
+    enabled: true
+    locked: true  # 不可禁用
+
+  IL002:
+    rule: "NO HARNESS WITHOUT SCAN RESULTS"
+    description: "Harness 生成需要项目扫描数据"
+    enabled: true
+    locked: true
+
+  IL003:
+    rule: "NO COMPLETION CLAIMS WITHOUT VERIFICATION"
+    description: "完成声明需要实际验证证据"
+    enabled: true
+    locked: true
+
+  IL004:
+    rule: "NO VERSION CHANGES WITHOUT USER CONSENT"
+    description: "版本变更需要用户明确同意"
+    enabled: true
+    locked: true
+
+  IL005:
+    rule: "NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL"
+    description: "敏感配置修改需要明确批准"
+    enabled: true
+    locked: true
+
+# ===========================================
+# 用户自定义铁律
+# ===========================================
+custom_iron_laws:
+  # 示例 1: 数据库安全
+  - id: IL-C001
+    rule: "NO DATABASE CHANGES WITHOUT BACKUP"
+    description: "数据库变更前必须创建备份"
+    severity: critical  # critical | warning | info
+    triggers:
+      - type: pattern
+        pattern: "ALTER TABLE|DROP TABLE|TRUNCATE"
+        action: block
+        message: "检测到数据库结构变更，请先创建备份"
+    enforcement:
+      - 检查是否有备份命令执行记录
+      - 要求用户确认已创建备份
+    enabled: true
+
+  # 示例 2: 部署时间限制
+  - id: IL-C002
+    rule: "NO DEPLOYMENT ON FRIDAY"
+    description: "周五禁止部署到生产环境"
+    severity: warning
+    triggers:
+      - type: condition
+        condition: "day_of_week == Friday"
+        action: warn
+        message: "今天是周五，部署风险较高。建议周一再部署。"
+    enforcement:
+      - 检查当前日期
+      - 显示风险提示
+    enabled: true
+
+  # 示例 3: API 文档同步
+  - id: IL-C003
+    rule: "NO API CHANGES WITHOUT DOCUMENTATION"
+    description: "API 变更必须同步更新文档"
+    severity: critical
+    triggers:
+      - type: pattern
+        pattern: "@RequestMapping|@GetMapping|@PostMapping|@DeleteMapping|@PutMapping"
+        action: require
+        message: "检测到 API 变更，请同步更新 API 文档"
+    enforcement:
+      - 检查是否有文档更新
+      - 要求用户提供文档链接
+    enabled: true
+
+  # 示例 4: 代码审查
+  - id: IL-C004
+    rule: "NO DIRECT MAIN MERGE"
+    description: "禁止直接合并到主分支"
+    severity: critical
+    triggers:
+      - type: pattern
+        pattern: "git push origin main|git push origin master|git merge main"
+        action: block
+        message: "禁止直接推送到主分支，请使用 PR 流程"
+    enforcement:
+      - 阻止直接推送命令
+      - 引导用户创建 PR
+    enabled: true
+
+  # 示例 5: Spring 字段注入警告
+  - id: IL-J001
+    rule: "NO @Autowired ON FIELDS"
+    description: "Spring 项目禁止字段注入，推荐构造器注入"
+    severity: info
+    triggers:
+      - type: pattern
+        pattern: "@Autowired\\s+private"
+        action: info
+        message: "检测到字段注入，推荐使用构造器注入以提高可测试性"
+    enforcement:
+      - 显示建议
+      - 提供重构示例
+    enabled: true
+
+# ===========================================
+# 团队铁律（从外部继承）
+# ===========================================
+inherit_team_iron_laws: false
+team_iron_laws_path: ""
+
+# 示例配置:
+# inherit_team_iron_laws: true
+# team_iron_laws_path: "~/.config/team/iron-laws.yaml"
+
+# ===========================================
+# 项目铁律（项目特定）
+# ===========================================
+inherit_project_iron_laws: true
+project_iron_laws_path: "./.claude/harness/project-iron-laws.yaml"
+
+# ===========================================
+# 铁律模板库（预定义）
+# ===========================================
+templates:
+  # 数据库安全模板
+  database-safety:
+    iron_laws:
+      - IL-C001  # 备份要求
+
+  # 安全优先模板
+  security-first:
+    iron_laws:
+      - id: IL-S001
+        rule: "NO SECRETS IN CODE"
+        description: "禁止在代码中硬编码敏感信息"
+        severity: critical
+        triggers:
+          - type: pattern
+            pattern: "password\\s*=|secret\\s*=|api_key\\s*="
+            action: block
+            message: "检测到敏感信息，请使用环境变量"
+
+  # 质量优先模板
+  quality-first:
+    iron_laws:
+      - id: IL-Q001
+        rule: "NO UNTESTED CODE"
+        description: "所有代码必须有对应测试"
+        severity: warning
+
+  # 文档优先模板
+  documentation-first:
+    iron_laws:
+      - IL-C003  # API 文档
+      - id: IL-D001
+        rule: "NO UNDOCUMENTED FUNCTIONS"
+        description: "公共函数必须有文档注释"
+        severity: info
+
+# ===========================================
+# 铁律执行配置
+# ===========================================
+execution:
+  # 日志记录
+  log_enabled: true
+  log_path: ".claude/harness/iron-law-log.json"
+
+  # 严重程度对应的行为
+  severity_actions:
+    critical: block      # 阻止操作
+    warning: warn        # 警告但允许
+    info: info           # 仅提示
+    require: require     # 要求额外操作
+
+  # 用户确认超时（秒）
+  confirmation_timeout: 60
+
+  # 是否允许用户临时绕过警告级别铁律
+  allow_bypass_warning: true
+
+  # 是否允许用户临时绕过 info 级别铁律
+  allow_bypass_info: true

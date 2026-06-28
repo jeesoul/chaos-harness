@@ -1,0 +1,163 @@
+identity:
+  name: java-spring-harness
+  version: "1.0.0"
+  createdAt: "2026-04-02"
+  createdBy: scanner
+  suitableFor:
+    - java-spring
+    - spring-boot
+    - java
+  confidenceThreshold: 0.8
+
+selfCheck:
+  activationConditions:
+    - field: "projectType.type"
+      operator: "equals"
+      value: "java-spring"
+      description: "Project is Java Spring Boot"
+    - field: "buildTool.name"
+      operator: "equals"
+      value: "maven"
+      description: "Uses Maven build tool"
+  warningConditions:
+    - field: "language.version"
+      operator: "matches"
+      value: '1\.[0-8]'
+      description: "Legacy Java version detected"
+  changeMonitor:
+    watchedFiles:
+      - "pom.xml"
+      - "build.gradle"
+      - "application.yml"
+      - "application.properties"
+    threshold: 3
+  redFlags:
+    - thought: "This is just a simple fix"
+      reality: "Simple fixes still need root cause analysis"
+      ironLawRef: "IL002"
+      persuasionPrinciple: "authority"
+    - thought: "Tests take too long to run"
+      reality: "Skipping tests leads to regressions. Run at least the affected test suite."
+      ironLawRef: "IL003"
+      persuasionPrinciple: "socialProof"
+    - thought: "I don't have time for proper documentation"
+      reality: "Documentation saves time for future developers including yourself."
+      ironLawRef: "IL001"
+      persuasionPrinciple: "unity"
+    - thought: "The code is too legacy to follow modern practices"
+      reality: "Legacy code benefits most from structured practices. Start with small improvements."
+      ironLawRef: "IL001"
+      persuasionPrinciple: "commitment"
+
+ironLaws:
+  - id: "IL001"
+    rule: "NO DOCUMENTS WITHOUT VERSION LOCK"
+    enforcement: block
+    violationAction: "Require version directory selection before generating documents"
+    loopholes:
+      - pattern: "user didn't specify version"
+        rebuttal: "No version = use existing. Changes require explicit consent."
+      - pattern: "I'll just use the latest"
+        rebuttal: "User must explicitly consent to version changes."
+  - id: "IL002"
+    rule: "NO HARNESS WITHOUT SCAN RESULTS"
+    enforcement: block
+    violationAction: "Run scanner first to gather project information"
+    loopholes:
+      - pattern: "I know this project type"
+        rebuttal: "Knowledge without scan is assumption. Run the scanner."
+      - pattern: "I'll scan later"
+        rebuttal: "Scan first. Always. No exceptions."
+  - id: "IL003"
+    rule: "NO ENVIRONMENT CLAIMS WITHOUT ACTUAL EXECUTION"
+    enforcement: block
+    violationAction: "Execute environment checks before reporting status"
+    loopholes:
+      - pattern: "I checked the config file"
+        rebuttal: "File check ≠ execution. Run the actual commands."
+      - pattern: "It should be installed"
+        rebuttal: "Should ≠ is. Execute and verify."
+  - id: "IL004"
+    rule: "NO WORKFLOW STEP SKIP WITHOUT EXPLICIT USER CONSENT"
+    enforcement: warn
+    violationAction: "Log skipped step and require user acknowledgment"
+    loopholes:
+      - pattern: "this step is optional"
+        rebuttal: "Optional ≠ skippable without consent. Ask your human partner."
+      - pattern: "I'll come back to this"
+        rebuttal: "Now or with explicit agreement. No 'later' without record."
+  - id: "IL005"
+    rule: "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE"
+    enforcement: block
+    violationAction: "Require verification step before marking complete"
+    loopholes:
+      - pattern: "I already tested earlier"
+        rebuttal: "Earlier ≠ fresh. Run verification now."
+      - pattern: "it should work"
+        rebuttal: "Should ≠ verified. Run the test command."
+
+loopholeClosure:
+  - pattern: "spirit vs letter"
+    rebuttal: "Violating the letter of the rules IS violating the spirit."
+  - pattern: "just this once"
+    rebuttal: "No exceptions means no exceptions. This is non-negotiable."
+  - pattern: "different words"
+    rebuttal: "Rule applies regardless of phrasing. 'Should' = 'must'."
+  - pattern: "keep as reference"
+    rebuttal: "Delete means delete. You will adapt it. Start fresh."
+
+recommendations:
+  - id: "R001"
+    rule: "Use Spring Boot best practices for dependency injection"
+    skipCondition: "Legacy codebase with existing patterns"
+    skipRecord: "Record reason for skipping in VERSION-LOG.md"
+  - id: "R002"
+    rule: "Follow Java naming conventions (PascalCase for classes, camelCase for methods)"
+    skipCondition: "Existing codebase with different conventions"
+  - id: "R003"
+    rule: "Run tests before committing changes"
+    skipCondition: "No test framework configured"
+
+dynamicRules:
+  privateRepositories: []
+  buildCommands:
+    standard: "mvn clean install -DskipTests"
+    withTests: "mvn clean install"
+  testFramework:
+    primary: "junit"
+    mock: "mockito"
+  inferredCodeStyle:
+    namingConvention:
+      className: "PascalCase"
+      methodName: "camelCase"
+      constantName: "SCREAMING_SNAKE_CASE"
+    importStyle: "wildcard-avoid"
+
+antiBypass:
+  - id: "AB001"
+    excuse: "The code is too legacy to follow modern practices"
+    rebuttal: "Legacy code benefits most from structured practices. Start with small improvements in new code."
+    ironLawRef: "R001"
+    persuasionPrinciple: "commitment"
+  - id: "AB002"
+    excuse: "Tests take too long to run"
+    rebuttal: "Skipping tests leads to regressions. Run at least the affected test suite."
+    ironLawRef: "R003"
+    persuasionPrinciple: "socialProof"
+  - id: "AB003"
+    excuse: "I don't have time for proper documentation"
+    rebuttal: "Documentation saves time for future developers including yourself. Version-locked docs prevent confusion."
+    ironLawRef: "IL001"
+    persuasionPrinciple: "unity"
+  - id: "AB004"
+    excuse: "This is a simple fix, just change one line"
+    rebuttal: "Simple fixes still need root cause analysis. Quick patches mask underlying issues."
+    ironLawRef: "IL002"
+    persuasionPrinciple: "authority"
+  - id: "AB005"
+    excuse: "I'll just skip this one test"
+    rebuttal: "No exceptions means no exceptions. Every test skipped is a potential regression."
+    ironLawRef: "IL003"
+    persuasionPrinciple: "authority"
+
+effectivenessLog: "version-logs/effectiveness.md"

@@ -1,0 +1,15 @@
+{
+  "id": "gate-quality-tests",
+  "status": "passed",
+  "lastChecked": "2026-04-23T02:26:25.950Z",
+  "fileHashes": {},
+  "result": {
+    "results": [
+      {
+        "type": "test-suite-pass",
+        "status": "skipped",
+        "reason": "No package.json found"
+      }
+    ]
+  }
+}

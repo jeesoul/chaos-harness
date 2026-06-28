@@ -1,0 +1,224 @@
+identity:
+  name: java-springboot-harness
+  version: "1.3.0"
+  createdAt: "2026-04-06"
+  createdBy: scanner
+  suitableFor:
+    - java
+    - springboot
+    - spring-boot
+    - mybatis-plus
+  confidenceThreshold: 0.7
+
+selfCheck:
+  activationConditions:
+    - field: "projectType.type"
+      operator: "equals"
+      value: "java"
+      description: "Java project detected"
+    - field: "language.name"
+      operator: "equals"
+      value: "Java"
+      description: "Java language detected"
+  warningConditions:
+    - field: "projectType.confidence"
+      operator: "lessThan"
+      value: "0.7"
+      description: "Java detection confidence too low"
+  changeMonitor:
+    watchedFiles:
+      - "pom.xml"
+      - "build.gradle"
+      - "application.yml"
+      - "application.properties"
+    threshold: 3
+  redFlags:
+    - thought: "SQL in annotations is fine for simple queries"
+      reality: "All SQL must be in mapper.xml. No exceptions."
+      ironLawRef: "IL-JAVA003"
+      persuasionPrinciple: "authority"
+    - thought: "Returning Map from Controller is simpler"
+      reality: "Controller must return R<FixedVO>. Map is forbidden."
+      ironLawRef: "IL-JAVA002"
+      persuasionPrinciple: "authority"
+
+ironLaws:
+  # IL-JAVA001: 代码风格规范
+  - id: "IL-JAVA001"
+    rule: "NO CODE WITHOUT CHECKSTYLE"
+    enforcement: block
+    violationAction: "All Java code must follow checkstyle rules"
+    details:
+      charset: "UTF-8"
+      maxLineLength: 125
+      indentation: 4
+      indentationChar: "space"
+      annotationOnOwnLine: true
+      bracesRequired: true
+    naming:
+      package: "^[a-z]+(\\.[a-z][a-z0-9]*)*$"
+      class: "PascalCase"
+      variable: "camelCase"
+      constant: "UPPER_SNAKE_CASE"
+      collection: "plural"
+      genericType: "single uppercase letter"
+    javadoc:
+      classRequired: true
+      methodRequired: true
+      fieldRequired: true
+      authorRequired: true
+      dateRequired: true
+    imports:
+      wildcardForbidden: true
+      order: ["java.*", "javax.*", "third-party", "project"]
+    logging:
+      useSlf4j: true
+      placeholderRequired: true
+      stringConcatForbidden: true
+
+  # IL-JAVA002: Controller 接口规范
+  - id: "IL-JAVA002"
+    rule: "NO CONTROLLER WITHOUT VO"
+    enforcement: block
+    violationAction: "Controller must return unified response R<FixedVO>"
+    details:
+      responseWrapper: "R<T>"
+      forbiddenReturnTypes: ["Map", "JSONObject", "Object"]
+      requestParamsOver3MustWrap: true
+    cEndApi:
+      request: "{BusinessName}RequestVO"
+      response: "{BusinessName}ResponseVO"
+      pathPrefix: "/app/ or /h5/"
+    bEndApi:
+      request: "prefer independent VO"
+      response: "must use independent VO"
+      pathPrefix: "/web/ or /admin/"
+
+  # IL-JAVA003: MyBatis-Plus 强制规范
+  - id: "IL-JAVA003"
+    rule: "NO SQL IN JAVA CODE"
+    enforcement: block
+    violationAction: "All SQL must be in mapper.xml files"
+    details:
+      defaultOrm: "MyBatis-Plus"
+      forbiddenAnnotations: ["@Select", "@Update", "@Insert", "@Delete"]
+      mapperXmlRequired: true
+      paginationInXmlRequired: true
+      resultMapRequired: true
+      baseColumnsReuse: true
+
+  # IL-JAVA004: 代码质量规范
+  - id: "IL-JAVA004"
+    rule: "NO BAD PRACTICES"
+    enforcement: block
+    violationAction: "Bad practices detected in Java code"
+    details:
+      forbiddenItems:
+        - "System.exit()"
+        - "e.printStackTrace()"
+        - "stringLiteralComparison"
+        - "returnNullCollection"
+    methodLimits:
+      maxParams: 10
+      maxLines: 120
+      maxNesting: 2
+
+loopholeClosure:
+  - pattern: "简单查询不用 VO"
+    rebuttal: "Controller 返回类型检测，强制使用 VO"
+    ironLawRef: "IL-JAVA002"
+  - pattern: "SQL 写注解更方便"
+    rebuttal: "@Select/@Update 注解检测，拒绝执行，提示迁移到 XML"
+    ironLawRef: "IL-JAVA003"
+  - pattern: "临时方案先这样"
+    rebuttal: "临时方案也必须合规，无例外"
+    ironLawRef: "IL-JAVA001"
+  - pattern: "分页用代码实现"
+    rebuttal: "分页方法检测，必须在 mapper.xml 中实现"
+    ironLawRef: "IL-JAVA003"
+  - pattern: "checkstyle 太严格了"
+    rebuttal: "严格规范保证代码质量，无妥协空间"
+    ironLawRef: "IL-JAVA001"
+  - pattern: "这个方法太简单不需要 Javadoc"
+    rebuttal: "所有 public 方法必须有完整 Javadoc，包括 main"
+    ironLawRef: "IL-JAVA001"
+
+recommendations:
+  - id: "R-JAVA001"
+    rule: "新建 SpringBoot 项目默认使用 MyBatis-Plus"
+    skipCondition: "User explicitly specifies different ORM"
+  - id: "R-JAVA002"
+    rule: "生成代码后执行完整 checkstyle 检查清单"
+    skipCondition: "None - mandatory verification"
+  - id: "R-JAVA003"
+    rule: "分页查询必须在 mapper.xml 中实现"
+    skipCondition: "None - mandatory for pagination"
+
+autoTrigger:
+  - signal: "file extension .java"
+    action: "execute checkstyle check"
+  - signal: "new SpringBoot project"
+    action: "default MyBatis-Plus + mapper.xml template"
+  - signal: "@Select annotation detected"
+    action: "block and prompt migration to XML"
+  - signal: "Controller returns Map"
+    action: "block and prompt creating VO"
+  - signal: "e.printStackTrace() detected"
+    action: "block and prompt using log.error"
+
+checklist:
+  postGeneration:
+    - "类有 Javadoc（@author + @date）"
+    - "所有 public 方法有完整 Javadoc（包括 main）"
+    - "方法注释包含有意义描述"
+    - "@param/@return/@throws 标签完整"
+    - "成员变量有 Javadoc（禁止行尾注释）"
+    - "无通配符导入"
+    - "注解独占一行"
+    - "所有语句块使用大括号"
+    - "4 空格缩进，无 Tab"
+    - "日志使用占位符（禁止拼接）"
+    - "无 e.printStackTrace()"
+    - "Controller 返回 R<固定VO>"
+    - "返回体禁止 Map/JSONObject"
+    - "C端 Request/Response 用独立 VO"
+    - "SQL 全部在 mapper.xml 中"
+    - "分页查询在 mapper.xml 中"
+
+antiBypass:
+  - id: "AB-JAVA001"
+    excuse: "简单查询不需要 VO"
+    rebuttal: "检测返回类型，强制 VO。无例外。"
+    ironLawRef: "IL-JAVA002"
+    persuasionPrinciple: "authority"
+  - id: "AB-JAVA002"
+    excuse: "SQL 写注解更方便"
+    rebuttal: "检测 @Select/@Update，拒绝执行。迁移到 mapper.xml。"
+    ironLawRef: "IL-JAVA003"
+    persuasionPrinciple: "authority"
+  - id: "AB-JAVA003"
+    excuse: "临时方案先这样"
+    rebuttal: "临时方案也必须合规。合规无例外。"
+    ironLawRef: "IL-JAVA001"
+    persuasionPrinciple: "consistency"
+  - id: "AB-JAVA004"
+    excuse: "分页用代码实现更快"
+    rebuttal: "分页必须在 mapper.xml 中。代码分页不可维护。"
+    ironLawRef: "IL-JAVA003"
+    persuasionPrinciple: "authority"
+
+dynamicRules:
+  privateRepositories: []
+  buildCommands:
+    standard: "mvn clean package"
+    withTests: "mvn clean test"
+  testFramework:
+    primary: "JUnit 5"
+  inferredCodeStyle:
+    namingConvention:
+      package: "lowercase"
+      class: "PascalCase"
+      variable: "camelCase"
+    importStyle: "no wildcard"
+
+effectivenessLog: "version-logs/java-springboot-effectiveness.md"
