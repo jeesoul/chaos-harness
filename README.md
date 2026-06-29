@@ -14,7 +14,7 @@ _用 Gate 状态机 + Loop 引擎 + Wiki 记忆，给 AI 开发流程立规矩_
 
 **Loops persist · Wiki remembers · Chaos resumes**
 
-[Quickstart](#quickstart) · [Concepts](#core-concepts) · [Skills](#skills) · [Commands](#command-reference) · [中文](#中文导览)
+[Quickstart](#quickstart) · [Concepts](#core-concepts) · [Skills](#skills) · [Commands](#command-reference) · [中文完整版](README.zh-CN.md)
 
 </div>
 

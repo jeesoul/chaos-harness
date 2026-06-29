@@ -1,6 +1,6 @@
 {
   "name": "chaos-harness",
-  "description": "Claude Code Agent Constraint Framework - Gate State Machine, Loop Engine, Project Wiki, Resume Engine, Iron Laws",
+  "description": "Deterministic constraint framework for AI coding agents — Gate state machine, Loop engine & Project Wiki enforced by Claude Code hooks",
   "owner": {
     "name": "jeesoul",
     "url": "https://github.com/jeesoul"
@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "chaos-harness",
-      "description": "v1.4.0 Loop & Wiki — Gate State Machine + Loop Engine + Project Wiki + Resume Engine + Iron Laws. Loops persist. Wiki remembers. Chaos resumes.",
+      "description": "Deterministic constraint framework for AI coding agents — Gate state machine, Loop engine & Project Wiki enforced by Claude Code hooks. Loops persist, Wiki remembers, chaos resumes.",
       "version": "1.4.0",
       "source": "./",
       "author": {

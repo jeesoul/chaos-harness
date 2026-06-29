@@ -1,6 +1,6 @@
 {
   "name": "chaos-harness",
-  "description": "Claude Code Agent Constraint Framework - Iron Laws, Bypass Detection, Laziness Monitoring, Adaptive Workflow, Self-Correction Hooks",
+  "description": "Deterministic constraint framework for AI coding agents — Gate state machine, Loop engine & Project Wiki enforced by Claude Code hooks",
   "version": "1.4.0",
   "author": {
     "name": "jeesoul"

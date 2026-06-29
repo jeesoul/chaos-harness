@@ -1,13 +1,13 @@
 ---
 name: dev-intelligence
-description: 开发质量智能引擎 — BM25 搜索 Gate 模式/铁律/测试策略/反模式/UI 自动化/PRD 质量。触发词：分析项目、质量检查、Gate 配置、测试策略、反模式、PRD 质量、智能建议
+description: 开发质量智能引擎 — Wiki 搜索 Gate 模式/铁律/测试策略/反模式/UI 自动化/PRD 质量。触发词：分析项目、质量检查、Gate 配置、测试策略、反模式、PRD 质量、智能建议
 ---
 
 # Dev-Intelligence
 
 ## 概述
 
-基于结构化知识库 + BM25 检索的开发质量智能引擎，为 PM/QA/Dev 角色提供数据驱动的决策建议。
+基于结构化知识库 + 纯 Node 搜索的开发质量智能引擎，为 PM/QA/Dev 角色提供数据驱动的决策建议。
 
 ## 能力模块
 

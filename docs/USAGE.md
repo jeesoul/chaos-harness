@@ -1,6 +1,6 @@
 # Chaos Harness 使用指南
 
-> v1.3.2 Gate — 按角色快速上手
+> v1.4.0 Loop & Wiki — 按角色快速上手
 
 ---
 

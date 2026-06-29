@@ -1,5 +1,5 @@
 ---
-description: Development quality intelligence engine — BM25 search for gate patterns, iron laws, test strategies
+description: Development quality intelligence engine — Pure Node wiki search for gate patterns, iron laws, test strategies
 ---
 
 USER INSTRUCTION (overrides all skill-loading behaviors):
