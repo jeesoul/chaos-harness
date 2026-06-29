@@ -1,6 +1,6 @@
 ---
 name: dev-intelligence
-description: 开发质量智能引擎 — Wiki 搜索 Gate 模式/铁律/测试策略/反模式/UI 自动化/PRD 质量。触发词：分析项目、质量检查、Gate 配置、测试策略、反模式、PRD 质量、智能建议
+description: Wiki 知识库搜索与质量分析,用于查找 Gate 模式、铁律规则、测试策略、反模式等知识条目并提供智能建议
 ---
 
 # Dev-Intelligence

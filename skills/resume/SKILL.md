@@ -1,6 +1,6 @@
 ---
 name: resume
-description: "断电/中断恢复与会话快照（v1.4.0 由 project-state 改造）。触发词：继续、恢复、resume、状态恢复、上次进度"
+description: "会话中断恢复与断点管理,当用户说'继续'、'恢复'、'上次进度'或会话重启时自动提示断点位置与快照"
 license: MIT
 version: "1.4.0"
 ---

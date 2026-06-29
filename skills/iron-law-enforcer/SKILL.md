@@ -1,6 +1,6 @@
 ---
 name: iron-law-enforcer
-description: "铁律执行器 - 始终激活，不可禁用。v1.4.0 合并版本锁定。触发词：铁律、约束、违规、绕过、版本、锁定、版本目录"
+description: "铁律执行与版本锁定检查,自动检测文档版本违规(IL001)和无验证完成声明(IL003)并强制约束"
 license: MIT
 version: "1.4.0"
 ---

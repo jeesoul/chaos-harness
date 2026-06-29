@@ -1,6 +1,6 @@
 ---
 name: overview
-description: "Chaos Harness 系统概览。当用户明确询问 chaos-harness 功能时使用。"
+description: "chaos-harness 系统概览与核心能力介绍,当用户询问框架功能、架构、使用方式时触发"
 license: MIT
 version: "1.4.0"
 ---
@@ -30,21 +30,17 @@ version: "1.4.0"
 
 > v1.4.0 设计：原 IL002/IL004/IL005 已移除。少而严 > 多而松。
 
-## 可用 Skills（11 个：核心 6 + 可选 5）
+## 核心 Skills（5 个：聚焦精简）
 
-| Skill | 触发词 | 功能 |
-|-------|--------|------|
-| overview | chaos-harness | 系统概览（当前 skill） |
-| gate-manager | Gate、阶段、钩子、hooks | Gate 状态机 + Hooks 管理 |
-| iron-law-enforcer | 铁律、约束、违规、版本、锁定 | **v1.4 合并：铁律执行 + 版本锁定** |
-| dev-intelligence | 搜索、质量检查、知识库 | Wiki 搜索 + AI 建议（纯 Node） |
-| resume | 继续、恢复、上次进度 | 断电恢复 + 会话快照 |
-| overdrive | 紧急、超频、立刻解决 | 最高优先级 |
-| harness-generator | 扫描项目、生成约束 | 可选：扫描 + 约束生成 |
-| product-manager | 需求分析、PRD、Kano | 可选：产品经理 |
-| java-checkstyle | Java 项目 | 可选：Java 代码规范 |
-| ui-generator | 生成界面、UI 生成 | 可选：PRD → 前端 |
-| web-access | 搜索、网页、CDP | 可选：联网与浏览器 |
+| Skill | 功能 |
+|-------|------|
+| **overview** | 系统概览（当前 skill） |
+| **gate-manager** | Gate 状态机 + Hooks 自动拦截 |
+| **iron-law-enforcer** | 2 条核心铁律执行(IL001/IL003) |
+| **dev-intelligence** | Wiki 知识库搜索 + 质量智能建议 |
+| **resume** | 会话断点恢复 + 快照管理 |
+
+> **v1.4.0 设计哲学:精而最优,少即是多。** 6 个可选 skills(overdrive/harness-generator/product-manager/java-checkstyle/ui-generator/web-access)已归档,1.4.0 聚焦 Loop+Wiki+Gate 核心能力。
 
 ## 三层架构
 

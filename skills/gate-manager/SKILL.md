@@ -1,6 +1,6 @@
 ---
 name: gate-manager
-description: Gate 状态机 + Hooks 管理（v1.4.0 合并 hooks-manager）。触发词：Gate、阶段、钩子、hooks、阶段切换、绕过
+description: Gate 状态机管理与 Hooks 配置,处理阶段切换、Gate 检查、钩子调试、绕过审批等场景
 license: MIT
 version: "1.4.0"
 ---
