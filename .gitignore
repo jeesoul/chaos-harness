@@ -69,3 +69,4 @@ Thumbs.db
 .chaos-harness/intelligence-report.md
 .chaos-harness/intelligence-result.json
 .chaos-harness/intelligence-decisions.jsonl
+.chaos-harness/state.json
