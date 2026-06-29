@@ -17,6 +17,7 @@ import { execSync, execFileSync } from 'node:child_process';
 
 import { resolvePluginRoot, resolveProjectRoot, normalizePath } from './path-utils.mjs';
 import { readJson, writeJsonAtomic, ensureDir } from './hook-utils.mjs';
+import { resolveGitBinary } from './git-detector.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolvePluginRoot();
@@ -153,10 +154,13 @@ function suggestTransition(projectRoot, registry) {
   const stages = state.workflow?.stages_completed?.map(s => s.stage) || [];
 
   if (stages.includes('implementation') && !stages.includes('release')) {
+    const git = resolveGitBinary();
+    if (!git.found) return;
     try {
-      const output = execSync('git log --oneline --since="1 week ago"', {
+      const output = execFileSync(git.cmd, [...git.prefix, 'log', '--oneline', '--since=1 week ago'], {
         cwd: projectRoot,
-        encoding: 'utf-8'
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'ignore'],
       });
       const count = output.trim().split('\n').filter(l => l.length > 0).length;
       if (count >= 5) {

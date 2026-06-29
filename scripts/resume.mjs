@@ -7,9 +7,10 @@
  * 不修改任何状态，纯只读 + stdout 提示。
  *
  * 用法：
- *   node resume.mjs                # 默认：检测并输出可读提示
+ *   node resume.mjs                # 默认：检测并输出可读提示（exit 10=需恢复，供 CLI 判断）
  *   node resume.mjs --json         # JSON 输出
  *   node resume.mjs --silent       # 不输出，但 exit code 反映是否需要 resume (0=no, 10=yes)
+ *   node resume.mjs --hook         # SessionStart hook 模式：始终 exit 0（避免 hook error）
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -109,6 +110,7 @@ function cli() {
   const args = process.argv.slice(2);
   const json = args.includes('--json');
   const silent = args.includes('--silent');
+  const hookMode = args.includes('--hook');
 
   const r = checkResume();
 
@@ -118,6 +120,8 @@ function cli() {
     console.log(formatHuman(r));
   }
 
+  // hook 模式恒 exit 0，避免 SessionStart hook 把"需恢复"误判为错误
+  if (hookMode) process.exit(0);
   process.exit(r.needs_resume ? 10 : 0);
 }
 

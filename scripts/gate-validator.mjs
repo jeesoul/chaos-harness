@@ -8,11 +8,12 @@
 
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { resolvePluginRoot, resolveProjectRoot, normalizePath } from './path-utils.mjs';
 import { readJson, computeFileHash } from './hook-utils.mjs';
+import { resolveGitBinary } from './git-detector.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolvePluginRoot();
@@ -109,11 +110,15 @@ function findFilesRecursive(dir, pattern) {
 }
 
 /**
- * 简易路径匹配：将 pattern 中的 * 转换为正则
+ * 简易路径匹配：将 pattern 中的 * 转换为正则。
+ * 转义除 * 外的正则元字符（尤其 .），并锚定结尾，避免 *.js 误匹配 .json。
  */
 function matchesPattern(filePath, pattern) {
-  const regex = pattern.replace(/\*/g, '[^/]*').replace(/\//g, '[\\\\/]');
-  return new RegExp(regex).test(filePath);
+  const escaped = pattern
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')  // 转义正则元字符（保留 *）
+    .replace(/\*/g, '[^/\\\\]*')           // * → 非分隔符任意
+    .replace(/\//g, '[\\\\/]');            // 路径分隔符兼容
+  return new RegExp(escaped + '$').test(filePath);
 }
 
 /**
@@ -227,10 +232,15 @@ function validateLint(validator, projectRoot) {
  */
 function validateGitCommits(validator, projectRoot) {
   const minCommits = validator.minCommits || 1;
+  const git = resolveGitBinary();
+  if (!git.found) {
+    return { status: 'skipped', reason: 'git not found (PATH/Program Files/scoop/chocolatey/WSL)' };
+  }
   try {
-    const output = execSync('git log --oneline --since="1 week ago"', {
+    const output = execFileSync(git.cmd, [...git.prefix, 'log', '--oneline', '--since=1 week ago'], {
       cwd: projectRoot,
-      encoding: 'utf-8'
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
     });
     const count = output.trim().split('\n').filter(l => l.length > 0).length;
     if (count >= minCommits) {

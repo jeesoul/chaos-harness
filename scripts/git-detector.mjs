@@ -133,6 +133,42 @@ export function detectGit() {
 }
 
 /**
+ * 解析可用的 git 调用方式。
+ * 优先读 .chaos-harness/config.json 缓存（安装时 install.mjs 已写入），
+ * 缓存缺失/失效再实时探测。返回 { cmd, args, found }，供 execFileSync 使用。
+ *
+ * - 普通二进制：{ cmd: 'C:\\...\\git.exe', prefix: [] }
+ * - WSL：{ cmd: 'wsl', prefix: ['<git-path>'] }
+ * - 未找到：{ found: false }
+ *
+ * 这样 Windows 上 git 不在 PATH 时也能工作，且不会因 `git` 命令缺失而抛错。
+ */
+export function resolveGitBinary() {
+  // 1. 读 config 缓存
+  try {
+    const configPath = join(resolvePluginRoot(), '.chaos-harness', 'config.json');
+    const cfg = readJson(configPath, {});
+    if (cfg.git && cfg.git.binary) {
+      const bin = cfg.git.binary;
+      if (bin.startsWith('wsl:')) {
+        return { found: true, cmd: 'wsl', prefix: [bin.slice(4)], via: 'config-wsl' };
+      }
+      if (existsSync(bin)) {
+        return { found: true, cmd: bin, prefix: [], via: 'config' };
+      }
+    }
+  } catch { /* fall through to detect */ }
+
+  // 2. 实时探测
+  const r = detectGit();
+  if (!r.found) return { found: false };
+  if (r.path && r.path.startsWith('wsl:')) {
+    return { found: true, cmd: 'wsl', prefix: [r.path.slice(4)], via: r.via };
+  }
+  return { found: true, cmd: r.path, prefix: [], via: r.via };
+}
+
+/**
  * 保存到配置文件
  */
 function saveToConfig(result) {
