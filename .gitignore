@@ -51,6 +51,10 @@ instincts/clusters/*.json
 
 # Eval system runtime data
 evals/results/eval-log.jsonl
+evals/results/registry.json
+evals/results/registry.json.bak
+evals/results/v140-capability-run.json
+evals/results/v140-regression-run.json
 .chaos-harness/retrieval-state.json
 
 # v1.4.0 runtime artifacts
@@ -74,3 +78,5 @@ Thumbs.db
 .chaos-harness/intelligence-result.json
 .chaos-harness/intelligence-decisions.jsonl
 .chaos-harness/state.json
+.chaos-harness/gates/gate-quality.json
+.chaos-harness/wiki/index.md
