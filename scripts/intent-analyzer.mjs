@@ -16,12 +16,12 @@ mkdirSync(join(PROJECT_ROOT, '.chaos-harness'), { recursive: true });
 const toolName = process.env.CLAUDE_TOOL_NAME || 'unknown';
 const toolInput = process.env.CLAUDE_TOOL_INPUT || '';
 
-// 禁止理由表
+// 禁止理由表（v1.4.0：铁律精简为 IL001 + IL003）
 const BYPASS_PATTERNS = {
   IL001: [
     {
       excuse: /就这一次|快速处理|临时文件|temporary|just this once|quick fix/i,
-      rebuttal: 'IL001 没有例外。如果紧急，使用 /overdrive 激活紧急模式。临时文件也应放在 output/vX.X.X/temp/',
+      rebuttal: 'IL001 没有例外。如果紧急，使用 /overdrive 激活紧急模式。临时文件也应放在 output/vX.Y.Z/temp/',
       severity: 'critical'
     },
     {
@@ -30,31 +30,22 @@ const BYPASS_PATTERNS = {
       severity: 'critical'
     }
   ],
-  IL002: [
+  IL003: [
     {
-      excuse: /我已经了解|不需要扫描|already know/i,
-      rebuttal: '主观了解不够，需要扫描数据确认。运行 node scripts/project-scanner.mjs 快速扫描。',
-      severity: 'warning'
-    }
-  ],
-  IL004: [
-    {
-      excuse: /更新版本|升级版本|bump version/i,
-      rebuttal: 'IL004: 版本变更需要用户确认。禁止擅自更改版本号。',
+      excuse: /应该没问题|大概可以|probably works|should be fine/i,
+      rebuttal: 'IL003: 完成声明需要实际验证证据。运行测试或展示输出，不要凭感觉判断。',
       severity: 'critical'
-    }
-  ],
-  IL005: [
+    },
     {
-      excuse: /修改.*配置|change.*config|modify.*hook/i,
-      rebuttal: 'IL005: 敏感配置修改需要批准。包括 hooks.json、harness.yaml 等。',
+      excuse: /跳过测试|skip test|不用测/i,
+      rebuttal: 'IL003: 测试是基本验证。跳过测试 = 无验证证据。',
       severity: 'critical'
     }
   ],
   'IL-TEAM005': [
     {
       excuse: /太简单|不需要.*agent|too simple|no need.*agent/i,
-      rebuttal: 'IL-TEAM005: 简单任务也需要并行验证。使用 /agent-team-orchestrator 分配最少 2 个 Agent。',
+      rebuttal: 'IL-TEAM005: 简单任务也需要并行验证。分配最少 2 个 Agent。',
       severity: 'critical'
     },
     {
@@ -77,29 +68,9 @@ function analyzeIntent(tool, input) {
         law: 'IL001',
         description: '尝试写入非版本目录文件',
         file: filePath,
-        suggestions: [`将文件放在 output/v1.3.1/ 目录下`]
+        suggestions: [`将文件放在 output/vX.Y.Z/ 目录下`]
       });
     }
-  }
-
-  // 检测 IL005: 修改高风险配置
-  if ((tool === 'Write' || tool === 'Edit') && isHighRiskConfig(input)) {
-    violations.push({
-      law: 'IL005',
-      description: '尝试修改敏感配置',
-      file: extractFilePath(input) || 'unknown',
-      suggestions: ['此操作需要用户批准']
-    });
-  }
-
-  // 检测 IL004: 版本号变更
-  if ((tool === 'Write' || tool === 'Edit') && input.includes('"version"')) {
-    violations.push({
-      law: 'IL004',
-      description: '尝试修改版本号',
-      file: extractFilePath(input) || 'unknown',
-      suggestions: ['版本变更需要用户确认']
-    });
   }
 
   // 检测 IL-TEAM005: 单线程退化
@@ -137,16 +108,9 @@ function isNonVersionedPath(filePath) {
   const excluded = [
     'output/v', '.chaos-harness', 'instincts/', 'evals/',
     'schemas/', 'skills/', 'scripts/', 'commands/', 'hooks/',
-    'templates/', 'node_modules/'
+    'templates/', 'node_modules/', 'docs/'
   ];
   return !excluded.some(dir => filePath.includes(dir));
-}
-
-function isHighRiskConfig(input) {
-  return input.includes('hooks.json') ||
-         input.includes('harness.yaml') ||
-         input.includes('CLAUDE.md') ||
-         input.includes('package.json');
 }
 
 // 主流程

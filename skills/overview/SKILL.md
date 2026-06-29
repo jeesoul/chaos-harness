@@ -21,32 +21,30 @@ version: "1.4.0"
 | **Hook 单一分发** | PostToolUse 4 个 hook 合并为 `post-write-dispatcher`，5 秒 debounce |
 | **跨平台安装** | `scripts/install.mjs` 统一入口 + `git-detector` 探测 Windows 下含空格 Git 路径 |
 
-## 核心铁律（不可协商）
+## 核心铁律（v1.4.0 精简为 2 条不可协商）
 
 | ID | 铁律 | 说明 |
 |----|------|------|
 | IL001 | NO DOCUMENTS WITHOUT VERSION LOCK | 所有文档必须在版本目录下 |
-| IL002 | NO HARNESS WITHOUT SCAN RESULTS | Harness 需要项目扫描数据 |
 | IL003 | NO COMPLETION CLAIMS WITHOUT VERIFICATION | 完成声明需要实际验证 |
-| IL004 | NO VERSION CHANGES WITHOUT USER CONSENT | 版本变更需要用户确认 |
-| IL005 | NO HIGH-RISK CONFIG MODIFICATIONS WITHOUT APPROVAL | 敏感配置修改需要批准 |
 
-## 可用 Skills（12 个）
+> v1.4.0 设计：原 IL002/IL004/IL005 已移除。少而严 > 多而松。
+
+## 可用 Skills（11 个：核心 6 + 可选 5）
 
 | Skill | 触发词 | 功能 |
 |-------|--------|------|
-| iron-law-enforcer | 铁律、约束、违规 | 始终激活 |
-| gate-manager | Gate、阶段、钩子、hooks | **v1.4 合并：Gate 状态机 + Hooks 管理** |
-| dev-intelligence | 分析项目、质量检查、Gate 配置 | BM25 + Wiki 搜索 |
-| harness-generator | 生成 Harness、创建约束、扫描项目 | **v1.4 合并：扫描 + 约束生成** |
-| version-locker | 版本、锁定 | 版本管理（IL001） |
-| resume | 继续、恢复、上次进度 | **v1.4 新：断电恢复 + 会话快照** |
-| overdrive | 紧急、超频、立刻解决 | 最高优先级 |
 | overview | chaos-harness | 系统概览（当前 skill） |
-| product-manager | 需求分析、PRD、Kano | 产品经理 |
-| java-checkstyle | Java 项目 | Java 代码规范 |
-| ui-generator | 生成界面、UI 生成 | PRD → 前端 |
-| web-access | 搜索、网页、CDP | 联网与浏览器 |
+| gate-manager | Gate、阶段、钩子、hooks | Gate 状态机 + Hooks 管理 |
+| iron-law-enforcer | 铁律、约束、违规、版本、锁定 | **v1.4 合并：铁律执行 + 版本锁定** |
+| dev-intelligence | 搜索、质量检查、知识库 | Wiki 搜索 + AI 建议（纯 Node） |
+| resume | 继续、恢复、上次进度 | 断电恢复 + 会话快照 |
+| overdrive | 紧急、超频、立刻解决 | 最高优先级 |
+| harness-generator | 扫描项目、生成约束 | 可选：扫描 + 约束生成 |
+| product-manager | 需求分析、PRD、Kano | 可选：产品经理 |
+| java-checkstyle | Java 项目 | 可选：Java 代码规范 |
+| ui-generator | 生成界面、UI 生成 | 可选：PRD → 前端 |
+| web-access | 搜索、网页、CDP | 可选：联网与浏览器 |
 
 ## 三层架构
 
@@ -67,15 +65,22 @@ Gate     Loop      Wiki      Iron-Law
 状态机   Engine    Indexer   Enforcer
    │      │         │         │
    └──────┴────.chaos-harness/────────┘
-            ├── gates/   (Gate 状态)
+            ├── gates/   (5 Gate 状态)
             ├── loop/    (cursor + journal)
             └── wiki/    (patterns + decisions + incidents + sessions)
 ```
 
-## Gate 状态机
+## Gate 状态机（v1.4.0 精简为 5 个）
 
-10 Gates（6 stage + 4 quality），7 种验证器：
-`file-exists` `project-scan` `git-has-commits` `no-syntax-errors` `test-suite-pass` `lint-check` `iron-law-check`
+| Gate | 类型 | Level | 验证器 |
+|------|------|-------|--------|
+| gate-requirements | stage | hard | file-exists |
+| gate-implementation | stage | hard | no-syntax-errors + git-has-commits |
+| gate-release | stage | hard | test-suite-pass |
+| gate-quality | quality | hard | iron-law-check |
+| gate-intelligence | quality | soft | dev-intelligence (Wiki 推荐) |
+
+验证器：`file-exists` `no-syntax-errors` `git-has-commits` `test-suite-pass` `iron-law-check` `lint-check` `script`
 
 ## Loop 四帧
 
@@ -86,13 +91,16 @@ Gate     Loop      Wiki      Iron-Law
 | act     | PostToolUse | dispatcher |
 | reflect | Stop | hook |
 
-## Wiki 三层晋升
+## Wiki 三层晋升（v1.4.0 唯一知识库）
 
 ```
-observations.jsonl  (raw)         ≥3 次同质 → 
-patterns/<id>.md    (promoted)    ≥5 次复用 → 
-iron-law-rules.csv  (canonical)
+observations.jsonl  (raw)         ≥3 次同质 →
+patterns/<id>.md    (promoted)    ≥5 次复用 →
+decisions/<id>.md   (canonical, iron-law 候选)
 ```
+
+> v1.4.0：6 个 CSV 知识库已全部迁移为 Wiki 条目（90 条）。
+> 搜索引擎统一为纯 Node 的 wiki-search.mjs，删除 Python rank_bm25 依赖。
 
 ## 偷懒模式
 
@@ -102,8 +110,6 @@ iron-law-rules.csv  (canonical)
 | LP002 | 跳过根因分析直接修复 | critical |
 | LP003 | 长时间无产出 | warning |
 | LP004 | 试图跳过测试 | critical |
-| LP005 | 擅自更改版本号 | critical |
-| LP006 | 自动处理高风险配置 | critical |
 | LP007 | Team 阶段主 Agent 代劳 | critical |
 
 ## 防绕过
@@ -113,8 +119,7 @@ iron-law-rules.csv  (canonical)
 | "简单修复" | 简单也需要验证 |
 | "跳过测试" | 测试是基本验证 |
 | "就这一次" | 每次例外都是先例 |
-| "老项目" | 老项目更需要约束 |
-| "我已经了解项目结构" | 主观了解不够，需要扫描数据确认。使用 harness-generator 扫描 |
+| "应该没问题" | IL003 需要实际验证证据 |
 
 ## References 索引
 
@@ -124,6 +129,5 @@ iron-law-rules.csv  (canonical)
 | `.chaos-harness/state.json` | 查看项目当前状态时 |
 | `.chaos-harness/loop/cursor.json` | 查看本会话 loop 位置 |
 | `.chaos-harness/loop/journal.jsonl` | 查看 hook 行为流水 |
-| `.chaos-harness/wiki/index.md` | Wiki 总目录 |
+| `.chaos-harness/wiki/index.md` | Wiki 总目录（唯一知识库） |
 | `.chaos-harness/wiki/sessions/last.md` | 上次会话快照 |
-| `CLAUDE.md` | 查看项目完整上下文 |

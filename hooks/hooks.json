@@ -28,7 +28,7 @@
           },
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-iron-law --root \"${CLAUDE_PLUGIN_ROOT}\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality --root \"${CLAUDE_PLUGIN_ROOT}\"",
             "async": false
           },
           {
@@ -38,7 +38,7 @@
           },
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/loop-engine.mjs\" tick --frame decide --gate gate-quality-iron-law --status passed",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/loop-engine.mjs\" tick --frame decide --gate gate-quality --status passed",
             "async": true
           }
         ]
@@ -49,16 +49,6 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/loop-engine.mjs\" tick --frame observe --tool Bash",
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-tests --root \"${CLAUDE_PLUGIN_ROOT}\"",
-            "async": false
-          },
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/gate-enforcer.mjs\" gate-quality-format --root \"${CLAUDE_PLUGIN_ROOT}\"",
             "async": true
           }
         ]

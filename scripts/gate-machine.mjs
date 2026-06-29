@@ -37,34 +37,31 @@ function generateDefaultRegistry() {
 
   const defaultGates = [
     {
-      id: 'gate-quality-iron-law',
+      id: 'gate-quality',
       type: 'quality',
       level: 'hard',
-      description: '铁律违规零容忍',
+      description: '质量门 — 铁律合规',
       trigger: 'pre-write',
       cachePolicy: 'never',
       validators: [{ type: 'iron-law-check' }],
       dependsOn: [],
     },
     {
-      id: 'gate-quality-format',
+      id: 'gate-intelligence',
       type: 'quality',
       level: 'soft',
-      description: '代码格式建议',
-      trigger: 'pre-commit',
+      description: '智能建议 — 基于 Wiki 推荐',
+      trigger: 'stage-transition',
       cachePolicy: 'on-change',
-      validators: [{ type: 'lint-check' }],
+      validators: [{ type: 'script', script: 'dev-intelligence.mjs', args: ['--auto-check', '--stage', '{current_stage}'] }],
       dependsOn: [],
     },
   ];
 
   const allStages = [
-    { id: 'gate-w01-requirements', stage: 'W01_requirements' },
-    { id: 'gate-w03-architecture', stage: 'W03_architecture' },
-    { id: 'gate-w08-development', stage: 'W08_development' },
-    { id: 'gate-w09-code-review', stage: 'W09_code_review' },
-    { id: 'gate-w10-testing', stage: 'W10_testing' },
-    { id: 'gate-w12-release', stage: 'W12_release' },
+    { id: 'gate-requirements', stage: 'requirements', validators: [{ type: 'file-exists', path: 'output/*/requirements' }] },
+    { id: 'gate-implementation', stage: 'implementation', validators: [{ type: 'no-syntax-errors' }, { type: 'git-has-commits', minCommits: 1 }] },
+    { id: 'gate-release', stage: 'release', validators: [{ type: 'test-suite-pass' }] },
   ];
 
   for (let i = 0; i < allStages.length; i++) {
@@ -78,15 +75,15 @@ function generateDefaultRegistry() {
       level: 'hard',
       description: `${stage.stage} 进入检查`,
       trigger: 'stage-transition',
-      cachePolicy: 'always',
-      validators: [],
+      cachePolicy: 'on-change',
+      validators: stage.validators,
       dependsOn: prevDeps,
     });
   }
 
   const registry = {
     gates: defaultGates,
-    version: '1.3.2',
+    version: '1.4.0',
     createdAt: new Date().toISOString(),
   };
 
@@ -155,7 +152,7 @@ function suggestTransition(projectRoot, registry) {
 
   const stages = state.workflow?.stages_completed?.map(s => s.stage) || [];
 
-  if (stages.includes('W08_development') && !stages.includes('W09_code_review')) {
+  if (stages.includes('implementation') && !stages.includes('release')) {
     try {
       const output = execSync('git log --oneline --since="1 week ago"', {
         cwd: projectRoot,
@@ -163,8 +160,8 @@ function suggestTransition(projectRoot, registry) {
       });
       const count = output.trim().split('\n').filter(l => l.length > 0).length;
       if (count >= 5) {
-        console.log('\n[Gate Machine] 开发阶段似乎已完成（5+ commits）。');
-        console.log('运行 /gate-manager transition W09_code_review 进入代码审查阶段');
+        console.log('\n[Gate Machine] 实现阶段似乎已完成（5+ commits）。');
+        console.log('运行 /gate-manager transition release 进入发布阶段');
       }
     } catch {}
   }

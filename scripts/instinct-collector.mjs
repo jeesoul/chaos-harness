@@ -73,16 +73,6 @@ function detectIronLawViolations() {
         return null;
       },
       pattern: '写入非版本目录文件'
-    },
-    {
-      type: INSTINCT_TYPES.IRON_LAW_VIOLATION,
-      condition: () => {
-        if ((toolName === 'Write' || toolName === 'Edit') && toolInput.includes('hooks.json')) {
-          return { file_pattern: 'hooks.json', violation: 'IL005' };
-        }
-        return null;
-      },
-      pattern: '修改 hooks 配置'
     }
   ];
 

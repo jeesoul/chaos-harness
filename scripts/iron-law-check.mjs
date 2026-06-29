@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /**
  * iron-law-check — PreToolUse Hook for Write|Edit
- * 验证操作是否符合铁律 IL001-IL005
+ * v1.4.0 大版本：铁律精简为 2 条核心
+ *   IL001 — 文档必须版本化（output/ 下必须有 vX.Y 目录）
+ *   IL003 — 完成声明必须验证（由 Stop hook 的 reflect 帧 + laziness-detect 承担）
  *
- * 性能优化：仅检查被修改的文件，不扫描全项目。
- * 通过 CLAUDE_TOOL_INPUT 环境变量或 argv 参数获取文件路径。
+ * 本脚本负责 IL001 的写时拦截。IL003 是行为铁律，在 reflect/laziness 检测。
+ *
+ * 性能：仅检查被修改的文件，不扫描全项目。
  *
  * 调用: node iron-law-check.mjs [tool_name] [tool_input_json]
  */
@@ -98,19 +101,7 @@ if (filePath.startsWith('output/') || filePath.includes('/output/') || filePath.
   }
 }
 
-// IL005: 敏感配置检查
-const sensitivePatterns = /\.env$|secret|credential|password|token/i;
-if (sensitivePatterns.test(filePath)) {
-  checkIronLaw(
-    'IL005',
-    '敏感配置文件修改',
-    'warning',
-    'IL005 WARNING: HIGH-RISK CONFIG MODIFICATION'
-  );
-}
-
 // IL001 补充：禁止在项目根目录创建文档（必须在版本目录下）
-const projectRootPatterns = /^(CLAUDE\.md|README|\.md$|docs\/)/;
 // 如果文件不在 output/ 下且是 .md 文件，检查是否在根目录
 if (filePath.endsWith('.md') && !filePath.startsWith('output/') && !filePath.includes('/output/')) {
   // 允许 chaos-harness/ 下的 .md 文件和 skills/ 下的 .md 文件

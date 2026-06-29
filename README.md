@@ -19,7 +19,7 @@
 | **Project Wiki** | Karpathy 式可寻址记忆，patterns / decisions / incidents / sessions 自动双向链接 |
 | **Resume Engine** | 断电/重启后自动检测中断点，SessionStart 输出可读 resume 提示 |
 | **统一安装** | `scripts/install.mjs` 跨平台入口，自动探测 Windows 含空格 Git 路径 |
-| **Skill 精简** | 15 → 12，PostToolUse 4 hook → 1 dispatcher |
+| **大版本简化** | Skills 15→11 · Gates 10→5 · 铁律 5→2 · CSV→Wiki · 去除 Python 依赖 · PostToolUse 4 hook→1 dispatcher |
 
 ## 一句话定位
 
@@ -29,15 +29,15 @@
 
 AI Agent 辅助开发的核心问题是非确定性——跳过验证、绕过约束、幻觉式交付。自然语言提示词是软性建议，存在语义博弈空间。
 
-Chaos Harness 将约束编码为 **Gate 状态机**——通过 Gate 分级执行 + Hooks 自动拦截 + 知识库数据驱动，消除灰色地带。
+Chaos Harness 将约束编码为 **Gate 状态机**——通过 Gate 分级执行 + Hooks 自动拦截 + Wiki 知识库驱动，消除灰色地带。
 
 ### 三大特性
 
 | 特性 | 说明 |
 |------|------|
 | **确定性** | Gate 分级执行（hard 阻断 / soft 警告），行为路径可追溯 |
-| **数据驱动** | 6 个 CSV 知识库 + BM25 检索，Gate/铁律/测试/反模式全覆盖 |
-| **可进化** | 自学习闭环：行为追踪 → 模式聚类 → 规则优化 → 阈值调整 |
+| **数据驱动** | Wiki 可寻址知识库 + 纯 Node 搜索，模式/决策/事故全覆盖（零 Python 依赖） |
+| **可进化** | 自学习闭环：observe → pattern → decision 三层晋升 |
 
 ---
 
@@ -57,14 +57,14 @@ Chaos Harness 将约束编码为 **Gate 状态机**——通过 Gate 分级执�
     ▼             ▼
 ┌─────────┐ ┌──────────────┐
 │ Gate    │ │ Dev-Intelligence│
-│ 状态机  │ │ BM25 搜索引擎  │
-│ 15 Gates│ │ 6 个 CSV 知识库 │
+│ 状态机  │ │ Wiki 搜索引擎  │
+│ 5 Gates │ │ (纯 Node)     │
 └─────────┘ └──────────────┘
     │             │
     ▼             ▼
 ┌─────────────────────────────┐
-│ 13 Skills · 28 Scripts      │
-│ 6 验证器 · 5 技术栈适配      │
+│ 11 Skills · Loop + Wiki     │
+│ 7 验证器 · 5 技术栈适配      │
 └─────────────────────────────┘
 ```
 
@@ -72,29 +72,30 @@ Chaos Harness 将约束编码为 **Gate 状态机**——通过 Gate 分级执�
 
 ```
 chaos-harness/
-├── skills/              # 13 个 Skill（能力入口）
-│   ├── gate-manager/    # Gate 状态机交互
-│   ├── dev-intelligence/# 智能建议引擎（BM25 搜索）
-│   ├── iron-law-enforcer/
+├── skills/              # 11 个 Skill（能力入口）
+│   ├── gate-manager/    # Gate 状态机 + Hooks 管理
+│   ├── dev-intelligence/# 智能建议引擎（Wiki 搜索）
+│   ├── iron-law-enforcer/ # 铁律 + 版本锁定
+│   ├── resume/          # 断电恢复
 │   ├── overdrive/       # 超频模式
-│   ├── product-manager/
 │   └── ...
-├── scripts/             # 28 个脚本（执行引擎）
+├── scripts/             # 执行引擎（.mjs）
 │   ├── gate-machine.mjs     # 阶段状态机
 │   ├── gate-enforcer.mjs    # Gate 执行器
-│   ├── gate-recovery.mjs    # 失败恢复
-│   ├── gate-validator.mjs   # 验证器调度
-│   ├── dev-intelligence.mjs # CLI 入口
-│   ├── search.py            # BM25 搜索引擎
+│   ├── loop-engine.mjs      # Loop 四帧循环
+│   ├── wiki-indexer.mjs     # Wiki 索引器
+│   ├── wiki-search.mjs      # 纯 Node 搜索（零 Python 依赖）
+│   ├── resume.mjs           # 断电恢复
 │   └── ...
 ├── hooks/               # hooks.json（自动拦截配置）
-├── data/                # 6 个 CSV 知识库
 ├── stacks/              # 5 个技术栈配置
 ├── tests/               # 测试文件
-├── commands/            # 27 个 Slash 命令
+├── commands/            # Slash 命令
 ├── instincts/           # 本能系统（直觉观察）
 └── .chaos-harness/      # 运行时状态
-    ├── gates/           # Gate 定义 + 状态
+    ├── gates/           # 5 Gate 定义 + 状态
+    ├── loop/            # cursor + journal（WAL）
+    ├── wiki/            # 唯一知识库（patterns/decisions/incidents/sessions）
     └── state.json       # 会话状态
 ```
 
@@ -148,27 +149,25 @@ install.bat        # Windows cmd
 
 ## Gate 状态机
 
-v1.3.2 引入，v1.4.0 集成 Loop frame。10 个 Gates，7 种验证器，分级执行。
+v1.4.0 精简为 5 个 Gate（3 stage + 2 quality），7 种验证器，分级执行。
 
-### 阶段 Gates（6 个）
-
-| Gate | Level | 验证器 | 说明 |
-|------|-------|--------|------|
-| gate-w01-requirements | hard | — | 需求阶段入口（依赖锚点） |
-| gate-w03-architecture | hard | file-exists | 架构阶段：需求文档必须存在 |
-| gate-w08-development | hard | file-exists | 开发阶段：设计文档必须存在 |
-| gate-w09-code-review | hard | git-has-commits | 代码审查：至少 1 次提交 |
-| gate-w10-testing | hard | no-syntax-errors | 测试阶段：代码无语法错误 |
-| gate-w12-release | hard | test-suite-pass | 发布阶段：测试全部通过 |
-
-### 质量 Gates（4 个）
+### 阶段 Gates（3 个）
 
 | Gate | Level | 验证器 | 说明 |
 |------|-------|--------|------|
-| gate-quality-iron-law | hard | iron-law-check | 铁律零容忍 |
-| gate-quality-tests | hard | test-suite-pass | 测试必须通过 |
-| gate-quality-format | soft | lint-check | 代码格式建议 |
-| gate-intelligence-check | soft | dev-intelligence.mjs | 智能建议报告 |
+| gate-requirements | hard | file-exists | 需求阶段：需求文档/PRD 存在 |
+| gate-implementation | hard | no-syntax-errors + git-has-commits | 实现阶段：代码无错且有提交 |
+| gate-release | hard | test-suite-pass | 发布阶段：测试全部通过 |
+
+### 质量 Gates（2 个）
+
+| Gate | Level | 验证器 | 说明 |
+|------|-------|--------|------|
+| gate-quality | hard | iron-law-check | 铁律零容忍（合并 tests/format/iron-law） |
+| gate-intelligence | soft | dev-intelligence.mjs | 基于 Wiki 的智能建议 |
+
+> v1.4.0 压缩：原 6 stage + 4 quality = 10 Gate，合并为 3+2。
+> W01/W03→requirements，W08/W09→implementation，W10/W12→release。
 
 ### 执行策略
 
@@ -177,7 +176,7 @@ v1.3.2 引入，v1.4.0 集成 Loop frame。10 个 Gates，7 种验证器，分�
 | hard | exit 1 阻断 | 不可绕过，必须修复 |
 | soft | exit 0 警告 | 可绕过（单 session 最多 3 次） |
 
-### 6 种验证器
+### 7 种验证器
 
 | 验证器 | 实现 | 说明 |
 |--------|------|------|
@@ -187,21 +186,20 @@ v1.3.2 引入，v1.4.0 集成 Loop frame。10 个 Gates，7 种验证器，分�
 | iron-law-check | iron-law-check.mjs | 铁律合规检查 |
 | lint-check | eslint | 代码格式检查 |
 | git-has-commits | git log 计数 | 开发产出检查 |
-| script | 调用 .mjs/.py 脚本 | 自定义验证逻辑 |
+| script | 调用 .mjs 脚本 | 自定义验证逻辑 |
 
 ---
 
 ## 铁律引擎
 
-5 条核心铁律，自动执行，不可绕过：
+v1.4.0 精简为 2 条核心铁律，自动执行，不可绕过：
 
 | ID | 铁律 | 触发场景 |
 |----|------|----------|
-| IL001 | 文档必须在版本目录生成 | 任何文档输出 |
-| IL002 | Harness 生成依赖扫描数据 | 约束生成请求 |
-| IL003 | 完成声明必须附带验证证据 | Stop Hook |
-| IL004 | 版本变更需要用户确认 | 版本号修改 |
-| IL005 | 敏感配置修改需要审批 | 数据库/密钥配置 |
+| IL001 | 文档必须在版本目录生成 | 任何文档输出（PreToolUse hook 拦截） |
+| IL003 | 完成声明必须附带验证证据 | Stop hook（reflect 帧） |
+
+> 原 IL002/IL004/IL005 已移除：IL002 变成 gate-requirements 前置，IL004 由 Loop snapshot 替代，IL005 与 IL001 本质重合。**少而严 > 多而松。**
 
 ---
 
@@ -299,18 +297,20 @@ node scripts/snapshot.mjs read     # 读 last.md
 
 ## Dev-Intelligence 智能引擎
 
-基于 BM25 检索 + CSV 知识库的数据驱动决策引擎。
+v1.4.0：基于 **Wiki** 的纯 Node 搜索引擎（零 Python 依赖）。原 6 个 CSV 知识库已迁移为 Wiki 条目。
 
-### 6 个知识域
+### 知识域（Wiki tags）
 
-| 领域 | 内容 | 行数 |
+| tag | 内容 | 来源 |
 |------|------|------|
-| gate-patterns | Gate 模式库 | 15 行 |
-| iron-law-rules | 铁律规则库 | 15 行 |
-| test-patterns | 测试模式库 | 15 行 |
-| anti-patterns | 反模式库 | 20 行 |
-| ui-patterns | UI 自动化模式 | 15 行 |
-| prd-quality-rules | PRD 质量规则 | 10 行 |
+| gate | Gate 模式 | 原 gate-patterns.csv |
+| iron-law | 铁律规则 | 原 iron-law-rules.csv |
+| test | 测试模式 | 原 test-patterns.csv |
+| anti-pattern | 反模式 | 原 anti-patterns.csv |
+| ui | UI 自动化模式 | 原 ui-patterns.csv |
+| prd | PRD 质量规则 | 原 prd-quality-rules.csv |
+
+> 90 条知识全部迁移到 `.chaos-harness/wiki/`，可寻址、可链接、可演化。
 
 ### 5 个技术栈适配
 
@@ -321,8 +321,8 @@ Vue · React · Spring Boot · FastAPI · Generic
 | 方式 | 触发 | 说明 |
 |------|------|------|
 | 自然语言 | "搜索 Gate 配置" | SKILL.md 触发词匹配 |
-| CLI | `node dev-intelligence.mjs --query "测试" --domain gate-patterns` | 命令行查询 |
-| Gate 自动 | 阶段切换时自动触发 | gate-intelligence-check |
+| CLI | `node dev-intelligence.mjs --query "测试"` | 命令行查询（走 Wiki） |
+| Gate 自动 | 阶段切换时自动触发 | gate-intelligence |
 | 持久化 | `persist` 命令 | 跨会话决策记忆 |
 
 ---
@@ -333,11 +333,12 @@ Vue · React · Spring Boot · FastAPI · Generic
 
 | Hook | 触发条件 | 执行脚本 |
 |------|---------|---------|
-| SessionStart | 会话启动 | gate-machine.mjs |
-| PreToolUse (Write\|Edit) | 写/编辑文件 | gate-enforcer.mjs + iron-law-check.mjs |
-| PreToolUse (Bash) | 执行命令 | gate-enforcer.mjs |
-| PostToolUse (Write\|Edit) | 写/编辑后 | learning-update + project-pattern-writer + workflow-track + dev-intelligence |
-| Stop | 会话结束 | stop.mjs + laziness-detect.mjs |
+| SessionStart | 会话启动 | resume.mjs + gate-machine.mjs |
+| PreToolUse (Write\|Edit) | 写/编辑文件 | loop observe → gate-enforcer (gate-quality) + iron-law-check → loop decide |
+| PreToolUse (Bash) | 执行命令 | loop observe |
+| PostToolUse (Write\|Edit\|Bash) | 工具执行后 | **post-write-dispatcher**（loop act + learning + wiki-indexer） |
+| Stop | 会话结束 | loop reflect + snapshot + stop + laziness-detect |
+| PreCompact | 压缩前 | snapshot + pre-compact |
 
 ---
 
@@ -398,8 +399,7 @@ claude plugins install chaos-harness@chaos-harness
 | `/chaos-harness:product-manager` | 产品经理 |
 | `/chaos-harness:dev-intelligence` | 智能建议 + Wiki 搜索 |
 | `/chaos-harness:overview` | 项目总览 |
-| `/chaos-harness:iron-law-enforcer` | 铁律执行 |
-| `/chaos-harness:version-locker` | 版本管理 |
+| `/chaos-harness:iron-law-enforcer` | 铁律执行 + 版本锁定 |
 | `/chaos-harness:harness-generator` | 扫描 + 约束生成 |
 | `/chaos-harness:java-checkstyle` | Java 代码规范检查 |
 | `/chaos-harness:ui-generator` | UI 生成工具 |
@@ -414,28 +414,28 @@ claude plugins install chaos-harness@chaos-harness
 | "搜索"、"质量检查" | dev-intelligence |
 | "PRD"、"需求" | product-manager |
 | "继续"、"恢复"、"上次进度" | resume |
+| "版本"、"锁定" | iron-law-enforcer |
 
 ---
 
-## 技能清单（v1.4.0 共 12 个）
+## 技能清单（v1.4.0 共 11 个）
 
-### 核心（8 个）
+### 核心（6 个）
 
 | Skill | 说明 |
 |-------|------|
 | `overview` | 项目总览入口 |
-| `gate-manager` | **v1.4 合并：Gate 状态机 + Hooks 管理** |
-| `dev-intelligence` | BM25 + Wiki 搜索引擎 |
-| `iron-law-enforcer` | 铁律执行 |
-| `harness-generator` | **v1.4 合并：扫描 + 约束生成** |
-| `version-locker` | 版本管理 |
-| `resume` | **v1.4 新：断电恢复 + 会话快照** |
+| `gate-manager` | Gate 状态机 + Hooks 管理 |
+| `iron-law-enforcer` | **v1.4 合并：铁律执行 + 版本锁定** |
+| `dev-intelligence` | Wiki 搜索引擎（纯 Node） |
+| `resume` | 断电恢复 + 会话快照 |
 | `overdrive` | 应急超频模式 |
 
-### 可选（4 个）
+### 可选（5 个）
 
 | Skill | 说明 |
 |-------|------|
+| `harness-generator` | 扫描 + 约束生成 |
 | `product-manager` | 产品经理（需求/Kano/PRD/生命周期） |
 | `java-checkstyle` | Java 代码规范检查 |
 | `ui-generator` | UI 生成工具 |
@@ -447,7 +447,7 @@ claude plugins install chaos-harness@chaos-harness
 
 | 版本 | 主要更新 |
 |------|---------|
-| **1.4.0 Loop & Wiki** | Loop Engine 四帧循环 · Project Wiki（可寻址记忆 + 双向链接）· Resume Engine（断电恢复）· 跨平台统一安装（含 Windows Git 路径探测）· Skill 瘦身 15→12 · PostToolUse 单一 dispatcher · 82+13 测试全通过 |
+| **1.4.0 Loop & Wiki** | Loop Engine 四帧循环 · Project Wiki（可寻址记忆）· Resume Engine（断电恢复）· 跨平台统一安装 · **大版本简化：Skills 15→11 · Gates 10→5 · 铁律 5→2 · CSV→Wiki · 去 Python 依赖** · 测试全通过 |
 | 1.3.2 Gate | Gate 状态机 10 Gates · 6 种验证器 · BM25 智能引擎 · 6 个 CSV 知识库 · 5 技术栈适配 · 自学习闭环 · 13 Skills |
 | 1.3.1 孔明Pro | 持续学习系统 · 评测驱动 · Schema-Driven 工作流 · 深度防御 · 战略压缩 · 30 Skills |
 | 1.3.0 孔明 | overdrive 超频模式 · LP007 退化检测 · P03/P04 强制评审 · 23 Skills |

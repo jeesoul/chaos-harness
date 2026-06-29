@@ -50,7 +50,7 @@ if (state) {
   hookPrint(`项目状态文件已检测到: ${join(PROJECT_ROOT, '.chaos-harness', 'state.json')}`);
   hookPrint('');
   hookPrint('**建议操作:**');
-  hookPrint("使用 /chaos-harness:project-state 或说 '继续上次进度' 恢复会话。");
+  hookPrint("使用 /chaos-harness:resume 或说 '继续上次进度' 恢复会话。");
   hookPrint('');
   hookPrint('**快速状态:**');
   hookPrint(`- 项目: ${state.project_name || 'Unknown'}`);
@@ -125,9 +125,9 @@ if (state) {
   hookPrint('这是一个新项目或首次使用 Chaos Harness。');
   hookPrint('');
   hookPrint('**建议操作:**');
-  hookPrint('1. 使用 project-scanner 扫描项目（运行 node scripts/project-scanner.mjs）');
-  hookPrint('2. 使用 /version-locker 创建版本');
-  hookPrint('3. 使用 /harness-generator 生成约束');
+  hookPrint('1. 使用 /harness-generator 扫描项目并生成约束');
+  hookPrint('2. 使用 /iron-law-enforcer 锁定版本目录（IL001）');
+  hookPrint('3. 使用 /gate-manager status 查看 Gate 状态');
   hookPrint('');
   hookPrint("或说 '开始使用 chaos-harness' 进行初始化。");
   hookPrint('</CHAOS_HARNESS_NEW_PROJECT>');

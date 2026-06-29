@@ -65,3 +65,7 @@ Thumbs.db
 .chaos-harness/loop/cursor.json
 .chaos-harness/config.json
 .chaos-harness/self-test-result.json
+
+.chaos-harness/intelligence-report.md
+.chaos-harness/intelligence-result.json
+.chaos-harness/intelligence-decisions.jsonl

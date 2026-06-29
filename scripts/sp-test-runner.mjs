@@ -33,7 +33,6 @@ async function main() {
     'workflow-track.mjs',
     'stop.mjs',
     'dev-intelligence.mjs',
-    'search.py',
     // v1.4.0 Loop & Wiki
     'loop-engine.mjs',
     'loop-cursor.mjs',
@@ -98,28 +97,29 @@ async function main() {
   results.push({ test: 'gate-registry', passed: registryExists });
   console.log(`  [${registryExists ? 'PASS' : 'FAIL'}] gate-registry.json`);
 
-  // 检查 CSV 知识库
-  console.log('\nChecking knowledge base...');
-  const csvFiles = ['gate-patterns.csv', 'iron-law-rules.csv', 'test-patterns.csv', 'anti-patterns.csv', 'ui-patterns.csv', 'prd-quality-rules.csv'];
-  for (const csv of csvFiles) {
-    const csvPath = join(pluginRoot, 'data', csv);
-    const csvExists = existsSync(csvPath);
-    results.push({ test: `csv-exists:${csv}`, passed: csvExists });
-    console.log(`  [${csvExists ? 'PASS' : 'FAIL'}] data/${csv}`);
+  // 检查知识库（v1.4.0：Wiki 取代 CSV）
+  console.log('\nChecking knowledge base (Wiki)...');
+  const wikiPatternsDir = join(pluginRoot, '.chaos-harness', 'wiki', 'patterns');
+  if (existsSync(wikiPatternsDir)) {
+    const patternCount = readdirSync(wikiPatternsDir).filter(f => f.endsWith('.md')).length;
+    const ok = patternCount >= 20; // 迁移后应有大量 pattern
+    results.push({ test: 'wiki-patterns-populated', passed: ok, reason: `${patternCount} patterns` });
+    console.log(`  [${ok ? 'PASS' : 'FAIL'}] wiki patterns: ${patternCount}`);
+  } else {
+    results.push({ test: 'wiki-patterns-populated', passed: false, reason: 'wiki/patterns missing' });
+    console.log('  [FAIL] wiki/patterns missing');
   }
 
-  // 检查 Python 依赖（rank_bm25 可选，wiki-search 是 fallback）
-  console.log('\nChecking Python dependencies...');
-  let py_ok = false;
+  // 检查 Wiki 搜索（纯 Node，无 Python 依赖）
+  console.log('\nChecking Wiki search engine...');
   try {
-    execSync('python -c "import rank_bm25"', { stdio: 'pipe', timeout: 5000 });
-    results.push({ test: 'python-rank-bm25', passed: true });
-    console.log('  [PASS] rank_bm25');
-    py_ok = true;
-  } catch {
-    // Fallback: wiki-search.mjs 提供纯 Node 搜索
-    results.push({ test: 'python-rank-bm25', passed: true, reason: 'optional; wiki-search.mjs provides Node fallback' });
-    console.log('  [SKIP] rank_bm25 not installed — wiki-search.mjs is the Node fallback (OK)');
+    const out = execSync(`node "${join(pluginRoot, 'scripts', 'wiki-search.mjs')}" query "test"`, { stdio: 'pipe', timeout: 5000, encoding: 'utf8' });
+    JSON.parse(out);
+    results.push({ test: 'wiki-search-engine', passed: true });
+    console.log('  [PASS] wiki-search (pure Node, no Python dep)');
+  } catch (e) {
+    results.push({ test: 'wiki-search-engine', passed: false, reason: String(e).slice(0, 200) });
+    console.log('  [FAIL] wiki-search');
   }
 
   // v1.4.0 — Loop Engine 自检
@@ -162,7 +162,13 @@ async function main() {
   // v1.4.0 — Resume self-check
   console.log('\nChecking Resume Engine...');
   try {
-    const out = execSync(`node "${join(pluginRoot, 'scripts', 'resume.mjs')}" --json`, { stdio: 'pipe', timeout: 3000, encoding: 'utf8' });
+    let out;
+    try {
+      out = execSync(`node "${join(pluginRoot, 'scripts', 'resume.mjs')}" --json`, { stdio: 'pipe', timeout: 3000, encoding: 'utf8' });
+    } catch (e) {
+      // resume.mjs 用 exit 10 表示"需要恢复"，仍输出有效 JSON 到 stdout
+      out = e.stdout?.toString() || '';
+    }
     JSON.parse(out);
     results.push({ test: 'resume-json-output', passed: true });
     console.log('  [PASS] resume.mjs --json');

@@ -52,7 +52,7 @@ claude plugins install chaos-harness@chaos-harness
 
 ### 日常工作流
 
-1. **需求阶段** — Claude Code 会话启动后，Gate 自动进入 W01 需求阶段
+1. **需求阶段** — Claude Code 会话启动后，Gate 自动进入 requirements 阶段
 2. **PRD 编写** — 使用 product-manager skill 进行需求分析
 3. **质量检查** — Gate 自动检查 PRD 格式和完整性
 
@@ -76,7 +76,7 @@ claude plugins install chaos-harness@chaos-harness
 
 | 阶段 | 保护内容 |
 |------|---------|
-| W01 → W03 | 需求文档必须存在，否则无法进入架构阶段 |
+| requirements → implementation | 需求文档必须存在，否则无法进入实现阶段 |
 | PRD 输出 | 铁律 IL001：必须在版本目录下生成 |
 
 ---
@@ -87,7 +87,7 @@ claude plugins install chaos-harness@chaos-harness
 
 ### 日常工作流
 
-1. **架构设计** — W03 阶段，Gate 自动验证需求文档存在性
+1. **架构设计** — implementation 阶段前，Gate 自动验证需求文档存在性
 2. **技术选型** — 使用 dev-intelligence 搜索对应技术栈的最佳实践
 3. **Schema 驱动** — 定义工作流 Schema，约束开发流程
 
@@ -97,7 +97,7 @@ claude plugins install chaos-harness@chaos-harness
 |------|------|
 | `/gate-manager status` | Gate 状态仪表盘 |
 | `/chaos-harness:dev-intelligence` | 智能建议引擎 |
-| 自然语言："搜索架构模式" | BM25 检索 anti-patterns 知识库 |
+| 自然语言："搜索架构模式" | Wiki 检索 anti-pattern 标签知识 |
 
 ### 技术栈适配
 
@@ -113,9 +113,9 @@ claude plugins install chaos-harness@chaos-harness
 
 | Gate | 验证内容 |
 |------|---------|
-| gate-w03-architecture | 需求文档必须存在于 `output/*/W01_requirements` |
-| gate-w08-development | 设计文档必须存在于 `output/*/W03_architecture` |
-| gate-intelligence-check | 阶段切换时自动推荐 Gate 配置和反模式 |
+| gate-requirements | 需求文档必须存在于 `output/*/requirements` |
+| gate-implementation | 代码无语法错误且有 git 提交 |
+| gate-intelligence | 阶段切换时基于 Wiki 推荐模式与反模式 |
 
 ---
 
@@ -142,7 +142,7 @@ claude plugins install chaos-harness@chaos-harness
 
 | 操作 | 自动检查 |
 |------|---------|
-| 写/编辑文件 | 铁律检查（IL001-IL005） |
+| 写/编辑文件 | 铁律检查（IL001 版本目录） |
 | 执行命令 | 测试 Gate + 格式 Gate |
 | 写/编辑后 | 学习更新 + 工作流追踪 |
 
@@ -151,9 +151,9 @@ claude plugins install chaos-harness@chaos-harness
 | ID | 铁律 | 违反后果 |
 |----|------|---------|
 | IL001 | 文档必须在版本目录下生成 | Hook 阻断 |
-| IL003 | 完成声明必须附带验证证据 | Stop Hook 阻断 |
-| IL004 | 版本变更需要用户确认 | 自动回退 |
-| IL005 | 敏感配置修改需要审批 | Hook 阻断 |
+| IL003 | 完成声明必须附带验证证据 | Stop Hook（reflect 帧）检测 |
+
+> v1.4.0 精简为 2 条核心铁律。
 
 ---
 
@@ -163,34 +163,33 @@ claude plugins install chaos-harness@chaos-harness
 
 ### 日常工作流
 
-1. **测试阶段** — W10 阶段，Gate 自动验证代码无语法错误
-2. **发布阶段** — W12 阶段，Gate 要求测试全部通过
-3. **测试模式** — 使用 dev-intelligence 搜索测试最佳实践
+1. **实现阶段** — implementation Gate 自动验证代码无语法错误且有提交
+2. **发布阶段** — release Gate 要求测试全部通过
+3. **测试模式** — 使用 dev-intelligence 搜索测试最佳实践（走 Wiki）
 
 ### 常用命令
 
 | 命令 | 说明 |
 |------|------|
 | `/gate-manager status` | 查看测试阶段 Gate 状态 |
-| `/gate-manager recheck gate-w10-testing` | 重新验证测试 Gate |
-| 自然语言："搜索测试模式" | BM25 检索 test-patterns 知识库 |
+| `/gate-manager recheck gate-release` | 重新验证发布 Gate |
+| 自然语言："搜索测试模式" | Wiki 检索 test 标签知识 |
 
 ### Gate 保护
 
 | Gate | 验证器 | 说明 |
 |------|--------|------|
-| gate-w10-testing | no-syntax-errors | 代码无语法错误 |
-| gate-w12-release | test-suite-pass | 测试全部通过 |
-| gate-quality-tests | test-suite-pass | 提交前必须通过 |
+| gate-implementation | no-syntax-errors + git-has-commits | 代码无错且有提交 |
+| gate-release | test-suite-pass | 测试全部通过 |
+| gate-quality | iron-law-check | 写时铁律合规 |
 
 ### 测试模式知识库
 
-`data/test-patterns.csv` 包含 15 种测试模式，覆盖：
-- 单元测试模式
-- 集成测试模式
-- E2E 测试模式
-- 覆盖率要求
-- Mock 策略
+测试模式已迁移至 Wiki（`tag: test`），15 条覆盖单元/集成/E2E/覆盖率/Mock 策略：
+
+```bash
+node scripts/wiki-search.mjs query "test coverage" --type pattern
+```
 
 ---
 
@@ -215,7 +214,7 @@ claude plugins install chaos-harness@chaos-harness
 ### 阶段流转
 
 ```
-W01 需求 → W03 架构 → W08 开发 → W09 审查 → W10 测试 → W12 发布
+requirements 需求 → implementation 实现 → release 发布
 ```
 
 每个阶段切换都自动执行对应 Gate 验证。

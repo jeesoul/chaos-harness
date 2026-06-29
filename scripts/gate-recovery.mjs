@@ -55,7 +55,7 @@ function getFixSuggestion(result) {
     case 'test-suite-pass':
       return `修复失败的测试后运行: npm test`;
     case 'iron-law-check':
-      return `检查铁律违规，确保操作符合 IL001-IL005`;
+      return `检查铁律违规，确保操作符合 IL001/IL003`;
     case 'lint-check':
       return `运行格式化: npx eslint . --fix`;
     case 'git-has-commits':

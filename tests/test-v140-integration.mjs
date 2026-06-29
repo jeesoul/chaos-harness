@@ -123,7 +123,7 @@ test('hooks.json is valid + has v1.4.0 dispatcher', () => {
 test('skills directory has v1.4.0 count', () => {
   const skills = run(`node -e "console.log(require('fs').readdirSync('skills').filter(d => !d.startsWith('.') && d !== 'shared').length)"`);
   const n = parseInt(skills.trim(), 10);
-  ok(n === 12, `expected 12 skills, got ${n}`);
+  ok(n === 11, `expected 11 skills, got ${n}`);
 });
 
 // ---- runner ----

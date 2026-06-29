@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /**
  * dev-intelligence.mjs — 开发质量智能引擎 CLI
+ * v1.4.0 大版本：知识库统一为 Wiki（不再依赖 CSV + Python）
+ *
  * search / generate-gate / persist / auto-check / restore
  *
- * 调用: node dev-intelligence.mjs --query <text> --domain <domain>
+ * 调用: node dev-intelligence.mjs --query <text> [--domain <tag>]
  *       node dev-intelligence.mjs generate-gate --stage <stage> --stack <stack> --level <hard|soft>
  *       node dev-intelligence.mjs persist --type <type> --subject <text> --value <text> --evidence <text>
  *       node dev-intelligence.mjs --auto-check --stage <stage>
@@ -13,74 +15,36 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { execFileSync, execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { resolvePluginRoot } from './path-utils.mjs';
 import { ensureDir } from './hook-utils.mjs';
+import { search as wikiSearch } from './wiki-search.mjs';
 
 const pluginRoot = resolvePluginRoot();
-const scriptsDir = join(pluginRoot, 'scripts');
-const dataDir = join(pluginRoot, 'data');
 const stacksDir = join(pluginRoot, 'stacks');
 const chaosDir = join(pluginRoot, '.chaos-harness');
 
-const DOMAIN_MAP = {
-  "gate-patterns": "gate-patterns.csv",
-  "iron-law-rules": "iron-law-rules.csv",
-  "test-patterns": "test-patterns.csv",
-  "anti-patterns": "anti-patterns.csv",
-  "ui-patterns": "ui-patterns.csv",
-  "prd-quality-rules": "prd-quality-rules.csv",
-};
-
-/** 调用 search.py 执行 BM25 搜索 */
+/**
+ * 统一搜索：走 Wiki（纯 Node，零依赖）。
+ * domain 作为可选 tag 过滤（如 "gate"、"test"、"anti-pattern"）。
+ */
 function callSearch(query, domain, top = 5) {
-  const searchPy = join(scriptsDir, 'search.py');
-  if (!existsSync(searchPy)) {
-    return keywordFallback(query, domain);
-  }
-  try {
-    const output = execFileSync('python', [
-      searchPy, '--query', query, '--domain', domain, '--top', String(top), '--data-dir', dataDir
-    ], { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
-    return JSON.parse(output);
-  } catch (e) {
-    const stderr = e.stderr?.toString() || '';
-    const stdout = e.stdout?.toString() || '';
-    if (stderr.includes('ModuleNotFoundError') || stderr.includes('rank_bm25')) {
-      console.error('Python rank_bm25 library not installed. Run: pip install rank-bm25');
-      return keywordFallback(query, domain);
-    }
-    if (stdout) {
-      try { return JSON.parse(stdout); } catch { /* fall through */ }
-    }
-    return { error: stderr.slice(-200), query, domain, results: [], total_results: 0 };
-  }
-}
-
-/** 关键词回退搜索 */
-function keywordFallback(query, domain) {
-  const tokens = query.toLowerCase().split(/\s+/);
-  const results = [];
-  const domains = domain === 'all' ? Object.keys(DOMAIN_MAP) : [domain];
-  for (const d of domains) {
-    const fname = DOMAIN_MAP[d];
-    if (!fname) continue;
-    const path = join(dataDir, fname);
-    if (!existsSync(path)) continue;
-    const content = readFileSync(path, 'utf-8');
-    const lines = content.split('\n').slice(1).filter(l => l.trim());
-    for (const line of lines) {
-      const cells = line.split(',');
-      if (cells.length < 2) continue;
-      const score = tokens.filter(t => line.toLowerCase().includes(t)).length;
-      if (score > 0) {
-        results.push({ id: cells[0], score, source_domain: d, matched_fields: ['raw'], data: { raw: line.slice(0, 200) } });
-      }
-    }
-  }
-  results.sort((a, b) => b.score - a.score);
-  return { query, domain, results: results.slice(0, 5), total_results: results.length };
+  // domain 在 v1.4.0 中作为 tag 提示拼接进 query，提升相关性
+  const tagHint = domain && domain !== 'all' ? domain.replace(/-rules$|-patterns$/, '') : '';
+  const effectiveQuery = tagHint ? `${query} ${tagHint}` : query;
+  const hits = wikiSearch(effectiveQuery, { limit: top });
+  return {
+    query,
+    domain: domain || 'all',
+    results: hits.map(h => ({
+      id: h.id,
+      score: Math.round(h.score * 100) / 100,
+      source_domain: h.type,
+      matched_fields: h.tags,
+      data: { pattern_name: h.title, description: '', path: h.path },
+    })),
+    total_results: hits.length,
+  };
 }
 
 /** 格式化搜索结果为人类可读文本 */
@@ -107,13 +71,12 @@ function formatResults(searchResult) {
   return output;
 }
 
-/** 生成 Gate 配置 */
+/** 生成 Gate 配置（v1.4.0：基于 wiki 命中 + stack 默认验证器） */
 function generateGate(stage, stack, level, outputPath) {
-  // Normalize stage: "testing" → "W10_testing", "release" → "W12_release", etc.
   const STAGE_MAP = {
-    'requirements': 'W01_requirements', 'architecture': 'W03_architecture',
-    'development': 'W08_development', 'code-review': 'W09_code_review',
-    'testing': 'W10_testing', 'release': 'W12_release',
+    'requirements': 'gate-requirements', 'architecture': 'gate-requirements',
+    'development': 'gate-implementation', 'code-review': 'gate-implementation',
+    'testing': 'gate-release', 'release': 'gate-release',
   };
   const normalizedStage = STAGE_MAP[stage] || stage;
 
@@ -122,41 +85,27 @@ function generateGate(stage, stack, level, outputPath) {
     console.error(`Stack config not found: ${stack}.json`);
     process.exit(1);
   }
-  const stackConfig = JSON.parse(readFileSync(stackConfigPath, 'utf-8'));
 
-  const searchResult = callSearch(normalizedStage, 'gate-patterns', 10);
-  const matchingPatterns = (searchResult.results || []).filter(r => {
-    const data = r.data || {};
-    const stages = (data.stage || '').split('/');
-    const stacks = (data.stack || '').split(',');
-    return stages.includes(normalizedStage) && (stacks.includes(stack) || stacks.includes('generic'));
-  });
+  // 从 wiki 检索该 stage/stack 的相关模式作为参考
+  const hits = wikiSearch(`${stage} ${stack} gate`, { limit: 5 });
 
-  if (matchingPatterns.length === 0) {
-    console.log(`Warning: No matching patterns for stage=${normalizedStage} stack=${stack}`);
-  }
-
-  const validators = [];
-  const dependsOn = [];
-  for (const p of matchingPatterns) {
-    const v = p.data.validators || '';
-    if (v) {
-      const parts = v.split(':');
-      validators.push(parts.length > 1 ? { type: 'script', script: parts[1] } : { type: v });
-    }
-    const deps = p.data.dependencies || '';
-    if (deps) deps.split(',').forEach(d => d.trim() && dependsOn.push(d.trim()));
-  }
+  // 默认验证器按 stage 推断
+  const stageValidators = {
+    'gate-requirements': [{ type: 'file-exists', path: 'output/*/requirements' }],
+    'gate-implementation': [{ type: 'no-syntax-errors' }, { type: 'git-has-commits', minCommits: 1 }],
+    'gate-release': [{ type: 'test-suite-pass' }],
+  };
 
   const gate = {
-    id: `gate-${normalizedStage}-${stack}`,
+    id: `gate-${stage}-${stack}`,
     type: 'quality',
     level,
-    description: `Generated gate for ${normalizedStage} stage (${stack} stack)`,
+    description: `Generated gate for ${stage} stage (${stack} stack)`,
     trigger: 'stage-transition',
     cachePolicy: 'on-change',
-    validators: validators.length > 0 ? validators : [{ type: 'no-syntax-errors' }],
-    dependsOn: [...new Set(dependsOn)],
+    validators: stageValidators[normalizedStage] || [{ type: 'no-syntax-errors' }],
+    dependsOn: [],
+    references: hits.map(h => h.path),
   };
 
   const output = outputPath || join(chaosDir, 'gates', `gate-generated-${Date.now()}.json`);
@@ -164,11 +113,11 @@ function generateGate(stage, stack, level, outputPath) {
   writeFileSync(output, JSON.stringify(gate, null, 2) + '\n', 'utf-8');
 
   console.log(`\nGate generated: ${output}`);
-  console.log(`  Stage: ${normalizedStage}`);
+  console.log(`  Stage: ${stage} → ${normalizedStage}`);
   console.log(`  Stack: ${stack}`);
   console.log(`  Level: ${level}`);
   console.log(`  Validators: ${gate.validators.length}`);
-  console.log(`  Dependencies: ${gate.dependsOn.join(', ') || 'none'}`);
+  console.log(`  Wiki references: ${gate.references.length}`);
 }
 
 /** 持久化决策 */

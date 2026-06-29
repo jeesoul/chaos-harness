@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-06-29T03:50:50.351Z",
+  "passed": 12,
+  "failed": 0,
+  "total": 12,
+  "tests": [
+    "REG-001: Gate registry存在",
+    "REG-002: Gate machine --status运行",
+    "REG-003: iron-law-check脚本存在且可运行",
+    "REG-004: dev-intelligence脚本存在",
+    "REG-005: Wiki 知识库已填充（取代 CSV）",
+    "REG-006: hooks.json包含SessionStart/PreToolUse/PostToolUse/Stop",
+    "REG-007: state.json结构正确",
+    "REG-008: gate-enforcer可运行",
+    "REG-009: Skills目录含overview",
+    "REG-010: Skills 数量符合 v1.4.0（11 + shared）",
+    "REG-011: self-test通过率 ≥ 80/84",
+    "REG-012: package.json与plugin.json版本一致"
+  ]
+}
