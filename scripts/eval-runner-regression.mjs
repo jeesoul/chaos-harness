@@ -97,17 +97,16 @@ test('REG-006: hooks.json包含SessionStart/PreToolUse/PostToolUse/Stop', async 
   }
 });
 
-test('REG-007: state.json结构正确', async () => {
-  const path = join(PLUGIN_ROOT, '.chaos-harness', 'state.json');
-  if (!existsSync(path)) {
-    throw new Error('state.json missing');
+test('REG-007: 运行时 state.json 不入库', async () => {
+  const tracked = execSync('git ls-files .chaos-harness/state.json', {
+    cwd: PLUGIN_ROOT, encoding: 'utf8',
+  }).trim();
+  if (tracked) {
+    throw new Error('state.json 不应被 git 追踪（运行时状态）');
   }
-  const s = JSON.parse(readFileSync(path, 'utf8'));
-  const required = ['project_name', 'harness_version', 'current_version', 'workflow'];
-  for (const k of required) {
-    if (!s[k]) {
-      throw new Error(`state.json missing field: ${k}`);
-    }
+  const ignore = readFileSync(join(PLUGIN_ROOT, '.gitignore'), 'utf8');
+  if (!ignore.includes('.chaos-harness/state.json')) {
+    throw new Error('.gitignore 缺少 .chaos-harness/state.json');
   }
 });
 

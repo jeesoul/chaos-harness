@@ -6,6 +6,10 @@ dist/
 coverage/
 .env
 
+# IDE / 工具本地配置，不提交
+.idea/
+.claude/
+
 # Project-specific: 需求文档、参考文档、设计文档、实施计划不提交
 介绍
 参考/
