@@ -71,8 +71,7 @@ Delete: `<plugin-root>/.chaos-harness/gates/<gate-id>.json`
 |------|---------|---------|
 | SessionStart | 启动 / resume | resume.mjs + gate-machine session-start |
 | PreToolUse (Write\|Edit) | 写文件前 | loop observe → iron-law check → loop decide |
-| PreToolUse (Bash) | 执行命令前 | loop observe + gate-quality-tests + gate-quality-format |
-| PreToolUse (.*) | 任意工具 | overdrive + intent-analyzer |
+| PreToolUse (Bash) | 执行命令前 | loop observe |
 | PostToolUse (Write\|Edit\|Bash) | 工具执行后 | **post-write-dispatcher**（含 loop act） |
 | PostToolUse (Bash) | bash 后额外 | eval-collector |
 | Stop | 回合结束 | loop reflect + snapshot + stop + laziness-detect |
@@ -99,8 +98,6 @@ PostToolUse: post-write-dispatcher
    ├── learning-update.mjs                → learning-log.json
    ├── project-pattern-writer.mjs         → wiki/patterns/*.md (v1.4.0 新)
    ├── workflow-track.mjs                 → workflow-log.json
-   ├── instinct-collector.mjs             → instincts/observations.jsonl
-   ├── dev-intelligence --session-context → wiki 搜索范围扩展
    └── wiki-indexer build                 → 双向链接 + index.md
 
 Stop:
