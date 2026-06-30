@@ -91,6 +91,41 @@ claude plugins install chaos-harness@chaos-harness
 > **Windows 用户**: 脚本自动探测 Git(PATH/Program Files/Scoop/Chocolatey/WSL),
 > 非 ASCII 路径会被拒绝并提示清晰的错误。
 
+### 从 v1.3.x 升级
+
+如果你已安装**旧版本**:
+
+```bash
+# 1. 进入本地 chaos-harness 目录
+cd /path/to/chaos-harness
+
+# 2. 备份自定义配置(如果你修改过这些)
+cp -r .chaos-harness/wiki/decisions ~/.chaos-harness-backup/ 2>/dev/null || true
+
+# 3. 卸载旧版本
+claude plugins uninstall chaos-harness
+
+# 4. 拉取最新代码
+git fetch origin
+git checkout main
+git pull origin main
+
+# 5. 重新安装
+claude plugins marketplace add "$(pwd)"
+claude plugins install chaos-harness@chaos-harness
+
+# 6. 重启 Claude Code 以加载新 hooks
+```
+
+**v1.4.0 主要变化:**
+- Skills: 11 个 → **5 个核心**(overdrive/product-manager/java-checkstyle/ui-generator/web-access/harness-generator 已归档)
+- 铁律: 5 条 → **2 条**(仅保留 IL001/IL003)
+- Gates: 10 个 → **5 个**
+- 新增: **Loop 引擎**(四帧循环 + WAL)、**Project Wiki**(可寻址模式)、**Resume**(中断恢复)
+- 移除: Python/BM25 依赖(纯 Node.js)
+
+> **数据迁移**: 旧的 `.chaos-harness/` 目录兼容,v1.4.0 首次运行时会自动迁移。
+
 ### 卸载
 
 ```bash

@@ -213,6 +213,42 @@ No manual `settings.json` edits — skills and hooks load automatically.
 > **First run**: SessionStart hooks auto-create `.chaos-harness/` directories.
 > No manual setup needed.
 
+### Upgrade from v1.3.x
+
+If you have an **older version** already installed:
+
+```bash
+# 1. Navigate to your local chaos-harness directory
+cd /path/to/chaos-harness
+
+# 2. Backup custom configs (if you modified these)
+cp -r .chaos-harness/wiki/decisions ~/.chaos-harness-backup/ 2>/dev/null || true
+
+# 3. Uninstall old version
+claude plugins uninstall chaos-harness
+
+# 4. Pull latest code
+git fetch origin
+git checkout main
+git pull origin main
+
+# 5. Reinstall
+claude plugins marketplace add "$(pwd)"
+claude plugins install chaos-harness@chaos-harness
+
+# 6. Restart Claude Code to load new hooks
+```
+
+**What changed in v1.4.0:**
+- Skills: 11 → **5 core** (overdrive/product-manager/java-checkstyle/ui-generator/web-access/harness-generator archived)
+- Iron laws: 5 → **2** (IL001/IL003 only)
+- Gates: 10 → **5**
+- New: **Loop Engine** (4 frames + WAL), **Project Wiki** (addressable patterns), **Resume** (interruption recovery)
+- Removed: Python/BM25 dependencies (pure Node.js)
+
+> **Data migration**: Old `.chaos-harness/` directories are compatible. 
+> v1.4.0 will auto-migrate on first SessionStart.
+
 ### Uninstall
 
 ```bash

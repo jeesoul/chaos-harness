@@ -290,15 +290,33 @@ A: 可以。三个扩展点:
 2. **自定义 Gate** — `.chaos-harness/gates/gate-registry.json` 新增 Gate 定义
 3. **Wiki 知识库** — `.chaos-harness/wiki/decisions/` 添加项目决策
 
-**Q6: 如何升级到最新版?**
+**Q6: 如何从旧版本升级到 v1.4.0?**
 
 ```bash
+# 完整升级流程
 cd <chaos-harness 安装目录>
-git pull origin main
+
+# 1. 备份自定义配置(如果有)
+cp -r .chaos-harness/wiki/decisions ~/.chaos-harness-backup/ 2>/dev/null || true
+
+# 2. 卸载旧版插件
 claude plugins uninstall chaos-harness
+
+# 3. 拉取最新代码
+git fetch origin && git checkout main && git pull origin main
+
+# 4. 重新安装
+claude plugins marketplace add "$(pwd)"
 claude plugins install chaos-harness@chaos-harness
-# 重启 Claude Code 让新 hooks 生效
+
+# 5. 重启 Claude Code
+# 新 hooks 和 skills 会在重启后生效
 ```
+
+**注意事项:**
+- v1.4.0 简化为 5 个核心 skills,旧版的 overdrive/product-manager 等已归档
+- 旧的 `.chaos-harness/` 数据兼容,首次运行时自动迁移
+- 如有自定义铁律或 Gate 配置,升级后需要检查兼容性
 
 ---
 
