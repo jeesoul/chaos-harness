@@ -34,7 +34,7 @@ hooks. Constraints become code, not advice. There is no gray zone to argue with.
 | **Deterministic** | Gates run as hard-block (`exit 1`) or soft-warn (`exit 0`); every action is traceable |
 | **Resumable** | A four-frame loop + write-ahead journal means a power cut never loses your place |
 | **Memory-driven** | An addressable, linkable, evolvable Wiki replaces flat config files |
-| **Minimal** | 2 iron laws, 5 gates, 11 skills — few rules, strictly enforced |
+| **Minimal** | 2 iron laws, 5 gates, 5 skills — few rules, strictly enforced |
 
 <!-- ARCH -->
 
@@ -145,28 +145,15 @@ Two non-negotiable laws, enforced by hooks — not prompts.
 
 ## Skills
 
-11 skills — 6 core, 5 optional. Invoke via slash command or natural-language triggers.
-
-### Core
+5 core skills — focused and minimal. Invoke via slash command or natural-language triggers.
 
 | Skill | Triggers | Purpose |
 |-------|----------|---------|
 | `overview` | chaos-harness | System overview & entry point |
 | `gate-manager` | gate, stage, hooks | Gate state machine + hooks management |
-| `iron-law-enforcer` | iron law, version, lock | Iron-law enforcement + version locking |
+| `iron-law-enforcer` | iron law, version, lock | Iron-law enforcement (IL001/IL003) |
 | `dev-intelligence` | search, knowledge | Wiki search engine (pure Node) |
-| `resume` | resume, continue | Power-cut recovery + session snapshots |
-| `overdrive` | urgent, overdrive | Maximum-priority emergency mode |
-
-### Optional
-
-| Skill | Purpose |
-|-------|---------|
-| `harness-generator` | Project scan + constraint generation |
-| `product-manager` | Requirements / Kano / PRD lifecycle |
-| `java-checkstyle` | Java code-style checks |
-| `ui-generator` | PRD → runnable frontend |
-| `web-access` | Browser automation (CDP) |
+| `resume` | resume, continue | Session interruption recovery + snapshots |
 
 ## Command Reference
 
@@ -179,7 +166,7 @@ Two non-negotiable laws, enforced by hooks — not prompts.
 | `/gate-manager override <id> --reason "..."` | Bypass a soft gate |
 | `/resume` | Detect interruption & print recovery hints |
 | `/chaos-harness:dev-intelligence` | Wiki search + recommendations |
-| `/chaos-harness:overdrive` | Emergency mode |
+| `/chaos-harness:iron-law-enforcer` | Iron-law check & history |
 
 ### CLI
 
@@ -249,7 +236,7 @@ integration 13). See [evals/v1.4.0-eval-report.md](evals/v1.4.0-eval-report.md).
 
 | Version | Highlights |
 |---------|-----------|
-| **1.4.0 Loop & Wiki** | Loop Engine · Project Wiki · Resume Engine · cross-platform installer · **major simplification** (skills 15→11, gates 10→5, laws 5→2, CSV→Wiki, zero Python) |
+| **1.4.0 Loop & Wiki** | Loop Engine · Project Wiki · Resume Engine · cross-platform installer · **major simplification** (skills 15→5, gates 10→5, laws 5→2, CSV→Wiki, zero Python) |
 | 1.3.2 Gate | Gate state machine · 10 gates · BM25 engine · 6 CSV knowledge bases |
 | 1.3.1 | Continuous learning 2.0 · eval-driven · schema workflow |
 | 1.3.0 | Overdrive mode · multi-agent review |
@@ -284,7 +271,7 @@ Code 钩子强制执行：约束是代码，不是建议。
 | IL001 | 文档必须在版本目录下 |
 | IL003 | 完成声明必须附验证证据 |
 
-> v1.4.0 大版本简化：Skills 15→11、Gates 10→5、铁律 5→2、CSV→Wiki、去 Python 依赖。**少即是多。**
+> v1.4.0 大版本简化：Skills 15→5、Gates 10→5、铁律 5→2、CSV→Wiki、去 Python 依赖。**少即是多。**
 
 详细使用见 [USAGE.md](USAGE.md)。
 

@@ -31,7 +31,7 @@ Chaos Harness 把约束编码为 **Gate 状态机**，由 Claude Code 钩子强�
 | **确定性** | Gate 要么硬阻断（`exit 1`）要么软警告（`exit 0`），每个行为可追溯 |
 | **可恢复** | 四帧循环 + WAL 日志，断电也不会丢失进度 |
 | **记忆驱动** | 可寻址、可链接、可演化的 Wiki 取代扁平配置文件 |
-| **极简主义** | 2 条铁律、5 个 Gate、11 个技能——少而严胜过多而松 |
+| **极简主义** | 2 条铁律、5 个 Gate、5 个技能——少而严胜过多而松 |
 
 ## 架构
 
@@ -181,28 +181,15 @@ node scripts/resume.mjs   # CLI 版本
 
 ## 技能矩阵
 
-11 个技能 — 6 个核心 + 5 个可选。通过斜杠命令或自然语言触发。
-
-### 核心技能
+5 个核心技能 — 聚焦精简。通过斜杠命令或自然语言触发。
 
 | 技能 | 触发词 | 用途 |
 |------|--------|------|
 | `overview` | chaos-harness | 系统概览 + 入口 |
 | `gate-manager` | gate, stage, hooks | Gate 状态机 + hooks 管理 |
-| `iron-law-enforcer` | iron law, version, lock | 铁律执法 + 版本锁定 |
+| `iron-law-enforcer` | iron law, version, lock | 铁律执行(IL001/IL003) |
 | `dev-intelligence` | search, knowledge | Wiki 搜索引擎（纯 Node） |
-| `resume` | resume, continue | 断电恢复 + 会话快照 |
-| `overdrive` | urgent, overdrive | 最高优先级紧急模式 |
-
-### 可选技能
-
-| 技能 | 用途 |
-|------|------|
-| `harness-generator` | 项目扫描 + 约束生成 |
-| `product-manager` | 需求 / Kano / PRD 生命周期 |
-| `java-checkstyle` | Java 代码风格检查 |
-| `ui-generator` | PRD → 可运行前端 |
-| `web-access` | 浏览器自动化（CDP） |
+| `resume` | resume, continue | 会话中断恢复 + 快照 |
 
 ## 命令速查
 
@@ -215,7 +202,7 @@ node scripts/resume.mjs   # CLI 版本
 | `/gate-manager override <id> --reason "..."` | 绕过软 gate |
 | `/resume` | 检测中断 + 打印恢复提示 |
 | `/chaos-harness:dev-intelligence` | Wiki 搜索 + 推荐 |
-| `/chaos-harness:overdrive` | 紧急模式 |
+| `/chaos-harness:iron-law-enforcer` | 铁律检查与历史 |
 
 ### CLI
 
@@ -281,7 +268,7 @@ node tests/test-v140-integration.mjs     # 集成测试
 
 | 版本 | 亮点 |
 |------|------|
-| **1.4.0 Loop & Wiki** | Loop 引擎 · Project Wiki · Resume 引擎 · 跨平台安装器 · **大版本简化**（技能 15→11、gates 10→5、铁律 5→2、CSV→Wiki、零 Python） |
+| **1.4.0 Loop & Wiki** | Loop 引擎 · Project Wiki · Resume 引擎 · 跨平台安装器 · **大版本简化**（技能 15→5、gates 10→5、铁律 5→2、CSV→Wiki、零 Python） |
 | 1.3.2 Gate | Gate 状态机 · 10 gates · BM25 引擎 · 6 个 CSV 知识库 |
 | 1.3.1 | 持续学习 2.0 · eval 驱动 · schema 工作流 |
 | 1.3.0 | Overdrive 模式 · 多 agent 评审 |
