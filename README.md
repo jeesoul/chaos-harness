@@ -66,25 +66,23 @@ hooks. Constraints become code, not advice. There is no gray zone to argue with.
 ## Quickstart
 
 ```bash
-# 1. Clone & checkout the release branch
+# 1. Clone the repository
 git clone https://github.com/jeesoul/chaos-harness.git
 cd chaos-harness
-git checkout 1.4.0
 
-# 2. Cross-platform install (auto-detects git, validates path)
-node scripts/install.mjs
-
-# 3. Register with Claude Code
+# 2. Register as a Claude Code plugin
 claude plugins marketplace add "$(pwd)"
 claude plugins install chaos-harness@chaos-harness
 
-# 4. Verify
+# 3. Verify (in Claude Code)
 /chaos-harness:overview
 ```
 
-> **Windows + Git:** `scripts/git-detector.mjs` locates git across PATH,
-> `Program Files\Git`, Scoop, Chocolatey and WSL — no manual PATH setup.
-> Non-ASCII install paths are rejected with a clear error by `path-sanity.mjs`.
+> **First run**: SessionStart hooks will auto-create `.chaos-harness/` directories
+> (loop/, wiki/, gates/) — no manual setup needed.
+>
+> **Windows**: Scripts auto-detect Git across PATH, Program Files, Scoop,
+> Chocolatey, and WSL. Non-ASCII install paths are rejected with clear errors.
 
 ## Core Concepts
 
@@ -205,13 +203,15 @@ claude plugins install chaos-harness@chaos-harness
 
 # Local
 git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness && git checkout 1.4.0
-node scripts/install.mjs
+cd chaos-harness
 claude plugins marketplace add "$(pwd)"
 claude plugins install chaos-harness@chaos-harness
 ```
 
 No manual `settings.json` edits — skills and hooks load automatically.
+
+> **First run**: SessionStart hooks auto-create `.chaos-harness/` directories.
+> No manual setup needed.
 
 ### Uninstall
 

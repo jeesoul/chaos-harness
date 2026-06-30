@@ -78,13 +78,18 @@ claude plugins install chaos-harness@chaos-harness
 
 # 本地开发
 git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness && git checkout 1.4.0
-node scripts/install.mjs
+cd chaos-harness
 claude plugins marketplace add "$(pwd)"
 claude plugins install chaos-harness@chaos-harness
 ```
 
 无需手动编辑 `settings.json`——技能与钩子自动加载。
+
+> **首次运行**: SessionStart hooks 会自动创建 `.chaos-harness/` 目录
+> (loop/, wiki/, gates/)，无需手动配置。
+>
+> **Windows 用户**: 脚本自动探测 Git(PATH/Program Files/Scoop/Chocolatey/WSL),
+> 非 ASCII 路径会被拒绝并提示清晰的错误。
 
 ### 卸载
 
@@ -227,7 +232,7 @@ v1.4.0 是大版本：新增 Loop/Wiki/Resume 引擎，同时**大幅简化**核
 | 搜索引擎 | Python BM25 + Node 降级 | 纯 Node | 零 Python 依赖 |
 | PostToolUse 钩子 | 4 个独立钩子 | 1 个分发器 | −75% |
 
-**新增能力：** Loop 引擎（四帧循环 + WAL）、Project Wiki（可寻址记忆 + 双向链接）、Resume 引擎（断电恢复）、跨平台安装器（Windows git 检测）。
+**新增能力：** Loop 引擎（四帧循环 + WAL）、Project Wiki（可寻址记忆 + 双向链接）、Resume 引擎（断电恢复）。
 
 ## 安装
 
@@ -238,8 +243,10 @@ claude plugins install chaos-harness@chaos-harness
 
 # 本地
 git clone https://github.com/jeesoul/chaos-harness.git
-cd chaos-harness && git checkout 1.4.0
-node scripts/install.mjs
+cd chaos-harness
+claude plugins marketplace add "$(pwd)"
+claude plugins install chaos-harness@chaos-harness
+```
 claude plugins marketplace add "$(pwd)"
 claude plugins install chaos-harness@chaos-harness
 ```
